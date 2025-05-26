@@ -1,11 +1,20 @@
-<x-app-layout>
-    <x-slot name="title">Meu Perfil</x-slot>
+<?php if (isset($component)) { $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54 = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54 = $attributes; } ?>
+<?php $component = App\View\Components\AppLayout::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('app-layout'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\App\View\Components\AppLayout::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes([]); ?>
+     <?php $__env->slot('title', null, []); ?> Meu Perfil <?php $__env->endSlot(); ?>
     
-    @php
+    <?php
     $breadcrumbs = [
         ['title' => 'Meu Perfil']
     ];
-    @endphp
+    ?>
     
     <div class="space-y-6" x-data="profileEditor()" x-init="init()">
         <!-- Primeira linha de cards -->
@@ -24,7 +33,7 @@
                     </div>
                 </div>
                 
-                @if (session('status') === 'profile-updated')
+                <?php if(session('status') === 'profile-updated'): ?>
                     <div class="gqa-alert success mb-6" 
                          x-data="{ show: true }" 
                          x-show="show" 
@@ -49,11 +58,11 @@
                             </button>
                         </div>
                     </div>
-                @endif
+                <?php endif; ?>
                 
-                <form method="post" action="{{ route('profile.update') }}" class="space-y-6" @submit="isSubmitting = true" x-ref="profileForm">
-                    @csrf
-                    @method('patch')
+                <form method="post" action="<?php echo e(route('profile.update')); ?>" class="space-y-6" @submit="isSubmitting = true" x-ref="profileForm">
+                    <?php echo csrf_field(); ?>
+                    <?php echo method_field('patch'); ?>
                     
                     <div class="space-y-4">
                         <div>
@@ -61,8 +70,8 @@
                             <div class="relative">
                                 <input type="text" 
                                        id="name" name="name" 
-                                       value="{{ old('name', $user->name) }}" 
-                                       class="gqa-input {{ $errors->has('name') ? 'error' : '' }}" 
+                                       value="<?php echo e(old('name', $user->name)); ?>" 
+                                       class="gqa-input <?php echo e($errors->has('name') ? 'error' : ''); ?>" 
                                        required autofocus autocomplete="name"
                                        x-model="form.name"
                                        @input="validateField('name', $event.target.value)">
@@ -73,9 +82,16 @@
                                     </svg>
                                 </div>
                             </div>
-                            @error('name')
-                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                            @enderror
+                            <?php $__errorArgs = ['name'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400"><?php echo e($message); ?></p>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
                         
                         <div>
@@ -83,8 +99,8 @@
                             <div class="relative">
                                 <input type="email" 
                                        id="email" name="email" 
-                                       value="{{ old('email', $user->email) }}" 
-                                       class="gqa-input {{ $errors->has('email') ? 'error' : '' }}" 
+                                       value="<?php echo e(old('email', $user->email)); ?>" 
+                                       class="gqa-input <?php echo e($errors->has('email') ? 'error' : ''); ?>" 
                                        required autocomplete="email"
                                        x-model="form.email"
                                        @input="validateField('email', $event.target.value)">
@@ -95,9 +111,16 @@
                                     </svg>
                                 </div>
                             </div>
-                            @error('email')
-                                <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                            @enderror
+                            <?php $__errorArgs = ['email'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                                <p class="mt-1 text-sm text-red-600 dark:text-red-400"><?php echo e($message); ?></p>
+                            <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                         </div>
                     </div>
                     
@@ -126,49 +149,70 @@
                     </div>
                 </div>
                 
-                @if (session('status') === 'password-updated')
+                <?php if(session('status') === 'password-updated'): ?>
                     <div class="gqa-alert success mb-6" x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 5000)">
                         <span>Senha alterada com sucesso!</span>
                     </div>
-                @endif
+                <?php endif; ?>
                 
-                <form method="post" action="{{ route('password.update') }}" class="space-y-4" @submit="isSubmittingPassword = true">
-                    @csrf
-                    @method('put')
+                <form method="post" action="<?php echo e(route('password.update')); ?>" class="space-y-4" @submit="isSubmittingPassword = true">
+                    <?php echo csrf_field(); ?>
+                    <?php echo method_field('put'); ?>
                     
                     <div>
                         <label class="gqa-label" for="current_password">Senha Atual</label>
                         <input :type="showCurrentPassword ? 'text' : 'password'" 
                                id="current_password" name="current_password" 
-                               class="gqa-input {{ $errors->updatePassword->has('current_password') ? 'error' : '' }}" 
+                               class="gqa-input <?php echo e($errors->updatePassword->has('current_password') ? 'error' : ''); ?>" 
                                x-model="passwordForm.current_password">
-                        @error('current_password', 'updatePassword')
-                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                        @enderror
+                        <?php $__errorArgs = ['current_password', 'updatePassword'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                     
                     <div>
                         <label class="gqa-label" for="password">Nova Senha</label>
                         <input :type="showNewPassword ? 'text' : 'password'" 
                                id="password" name="password" 
-                               class="gqa-input {{ $errors->updatePassword->has('password') ? 'error' : '' }}" 
+                               class="gqa-input <?php echo e($errors->updatePassword->has('password') ? 'error' : ''); ?>" 
                                x-model="passwordForm.password"
                                @input="checkPasswordStrength($event.target.value)">
-                        @error('password', 'updatePassword')
-                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                        @enderror
+                        <?php $__errorArgs = ['password', 'updatePassword'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                     
                     <div>
                         <label class="gqa-label" for="password_confirmation">Confirmar Senha</label>
                         <input :type="showConfirmPassword ? 'text' : 'password'" 
                                id="password_confirmation" name="password_confirmation" 
-                               class="gqa-input {{ $errors->updatePassword->has('password_confirmation') ? 'error' : '' }}" 
+                               class="gqa-input <?php echo e($errors->updatePassword->has('password_confirmation') ? 'error' : ''); ?>" 
                                x-model="passwordForm.password_confirmation"
                                @input="checkPasswordMatch()">
-                        @error('password_confirmation', 'updatePassword')
-                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                        @enderror
+                        <?php $__errorArgs = ['password_confirmation', 'updatePassword'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                     
                     <div class="flex justify-end pt-4">
@@ -185,21 +229,21 @@
             <div class="gqa-card">
                 <div class="text-center mb-6">
                     <div class="w-24 h-24 rounded-full overflow-hidden bg-gray-200 dark:bg-gray-700 mx-auto mb-4">
-                        <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=random&size=96" 
-                             alt="{{ Auth::user()->name }}" class="w-full h-full object-cover" />
+                        <img src="https://ui-avatars.com/api/?name=<?php echo e(urlencode(Auth::user()->name)); ?>&background=random&size=96" 
+                             alt="<?php echo e(Auth::user()->name); ?>" class="w-full h-full object-cover" />
                     </div>
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ Auth::user()->name }}</h3>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">{{ Auth::user()->email }}</p>
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white"><?php echo e(Auth::user()->name); ?></h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400"><?php echo e(Auth::user()->email); ?></p>
                 </div>
                 
                 <div class="space-y-3">
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-medium text-gray-600 dark:text-gray-400">ID</span>
-                        <span class="text-sm font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">#{{ Auth::user()->id }}</span>
+                        <span class="text-sm font-mono bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded">#<?php echo e(Auth::user()->id); ?></span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Membro desde</span>
-                        <span class="text-sm">{{ Auth::user()->created_at->format('d/m/Y') }}</span>
+                        <span class="text-sm"><?php echo e(Auth::user()->created_at->format('d/m/Y')); ?></span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-sm font-medium text-gray-600 dark:text-gray-400">Status</span>
@@ -305,18 +349,25 @@
                     </div>
                 </div>
                 
-                <form method="post" action="{{ route('profile.destroy') }}" class="px-4 pb-4 sm:px-6 sm:pb-6" @submit="isDeleting = true">
-                    @csrf
-                    @method('delete')
+                <form method="post" action="<?php echo e(route('profile.destroy')); ?>" class="px-4 pb-4 sm:px-6 sm:pb-6" @submit="isDeleting = true">
+                    <?php echo csrf_field(); ?>
+                    <?php echo method_field('delete'); ?>
                     
                     <div class="mt-4">
                         <label for="delete_password" class="gqa-label">Digite sua senha:</label>
                         <input type="password" id="delete_password" name="password" 
-                               class="gqa-input {{ $errors->userDeletion->has('password') ? 'error' : '' }}" 
+                               class="gqa-input <?php echo e($errors->userDeletion->has('password') ? 'error' : ''); ?>" 
                                required x-model="password" x-ref="passwordInput">
-                        @error('password', 'userDeletion')
-                            <p class="mt-1 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
-                        @enderror
+                        <?php $__errorArgs = ['password', 'userDeletion'];
+$__bag = $errors->getBag($__errorArgs[1] ?? 'default');
+if ($__bag->has($__errorArgs[0])) :
+if (isset($message)) { $__messageOriginal = $message; }
+$message = $__bag->first($__errorArgs[0]); ?>
+                            <p class="mt-1 text-sm text-red-600 dark:text-red-400"><?php echo e($message); ?></p>
+                        <?php unset($message);
+if (isset($__messageOriginal)) { $message = $__messageOriginal; }
+endif;
+unset($__errorArgs, $__bag); ?>
                     </div>
                     
                     <div class="mt-6 flex space-x-3 justify-end">
@@ -334,7 +385,7 @@
         function profileEditor() {
             return {
                 isSubmitting: false,
-                form: { name: '{{ old('name', $user->name) }}', email: '{{ old('email', $user->email) }}' },
+                form: { name: '<?php echo e(old('name', $user->name)); ?>', email: '<?php echo e(old('email', $user->email)); ?>' },
                 validation: { name: { isValid: true }, email: { isValid: true } },
                 
                 init() {
@@ -412,4 +463,14 @@
             }
         }
     </script>
-</x-app-layout>
+ <?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $attributes = $__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__attributesOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54)): ?>
+<?php $component = $__componentOriginal9ac128a9029c0e4701924bd2d73d7f54; ?>
+<?php unset($__componentOriginal9ac128a9029c0e4701924bd2d73d7f54); ?>
+<?php endif; ?>
+<?php /**PATH C:\projects\qualidade\sistema-qualidade\resources\views/profile/edit.blade.php ENDPATH**/ ?>
