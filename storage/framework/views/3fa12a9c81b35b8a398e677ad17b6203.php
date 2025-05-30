@@ -112,26 +112,34 @@
             </a>
         </div>
         
-        <!-- Usuários Section -->
+        <!-- Permissões Section -->
+        <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->any(['role.index', 'permission.index'])): ?>
         <div class="hospital-nav-section">
-            <div class="hospital-nav-section-title" :class="{ 'opacity-0 hidden': sidebarCollapsed }">Usuários</div>
+            <div class="hospital-nav-section-title transition-opacity duration-300 transition-display" :class="{ 'opacity-0 !hidden': sidebarCollapsed }">Permissões</div>
             
-            <a href="#" 
-               class="hospital-nav-item <?php echo e(request()->is('usuarios*') ? 'active' : ''); ?>">
+            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('role.index')): ?>
+            <a href="<?php echo e(route('admin.roles.index')); ?>" 
+               class="hospital-nav-item <?php echo e(request()->routeIs('admin.roles.*') ? 'active' : ''); ?>"
+               data-tooltip="Perfis">
                 <svg class="hospital-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                 </svg>
-                <span class="hospital-nav-text" :class="{ 'opacity-0 w-0 overflow-hidden': sidebarCollapsed }">Gerenciar Usuários</span>
+                <span class="hospital-nav-text transition-opacity duration-300" :class="{ 'opacity-0 w-0 overflow-hidden': sidebarCollapsed }">Perfis</span>
             </a>
+            <?php endif; ?>
             
-            <a href="#" 
-               class="hospital-nav-item <?php echo e(request()->is('permissoes*') ? 'active' : ''); ?>">
+            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('permission.index')): ?>
+            <a href="<?php echo e(route('admin.permissions.index')); ?>" 
+               class="hospital-nav-item <?php echo e(request()->routeIs('admin.permissions.*') ? 'active' : ''); ?>"
+               data-tooltip="Permissões">
                 <svg class="hospital-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
                 </svg>
-                <span class="hospital-nav-text" :class="{ 'opacity-0 w-0 overflow-hidden': sidebarCollapsed }">Permissões</span>
+                <span class="hospital-nav-text transition-opacity duration-300" :class="{ 'opacity-0 w-0 overflow-hidden': sidebarCollapsed }">Permissões</span>
             </a>
+            <?php endif; ?>
         </div>
+        <?php endif; ?>
         
         <!-- Sistema Section -->
         <div class="hospital-nav-section">
@@ -145,6 +153,17 @@
                 </svg>
                 <span class="hospital-nav-text" :class="{ 'opacity-0 w-0 overflow-hidden': sidebarCollapsed }">Configurações</span>
             </a>
+            
+            <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('user.index')): ?>
+            <a href="<?php echo e(route('admin.users.index')); ?>" 
+               class="hospital-nav-item <?php echo e(request()->routeIs('admin.users.*') ? 'active' : ''); ?>"
+               data-tooltip="Usuários">
+                <svg class="hospital-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z"></path>
+                </svg>
+                <span class="hospital-nav-text transition-opacity duration-300" :class="{ 'opacity-0 w-0 overflow-hidden': sidebarCollapsed }">Usuários</span>
+            </a>
+            <?php endif; ?>
             
             <a href="#" 
                class="hospital-nav-item <?php echo e(request()->is('logs*') ? 'active' : ''); ?>">
@@ -160,35 +179,6 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
                 </svg>
                 <span class="hospital-nav-text" :class="{ 'opacity-0 w-0 overflow-hidden': sidebarCollapsed }">Backup</span>
-            </a>
-        </div>
-        
-        <!-- Suporte Section -->
-        <div class="hospital-nav-section">
-            <div class="hospital-nav-section-title" :class="{ 'opacity-0 hidden': sidebarCollapsed }">Suporte</div>
-            
-            <a href="#" 
-               class="hospital-nav-item">
-                <svg class="hospital-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span class="hospital-nav-text" :class="{ 'opacity-0 w-0 overflow-hidden': sidebarCollapsed }">Central de Ajuda</span>
-            </a>
-            
-            <a href="#" 
-               class="hospital-nav-item">
-                <svg class="hospital-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
-                </svg>
-                <span class="hospital-nav-text" :class="{ 'opacity-0 w-0 overflow-hidden': sidebarCollapsed }">Documentação</span>
-            </a>
-            
-            <a href="mailto:suporte@gqa.com" 
-               class="hospital-nav-item">
-                <svg class="hospital-nav-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                </svg>
-                <span class="hospital-nav-text" :class="{ 'opacity-0 w-0 overflow-hidden': sidebarCollapsed }">Contato</span>
             </a>
         </div>
     </nav>

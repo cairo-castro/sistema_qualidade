@@ -2,6 +2,10 @@ import './bootstrap';
 import Alpine from 'alpinejs';
 import Chart from 'chart.js/auto';
 
+// DataTables imports
+import 'datatables.net-dt';
+import { HSDataTable } from '@preline/datatable';
+
 // Configurar Alpine.js globalmente
 window.Alpine = Alpine;
 
@@ -716,6 +720,9 @@ document.addEventListener('keydown', function(e) {
         }
     }
 });
+
+// Inicializar HSDataTable
+window.HSDataTable = HSDataTable;
 
 // Inicializar Alpine.js
 Alpine.start();

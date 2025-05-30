@@ -27,11 +27,30 @@ class RolePermissionSeeder extends Seeder
             'export diagnosticos',
             
             // Usuários
+            'user.index',
+            'user.create',
+            'user.edit', 
+            'user.delete',
+            'user.show',
             'view users',
             'create users',
             'edit users', 
             'delete users',
             'manage users',
+            
+            // Roles (Perfis)
+            'role.index',
+            'role.create',
+            'role.edit',
+            'role.delete',
+            'role.show',
+            
+            // Permissions (Permissões)
+            'permission.index',
+            'permission.create',
+            'permission.edit',
+            'permission.delete',
+            'permission.show',
             
             // Unidades
             'view unidades',
@@ -71,7 +90,7 @@ class RolePermissionSeeder extends Seeder
         $gestorPermissions = [
             'view dashboard',
             'view diagnosticos', 'create diagnosticos', 'edit diagnosticos', 'export diagnosticos',
-            'view users', 'edit users',
+            'user.index', 'user.show', 'user.edit', 'view users', 'edit users',
             'view unidades', 'create unidades', 'edit unidades',
             'view setores', 'create setores', 'edit setores',
             'view reports', 'export reports'
