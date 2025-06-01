@@ -286,28 +286,3 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 @endpush
 @endsection
-        if (confirmPasswordInput.value && passwordInput.value !== confirmPasswordInput.value) {
-            confirmPasswordInput.setCustomValidity('As senhas não conferem');
-        } else {
-            confirmPasswordInput.setCustomValidity('');
-        }
-    }
-
-    if (passwordInput && confirmPasswordInput) {
-        passwordInput.addEventListener('input', validatePasswords);
-        confirmPasswordInput.addEventListener('input', validatePasswords);
-    }
-
-    // Auto-check confirmation when password is changed
-    if (passwordInput) {
-        passwordInput.addEventListener('input', function() {
-            if (this.value && !confirmPasswordInput.value) {
-                // Focus on confirmation field if password is entered but confirmation is empty
-                confirmPasswordInput.focus();
-            }
-        });
-    }
-});
-</script>
-@endpush
-@endsection
