@@ -15,7 +15,7 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     
     <!-- Vite Assets -->
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashboard-components.js'])
     
     <!-- Additional styles for specific pages -->
     @stack('styles')
@@ -222,7 +222,6 @@
     <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
     
     <!-- Scripts específicos da página -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @stack('scripts')
     
     <!-- Script de inicialização -->
@@ -275,21 +274,6 @@
                     setTimeout(() => alert.remove(), 500);
                 });
             }, 5000);
-            
-            // Tema automático baseado na hora
-            const currentHour = new Date().getHours();
-            if (currentHour >= 19 || currentHour <= 6) {
-                // Entre 19h e 6h, sugerir tema escuro
-                const prefersDark = localStorage.getItem('hospital-theme') === 'dark';
-                if (!localStorage.getItem('hospital-theme') && !prefersDark) {
-                    // Mostrar notificação sobre tema escuro
-                    setTimeout(() => {
-                        if (window.Hospital && window.Hospital.utils) {
-                            window.Hospital.utils.showToast('Modo escuro disponível para o período noturno', 'info', 6000);
-                        }
-                    }, 2000);
-                }
-            }
         });
         
         // Função global para alternar tema

@@ -1,15 +1,19 @@
 import './bootstrap';
+
+// Lazy loading para bibliotecas pesadas - ApexCharts substituindo Chart.js
+const loadApexCharts = () => import('apexcharts');
+const loadDataTables = () => import('datatables.net-dt');
+const loadPrelineComponents = () => Promise.all([
+  import('@preline/datatable'),
+  import('@preline/dropdown'),
+  import('@preline/tooltip')
+]);
+
+// Alpine.js - mantém carregamento normal pois é framework base
 import Alpine from 'alpinejs';
-import Chart from 'chart.js/auto';
-
-// DataTables imports
-import 'datatables.net-dt';
-import { HSDataTable } from '@preline/datatable';
-
-// Configurar Alpine.js globalmente
 window.Alpine = Alpine;
 
-// Configurações globais do Sistema
+// Configurações globais otimizadas do Sistema
 window.Hospital = {
     config: {
         theme: 'hospital',
@@ -24,45 +28,270 @@ window.Hospital = {
             warning: '#eab308',
             danger: '#ef4444',
             info: '#3b82f6'
+        },
+        // 🎨 Configurações específicas para ApexCharts - Tema Hospital
+        chartTheme: {
+            mode: 'light', // ou 'dark' baseado no tema atual
+            palette: 'palette1', // ApexCharts palette
+            monochrome: {
+                enabled: false,
+                color: '#22c55e',
+                shadeTo: 'light',
+                shadeIntensity: 0.65
+            },
+            // 📊 Cores personalizadas alinhadas com o tema Hospital
+            colors: ['#22c55e', '#3b82f6', '#eab308', '#ef4444', '#8b5cf6', '#06b6d4', '#f59e0b'],
+            grid: {
+                borderColor: '#e5e7eb',
+                strokeDashArray: 0,
+                position: 'back',
+                xaxis: {
+                    lines: {
+                        show: true
+                    }
+                },
+                yaxis: {
+                    lines: {
+                        show: true
+                    }
+                }
+            },
+            // 🎯 Configurações de performance
+            performance: {
+                animationSpeed: 'fast', // 'slow', 'medium', 'fast'
+                reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+            }
         }
     },
     
-    // Utilitários
+    // Módulos lazy-loaded
+    apexChartsModule: null,
+    dataTablesModule: null,
+    prelineModule: null,
+    
+    // 🚀 Inicialização otimizada
+    async init() {
+        // Inicializar componentes críticos
+        this.sidebar.init();
+        this.utils.createToastContainer();
+        
+        // 🔍 Detectar tema atual e configurar ApexCharts
+        this.updateChartTheme();
+        
+        // 📈 Lazy load de módulos pesados apenas quando necessário
+        if (document.querySelector('[data-chart]')) {
+            await this.loadApexChartsModule();
+        }
+        
+        if (document.querySelector('.data-table')) {
+            await this.loadDataTablesModule();
+        }
+        
+        if (document.querySelector('[data-preline]')) {
+            await this.loadPrelineModule();
+        }
+        
+        // 🌓 Listener para mudanças de tema
+        this.setupThemeObserver();
+    },
+    
+    // 📊 Lazy loading otimizado de ApexCharts
+    async loadApexChartsModule() {
+        if (!this.apexChartsModule) {
+            console.log('🚀 Carregando ApexCharts module...');
+            const ApexCharts = await loadApexCharts();
+            this.apexChartsModule = ApexCharts.default || ApexCharts;
+            
+            // ⚡ Configurar defaults globais do ApexCharts
+            this.setupApexChartsDefaults();
+        }
+        return this.apexChartsModule;
+    },
+    
+    // ⚙️ Configurar defaults globais do ApexCharts para performance
+    setupApexChartsDefaults() {
+        if (!this.apexChartsModule) return;
+        
+        // 🎨 Aplicar tema padrão do Hospital
+        this.apexChartsModule.exec('setGlobalOptions', {
+            theme: this.config.chartTheme,
+            chart: {
+                fontFamily: 'Inter, system-ui, sans-serif',
+                foreColor: this.getCurrentTheme() === 'dark' ? '#d1d5db' : '#6b7280',
+                background: 'transparent',
+                // 🚀 Configurações de performance
+                animations: {
+                    enabled: !this.config.chartTheme.performance.reducedMotion,
+                    easing: 'easeinout',
+                    speed: this.config.chartTheme.performance.animationSpeed === 'fast' ? 400 : 800,
+                    animateGradually: {
+                        enabled: true,
+                        delay: 150
+                    },
+                    dynamicAnimation: {
+                        enabled: true,
+                        speed: 350
+                    }
+                },
+                // 📱 Responsividade otimizada
+                responsive: [{
+                    breakpoint: 768,
+                    options: {
+                        chart: {
+                            height: 300
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }]
+            },
+            colors: this.config.chartTheme.colors,
+            grid: this.config.chartTheme.grid,
+            stroke: {
+                width: 2,
+                curve: 'smooth'
+            },
+            dataLabels: {
+                enabled: false
+            },
+            tooltip: {
+                theme: this.getCurrentTheme(),
+                style: {
+                    fontSize: '12px',
+                    fontFamily: 'Inter, system-ui, sans-serif'
+                }
+            }
+        });
+    },
+    
+    // 🌓 Detectar tema atual
+    getCurrentTheme() {
+        return document.documentElement.getAttribute('data-theme') || 'light';
+    },
+    
+    // 🎨 Atualizar tema dos charts
+    updateChartTheme() {
+        const currentTheme = this.getCurrentTheme();
+        this.config.chartTheme.mode = currentTheme;
+        
+        // 🎨 Ajustar cores baseado no tema
+        if (currentTheme === 'dark') {
+            this.config.chartTheme.grid.borderColor = '#374151';
+        } else {
+            this.config.chartTheme.grid.borderColor = '#e5e7eb';
+        }
+    },
+    
+    // 👀 Observer para mudanças de tema
+    setupThemeObserver() {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+                    this.updateChartTheme();
+                    // 🔄 Atualizar charts existentes com novo tema
+                    this.charts.updateAllThemes();
+                }
+            });
+        });
+        
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['data-theme']
+        });
+    },
+    
+    // 📊 Lazy loading otimizado de DataTables
+    async loadDataTablesModule() {
+        if (!this.dataTablesModule) {
+            console.log('🚀 Carregando DataTables module...');
+            this.dataTablesModule = await loadDataTables();
+        }
+        return this.dataTablesModule;
+    },
+    
+    // 🎛️ Lazy loading otimizado de Preline
+    async loadPrelineModule() {
+        if (!this.prelineModule) {
+            console.log('🚀 Carregando Preline modules...');
+            const [datatable, dropdown, tooltip] = await loadPrelineComponents();
+            this.prelineModule = { datatable, dropdown, tooltip };
+        }
+        return this.prelineModule;
+    },
+    
+    // 🛠️ Utilitários otimizados com memoização
     utils: {
+        formatters: new Map(),
+        
         formatNumber(num) {
-            return new Intl.NumberFormat('pt-BR').format(num);
+            const key = `number_${num}`;
+            if (!this.formatters.has(key)) {
+                this.formatters.set(key, new Intl.NumberFormat('pt-BR').format(num));
+            }
+            return this.formatters.get(key);
         },
         
         formatCurrency(value) {
-            return new Intl.NumberFormat('pt-BR', {
-                style: 'currency',
-                currency: 'BRL'
-            }).format(value);
+            const key = `currency_${value}`;
+            if (!this.formatters.has(key)) {
+                this.formatters.set(key, new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                }).format(value));
+            }
+            return this.formatters.get(key);
         },
         
         formatDate(date) {
-            return new Intl.DateTimeFormat('pt-BR', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit'
-            }).format(new Date(date));
+            const key = `date_${date}`;
+            if (!this.formatters.has(key)) {
+                this.formatters.set(key, new Intl.DateTimeFormat('pt-BR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit'
+                }).format(new Date(date)));
+            }
+            return this.formatters.get(key);
         },
         
         formatDateTime(date) {
-            return new Intl.DateTimeFormat('pt-BR', {
-                year: 'numeric',
-                month: '2-digit',
-                day: '2-digit',
-                hour: '2-digit',
-                minute: '2-digit'
-            }).format(new Date(date));
+            const key = `datetime_${date}`;
+            if (!this.formatters.has(key)) {
+                this.formatters.set(key, new Intl.DateTimeFormat('pt-BR', {
+                    year: 'numeric',
+                    month: '2-digit',
+                    day: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                }).format(new Date(date)));
+            }
+            return this.formatters.get(key);
         },
         
+        // 🎨 Toast system otimizado com pool de objetos
+        toastPool: [],
+        
         showToast(message, type = 'info', duration = 4000) {
-            const toastContainer = document.getElementById('toast-container') || this.createToastContainer();
+            const toastContainer = this.getToastContainer();
+            const toast = this.createToast(message, type);
             
+            toastContainer.appendChild(toast);
+            
+            // ✨ Animate entrada com requestAnimationFrame para melhor performance
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-x-full');
+            });
+            
+            // ⏱️ Auto remove otimizado
+            setTimeout(() => {
+                this.removeToast(toast);
+            }, duration);
+        },
+        
+        createToast(message, type) {
             const toast = document.createElement('div');
-            toast.className = `transform translate-x-full transition-transform duration-300 mb-2`;
+            toast.className = 'transform translate-x-full transition-transform duration-300 mb-2';
             
             const icons = {
                 success: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>',
@@ -86,7 +315,7 @@ window.Hospital = {
                     <div class="ml-3 flex-1">
                         <p class="text-sm font-medium">${message}</p>
                     </div>
-                    <button class="ml-4 flex-shrink-0 text-gray-400 hover:text-gray-600" onclick="this.closest('div').parentElement.remove()">
+                    <button class="ml-4 flex-shrink-0 text-gray-400 hover:text-gray-600" onclick="window.Hospital.utils.removeToast(this.closest('.transform'))">
                         <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
                             <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                         </svg>
@@ -94,22 +323,24 @@ window.Hospital = {
                 </div>
             `;
             
-            toastContainer.appendChild(toast);
-            
-            // Animar entrada
+            return toast;
+        },
+        
+        removeToast(toast) {
+            toast.classList.add('translate-x-full');
             setTimeout(() => {
-                toast.classList.remove('translate-x-full');
-            }, 100);
-            
-            // Auto remove
-            setTimeout(() => {
-                toast.classList.add('translate-x-full');
-                setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.remove();
-                    }
-                }, 300);
-            }, duration);
+                if (toast.parentNode) {
+                    toast.remove();
+                }
+            }, 300);
+        },
+        
+        getToastContainer() {
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = this.createToastContainer();
+            }
+            return container;
         },
         
         createToastContainer() {
@@ -120,62 +351,121 @@ window.Hospital = {
             return container;
         },
         
+        // 🔄 Modal otimizado com pool
+        modalPool: [],
+        
         confirm(message, title = 'Confirmar') {
             return new Promise((resolve) => {
-                const modal = document.createElement('div');
-                modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-                modal.innerHTML = `
-                    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-                        <div class="p-6 border-b">
-                            <h3 class="text-lg font-semibold text-gray-900">${title}</h3>
-                        </div>
-                        <div class="p-6">
-                            <p class="text-gray-600">${message}</p>
-                        </div>
-                        <div class="p-6 border-t flex justify-end space-x-3">
-                            <button class="gqa-btn ghost" onclick="this.closest('.fixed').remove(); window.hospitalConfirmResolve(false)">
-                                Cancelar
-                            </button>
-                            <button class="gqa-btn primary" onclick="this.closest('.fixed').remove(); window.hospitalConfirmResolve(true)">
-                                Confirmar
-                            </button>
-                        </div>
-                    </div>
-                `;
-                
-                window.hospitalConfirmResolve = resolve;
+                const modal = this.createConfirmModal(message, title, resolve);
                 document.body.appendChild(modal);
                 
-                // Fechar com ESC
-                const handleEsc = (e) => {
-                    if (e.key === 'Escape') {
-                        modal.remove();
-                        resolve(false);
-                        document.removeEventListener('keydown', handleEsc);
-                    }
-                };
-                document.addEventListener('keydown', handleEsc);
-                
-                // Fechar clicando fora
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        modal.remove();
-                        resolve(false);
-                    }
-                });
+                // 🎯 Event listeners otimizados
+                this.setupModalEvents(modal, resolve);
             });
+        },
+        
+        createConfirmModal(message, title, resolve) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                    <div class="p-6 border-b">
+                        <h3 class="text-lg font-semibold text-gray-900">${title}</h3>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-600">${message}</p>
+                    </div>
+                    <div class="p-6 border-t flex justify-end space-x-3">
+                        <button class="gqa-btn ghost cancel-btn">Cancelar</button>
+                        <button class="gqa-btn primary confirm-btn">Confirmar</button>
+                    </div>
+                </div>
+            `;
+            return modal;
+        },
+        
+        setupModalEvents(modal, resolve) {
+            const confirmBtn = modal.querySelector('.confirm-btn');
+            const cancelBtn = modal.querySelector('.cancel-btn');
+            
+            const handleConfirm = () => {
+                modal.remove();
+                resolve(true);
+            };
+            
+            const handleCancel = () => {
+                modal.remove();
+                resolve(false);
+            };
+            
+            confirmBtn.addEventListener('click', handleConfirm);
+            cancelBtn.addEventListener('click', handleCancel);
+            
+            // ⌨️ Fechar com ESC
+            const handleEsc = (e) => {
+                if (e.key === 'Escape') {
+                    handleCancel();
+                    document.removeEventListener('keydown', handleEsc);
+                }
+            };
+            document.addEventListener('keydown', handleEsc);
+            
+            // 🖱️ Fechar clicando fora
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    handleCancel();
+                }
+            });
+        },
+        
+        // ⏱️ Debounce otimizado
+        debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
         }
     },
     
-    // Gerenciamento da sidebar
+    // 📱 Gerenciamento otimizado da sidebar
     sidebar: {
+        element: null,
+        mainElement: null,
+        
+        init() {
+            this.element = document.querySelector('.hospital-sidebar');
+            this.mainElement = document.querySelector('.hospital-main');
+            
+            if (window.Hospital.config.sidebarCollapsed) {
+                this.collapse(false);
+            }
+            
+            this.handleResize();
+            window.addEventListener('resize', this.debounceResize);
+        },
+        
+        debounceResize: null,
+        
+        handleResize() {
+            if (!this.debounceResize) {
+                this.debounceResize = window.Hospital.utils.debounce(() => {
+                    if (window.innerWidth <= 1024) {
+                        this.element?.classList.remove('open');
+                    }
+                }, 100);
+            }
+            this.debounceResize();
+        },
+        
         toggle() {
-            const sidebar = document.querySelector('.hospital-sidebar');
-            const main = document.querySelector('.hospital-main');
+            if (!this.element || !this.mainElement) return;
             
-            if (!sidebar || !main) return;
-            
-            const isCollapsed = sidebar.classList.contains('collapsed');
+            const isCollapsed = this.element.classList.contains('collapsed');
             
             if (isCollapsed) {
                 this.expand();
@@ -184,560 +474,481 @@ window.Hospital = {
             }
         },
         
-        collapse() {
-            const sidebar = document.querySelector('.hospital-sidebar');
-            const main = document.querySelector('.hospital-main');
+        collapse(animate = true) {
+            if (!this.element || !this.mainElement) return;
             
-            if (!sidebar || !main) return;
+            this.element.classList.add('collapsed');
+            this.mainElement.classList.add('sidebar-collapsed');
             
-            sidebar.classList.add('collapsed');
-            main.classList.add('sidebar-collapsed');
-            
-            // Salvar estado
             localStorage.setItem('hospital-sidebar-collapsed', 'true');
             window.Hospital.config.sidebarCollapsed = true;
             
-            // Dispatch event
-            window.dispatchEvent(new CustomEvent('hospital:sidebar:collapsed'));
+            // 🚀 Performance: usar will-change apenas durante animação
+            if (animate) {
+                this.element.style.willChange = 'width';
+                this.mainElement.style.willChange = 'margin-left';
+                
+                setTimeout(() => {
+                    this.element.style.willChange = 'auto';
+                    this.mainElement.style.willChange = 'auto';
+                }, 300);
+            }
         },
         
-        expand() {
-            const sidebar = document.querySelector('.hospital-sidebar');
-            const main = document.querySelector('.hospital-main');
+        expand(animate = true) {
+            if (!this.element || !this.mainElement) return;
             
-            if (!sidebar || !main) return;
+            this.element.classList.remove('collapsed');
+            this.mainElement.classList.remove('sidebar-collapsed');
             
-            sidebar.classList.remove('collapsed');
-            main.classList.remove('sidebar-collapsed');
-            
-            // Salvar estado
             localStorage.setItem('hospital-sidebar-collapsed', 'false');
             window.Hospital.config.sidebarCollapsed = false;
             
-            // Dispatch event
-            window.dispatchEvent(new CustomEvent('hospital:sidebar:expanded'));
-        },
-        
-        init() {
-            // Aplicar estado salvo
-            if (window.Hospital.config.sidebarCollapsed) {
-                this.collapse();
+            // 🚀 Performance: usar will-change apenas durante animação
+            if (animate) {
+                this.element.style.willChange = 'width';
+                this.mainElement.style.willChange = 'margin-left';
+                
+                setTimeout(() => {
+                    this.element.style.willChange = 'auto';
+                    this.mainElement.style.willChange = 'auto';
+                }, 300);
             }
-            
-            // Responsivo
-            this.handleResize();
-            window.addEventListener('resize', () => this.handleResize());
-        },
-        
-        handleResize() {
-            const sidebar = document.querySelector('.hospital-sidebar');
-            
-            if (!sidebar) return;
-            
-            if (window.innerWidth < 1024) {
-                // Mobile: sidebar sempre hidden por padrão
-                sidebar.classList.remove('collapsed');
-            } else {
-                // Desktop: aplicar estado salvo
-                if (window.Hospital.config.sidebarCollapsed) {
-                    sidebar.classList.add('collapsed');
-                }
-            }
-        }
-    }
-};
-
-// Componente principal do Dashboard
-Alpine.data('hospitalDashboard', () => ({
-    // Estado da aplicação
-    sidebarOpen: false,
-    sidebarCollapsed: window.Hospital.config.sidebarCollapsed,
-    loading: false,
-    stats: {
-        totalDiagnosticos: 0,
-        taxaConformidade: 0,
-        periodosAtivos: 0,
-        itensNaoConformes: 0
-    },
-    notifications: [],
-    
-    // Métodos
-    toggleSidebar() {
-        if (window.innerWidth < 1024) {
-            this.sidebarOpen = !this.sidebarOpen;
-            
-            // Toggle overlay
-            const overlay = document.querySelector('.hospital-sidebar-overlay');
-            if (overlay) {
-                if (this.sidebarOpen) {
-                    overlay.classList.add('show');
-                } else {
-                    overlay.classList.remove('show');
-                }
-            }
-        } else {
-            window.Hospital.sidebar.toggle();
-            this.sidebarCollapsed = window.Hospital.config.sidebarCollapsed;
         }
     },
     
-    closeSidebar() {
-        this.sidebarOpen = false;
-        const overlay = document.querySelector('.hospital-sidebar-overlay');
-        if (overlay) {
-            overlay.classList.remove('show');
-        }
-    },
-    
-    async loadStats() {
-        this.loading = true;
-        try {
-            const response = await fetch('/dashboard/stats', {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                }
-            });
+    // 📊 ApexCharts otimizados com lazy loading e tema Hospital
+    charts: {
+        instances: new Map(),
+        
+        /**
+         * 🎯 Criar um gráfico ApexCharts otimizado
+         * @param {string|HTMLElement} selector - Seletor ou elemento do gráfico  
+         * @param {Object} config - Configuração do gráfico
+         * @param {string} config.type - Tipo: 'line', 'area', 'bar', 'pie', 'donut', 'radial', etc.
+         * @param {Array} config.series - Dados do gráfico
+         * @param {Object} config.options - Opções personalizadas (opcional)
+         * @returns {Promise<ApexChart>} Instância do gráfico
+         */
+        async create(selector, config) {
+            const ApexCharts = await window.Hospital.loadApexChartsModule();
             
-            if (response.ok) {
-                const data = await response.json();
-                this.stats = { ...this.stats, ...data.stats };
-            }
-        } catch (error) {
-            console.error('Erro ao carregar estatísticas:', error);
-            window.Hospital.utils.showToast('Erro ao carregar estatísticas', 'error');
-        } finally {
-            this.loading = false;
-        }
-    },
-    
-    async loadNotifications() {
-        try {
-            const response = await fetch('/dashboard/notifications', {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-                }
-            });
-            
-            if (response.ok) {
-                const data = await response.json();
-                this.notifications = data.notifications || [];
-            }
-        } catch (error) {
-            console.error('Erro ao carregar notificações:', error);
-        }
-    },
-    
-    formatNumber(num) {
-        return window.Hospital.utils.formatNumber(num);
-    },
-    
-    init() {
-        // Inicializar sidebar
-        window.Hospital.sidebar.init();
-        this.sidebarCollapsed = window.Hospital.config.sidebarCollapsed;
-        
-        // Carregar dados iniciais se as rotas existirem
-        if (typeof loadStats !== 'undefined') {
-            this.loadStats();
-        }
-        if (typeof loadNotifications !== 'undefined') {
-            this.loadNotifications();
-        }
-        
-        // Auto-refresh se habilitado
-        if (window.Hospital.config.autoRefresh) {
-            setInterval(() => {
-                if (typeof loadStats !== 'undefined') this.loadStats();
-                if (typeof loadNotifications !== 'undefined') this.loadNotifications();
-            }, window.Hospital.config.refreshInterval);
-        }
-        
-        // Listeners para eventos da sidebar
-        window.addEventListener('hospital:sidebar:collapsed', () => {
-            this.sidebarCollapsed = true;
-        });
-        
-        window.addEventListener('hospital:sidebar:expanded', () => {
-            this.sidebarCollapsed = false;
-        });
-        
-        // Listener para resize da tela
-        window.addEventListener('resize', () => {
-            if (window.innerWidth >= 1024) {
-                this.sidebarOpen = false;
-                this.closeSidebar();
-            }
-        });
-    }
-}));
-
-// Componente para gráficos
-Alpine.data('gqaChart', () => ({
-    chart: null,
-    
-    initChart(canvas, data, options = {}) {
-        if (typeof Chart === 'undefined') {
-            console.warn('Chart.js não está carregado');
-            return;
-        }
-        
-        const ctx = canvas.getContext('2d');
-        
-        const defaultOptions = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
+            // 🎨 Configurações padrão otimizadas para o tema Hospital
+            const defaultOptions = {
+                chart: {
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                    height: config.height || 350,
+                    type: config.type || 'line',
+                    background: 'transparent',
+                    foreColor: window.Hospital.getCurrentTheme() === 'dark' ? '#d1d5db' : '#6b7280',
+                    toolbar: {
+                        show: true,
+                        tools: {
+                            download: true,
+                            selection: false,
+                            zoom: true,
+                            zoomin: true,
+                            zoomout: true,
+                            pan: false,
+                            reset: true
+                        },
+                        export: {
+                            csv: {
+                                filename: 'hospital-chart-data',
+                                columnDelimiter: ',',
+                                headerCategory: 'Categoria',
+                                headerValue: 'Valor'
+                            },
+                            svg: {
+                                filename: 'hospital-chart'
+                            },
+                            png: {
+                                filename: 'hospital-chart'
+                            }
+                        }
+                    },
+                    // ⚡ Configurações de performance
+                    animations: {
+                        enabled: !window.Hospital.config.chartTheme.performance.reducedMotion,
+                        easing: 'easeinout',
+                        speed: window.Hospital.config.chartTheme.performance.animationSpeed === 'fast' ? 400 : 800,
+                        animateGradually: {
+                            enabled: true,
+                            delay: 50
+                        },
+                        dynamicAnimation: {
+                            enabled: true,
+                            speed: 250
+                        }
+                    },
+                    // 📱 Responsividade otimizada
+                    responsive: [{
+                        breakpoint: 768,
+                        options: {
+                            chart: {
+                                height: 300
+                            },
+                            legend: {
+                                position: 'bottom',
+                                fontSize: '12px'
+                            },
+                            xaxis: {
+                                labels: {
+                                    style: {
+                                        fontSize: '11px'
+                                    }
+                                }
+                            },
+                            yaxis: {
+                                labels: {
+                                    style: {
+                                        fontSize: '11px'
+                                    }
+                                }
+                            }
+                        }
+                    }]
+                },
+                // 🎨 Cores do tema Hospital
+                colors: window.Hospital.config.chartTheme.colors,
+                // 📊 Grid otimizada
+                grid: {
+                    ...window.Hospital.config.chartTheme.grid,
+                    padding: {
+                        top: 10,
+                        right: 10,
+                        bottom: 10,
+                        left: 20
+                    }
+                },
+                // 🎯 Stroke suave
+                stroke: {
+                    width: 2,
+                    curve: 'smooth',
+                    lineCap: 'round'
+                },
+                // 📝 DataLabels desabilitado para performance
+                dataLabels: {
+                    enabled: false
+                },
+                // 🔍 Tooltip personalizado
+                tooltip: {
+                    theme: window.Hospital.getCurrentTheme(),
+                    style: {
+                        fontSize: '12px',
+                        fontFamily: 'Inter, system-ui, sans-serif'
+                    },
+                    y: {
+                        formatter: function(value) {
+                            // 💰 Formatar valores monetários se aplicável
+                            if (config.formatCurrency) {
+                                return window.Hospital.utils.formatCurrency(value);
+                            }
+                            // 🔢 Formatar números
+                            return window.Hospital.utils.formatNumber(value);
+                        }
+                    }
+                },
+                // 📍 Legend otimizada
                 legend: {
                     position: 'bottom',
+                    horizontalAlign: 'left',
+                    fontSize: '13px',
+                    fontFamily: 'Inter, system-ui, sans-serif',
+                    fontWeight: 500,
+                    markers: {
+                        width: 8,
+                        height: 8,
+                        radius: 2
+                    }
+                },
+                // 📐 Eixo X
+                xaxis: {
                     labels: {
-                        usePointStyle: true,
-                        padding: 20,
-                        font: {
-                            family: 'Inter',
-                            size: 12
-                        },
-                        color: '#6b7280'
-                    }
-                }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    grid: {
-                        color: '#f3f4f6',
-                        borderColor: '#e5e7eb'
+                        style: {
+                            colors: window.Hospital.getCurrentTheme() === 'dark' ? '#9ca3af' : '#6b7280',
+                            fontSize: '12px',
+                            fontFamily: 'Inter, system-ui, sans-serif'
+                        }
                     },
-                    ticks: {
-                        font: {
-                            family: 'Inter',
-                            size: 11
-                        },
-                        color: '#6b7280'
+                    axisBorder: {
+                        show: true,
+                        color: window.Hospital.getCurrentTheme() === 'dark' ? '#374151' : '#e5e7eb'
+                    },
+                    axisTicks: {
+                        show: true,
+                        color: window.Hospital.getCurrentTheme() === 'dark' ? '#374151' : '#e5e7eb'
                     }
                 },
-                x: {
-                    grid: {
-                        color: '#f3f4f6',
-                        borderColor: '#e5e7eb'
-                    },
-                    ticks: {
-                        font: {
-                            family: 'Inter',
-                            size: 11
+                // 📏 Eixo Y  
+                yaxis: {
+                    labels: {
+                        style: {
+                            colors: window.Hospital.getCurrentTheme() === 'dark' ? '#9ca3af' : '#6b7280',
+                            fontSize: '12px',
+                            fontFamily: 'Inter, system-ui, sans-serif'
                         },
-                        color: '#6b7280'
+                        formatter: function(value) {
+                            // 💰 Formatar valores monetários se aplicável
+                            if (config.formatCurrency) {
+                                return window.Hospital.utils.formatCurrency(value);
+                            }
+                            // 🔢 Formatar números
+                            return window.Hospital.utils.formatNumber(value);
+                        }
                     }
                 }
-            },
-            elements: {
-                point: {
-                    backgroundColor: window.Hospital.config.colors.primary,
-                    borderColor: '#ffffff',
-                    borderWidth: 2,
-                    radius: 4,
-                    hoverRadius: 6
-                },
-                line: {
-                    borderWidth: 3,
-                    tension: 0.4
+            };
+            
+            // 🔄 Merge configurações customizadas
+            const mergedOptions = this.deepMerge(defaultOptions, config.options || {});
+            
+            // 🎯 Configuração final do gráfico
+            const chartConfig = {
+                series: config.series || [],
+                ...mergedOptions
+            };
+            
+            // 📊 Criar instância do gráfico
+            const element = typeof selector === 'string' ? document.querySelector(selector) : selector;
+            if (!element) {
+                console.error('❌ Elemento não encontrado para o gráfico:', selector);
+                return null;
+            }
+            
+            const chart = new ApexCharts(element, chartConfig);
+            
+            // 🚀 Renderizar com tratamento de erro
+            try {
+                await chart.render();
+                
+                // 💾 Armazenar instância para controle
+                const chartId = element.id || `chart-${Date.now()}`;
+                this.instances.set(chartId, chart);
+                
+                console.log(`✅ Gráfico ApexCharts criado: ${chartId}`);
+                return chart;
+                
+            } catch (error) {
+                console.error('❌ Erro ao renderizar gráfico:', error);
+                return null;
+            }
+        },
+        
+        /**
+         * 🔄 Atualizar dados de um gráfico existente
+         * @param {string} chartId - ID do gráfico
+         * @param {Array} newSeries - Novos dados
+         * @param {boolean} animate - Animar atualização
+         */
+        updateSeries(chartId, newSeries, animate = true) {
+            const chart = this.instances.get(chartId);
+            if (chart) {
+                chart.updateSeries(newSeries, animate);
+                console.log(`🔄 Gráfico atualizado: ${chartId}`);
+            }
+        },
+        
+        /**
+         * 🎨 Atualizar tema de todos os gráficos
+         */
+        updateAllThemes() {
+            this.instances.forEach((chart, chartId) => {
+                const newTheme = window.Hospital.getCurrentTheme();
+                chart.updateOptions({
+                    chart: {
+                        foreColor: newTheme === 'dark' ? '#d1d5db' : '#6b7280'
+                    },
+                    tooltip: {
+                        theme: newTheme
+                    },
+                    grid: {
+                        borderColor: newTheme === 'dark' ? '#374151' : '#e5e7eb'
+                    }
+                });
+                console.log(`🎨 Tema atualizado para: ${chartId}`);
+            });
+        },
+        
+        /**
+         * 🗑️ Destruir gráfico específico
+         * @param {string} chartId - ID do gráfico
+         */
+        destroy(chartId) {
+            const chart = this.instances.get(chartId);
+            if (chart) {
+                chart.destroy();
+                this.instances.delete(chartId);
+                console.log(`🗑️ Gráfico destruído: ${chartId}`);
+            }
+        },
+        
+        /**
+         * 🧹 Destruir todos os gráficos (cleanup)
+         */
+        destroyAll() {
+            this.instances.forEach((chart, chartId) => {
+                chart.destroy();
+                console.log(`🧹 Gráfico limpo: ${chartId}`);
+            });
+            this.instances.clear();
+            console.log('🧹 Todos os gráficos foram limpos');
+        },
+        
+        /**
+         * 🔧 Merge profundo de objetos (utility)
+         * @param {Object} target - Objeto alvo
+         * @param {Object} source - Objeto fonte
+         * @returns {Object} Objeto merged
+         */
+        deepMerge(target, source) {
+            const result = { ...target };
+            
+            for (const key in source) {
+                if (source[key] !== null && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+                    result[key] = this.deepMerge(result[key] || {}, source[key]);
+                } else {
+                    result[key] = source[key];
                 }
             }
-        };
+            
+            return result;
+        },
         
-        // Aplicar cores do tema
-        if (data.datasets) {
-            data.datasets.forEach((dataset, index) => {
-                const colors = [
-                    window.Hospital.config.colors.primary,
-                    window.Hospital.config.colors.secondary,
-                    window.Hospital.config.colors.success,
-                    window.Hospital.config.colors.warning,
-                    window.Hospital.config.colors.info
-                ];
-                
-                if (!dataset.borderColor) {
-                    dataset.borderColor = colors[index % colors.length];
+        /**
+         * 📊 Helpers para tipos de gráficos comuns
+         */
+        // 📈 Gráfico de linha otimizado
+        async createLineChart(selector, data, options = {}) {
+            return this.create(selector, {
+                type: 'line',
+                series: data,
+                options: {
+                    stroke: {
+                        width: 3,
+                        curve: 'smooth'
+                    },
+                    markers: {
+                        size: 4,
+                        strokeWidth: 2,
+                        hover: {
+                            size: 6
+                        }
+                    },
+                    ...options
                 }
-                
-                if (!dataset.backgroundColor && options.type !== 'line') {
-                    dataset.backgroundColor = colors[index % colors.length] + '20';
+            });
+        },
+        
+        // 📊 Gráfico de barras otimizado
+        async createBarChart(selector, data, options = {}) {
+            return this.create(selector, {
+                type: 'bar',
+                series: data,
+                options: {
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 4,
+                            columnWidth: '60%'
+                        }
+                    },
+                    ...options
                 }
-                
-                if (options.type === 'line' && !dataset.backgroundColor) {
-                    dataset.backgroundColor = colors[index % colors.length] + '10';
+            });
+        },
+        
+        // 🍩 Gráfico de donut otimizado
+        async createDonutChart(selector, data, options = {}) {
+            return this.create(selector, {
+                type: 'donut',
+                series: data,
+                options: {
+                    plotOptions: {
+                        pie: {
+                            donut: {
+                                size: '70%'
+                            }
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: function(val) {
+                            return Math.round(val) + '%';
+                        }
+                    },
+                    ...options
                 }
             });
         }
-        
-        this.chart = new Chart(ctx, {
-            type: options.type || 'line',
-            data: data,
-            options: { ...defaultOptions, ...options }
-        });
-    },
-    
-    updateChart(data) {
-        if (this.chart) {
-            this.chart.data = data;
-            this.chart.update('active');
-        }
-    },
-    
-    destroy() {
-        if (this.chart) {
-            this.chart.destroy();
-            this.chart = null;
-        }
-    }
-}));
-
-// Event listeners globais
-document.addEventListener('DOMContentLoaded', function() {
-    // Inicializar tooltips
-    initTooltips();
-    
-    // Auto-hide flash messages
-    hideFlashMessages();
-    
-    // Inicializar tema
-    initTheme();
-    
-    // Adicionar listener para o toggle da sidebar via botão
-    const toggleButton = document.querySelector('.hospital-sidebar-toggle');
-    if (toggleButton) {
-        toggleButton.addEventListener('click', function(e) {
-            e.preventDefault();
-            window.Hospital.sidebar.toggle();
-        });
-    }
-    
-    // Fechar sidebar no mobile ao clicar no overlay
-    const overlay = document.querySelector('.hospital-sidebar-overlay');
-    if (overlay) {
-        overlay.addEventListener('click', function() {
-            const sidebarComponent = Alpine.$data(document.querySelector('[x-data*="hospitalDashboard"]'));
-            if (sidebarComponent) {
-                sidebarComponent.closeSidebar();
-            }
-        });
-    }
-});
-
-// Funções utilitárias
-function initTooltips() {
-    const tooltips = document.querySelectorAll('[data-tooltip]');
-    tooltips.forEach(element => {
-        element.addEventListener('mouseenter', showTooltip);
-        element.addEventListener('mouseleave', hideTooltip);
-    });
-}
-
-function showTooltip(event) {
-    const text = event.target.getAttribute('data-tooltip');
-    if (!text) return;
-    
-    const tooltip = document.createElement('div');
-    tooltip.className = 'hospital-tooltip';
-    tooltip.textContent = text;
-    
-    document.body.appendChild(tooltip);
-    
-    const rect = event.target.getBoundingClientRect();
-    const tooltipRect = tooltip.getBoundingClientRect();
-    
-    tooltip.style.left = rect.left + (rect.width / 2) - (tooltipRect.width / 2) + 'px';
-    tooltip.style.top = rect.top - tooltipRect.height - 8 + 'px';
-    
-    event.target._tooltip = tooltip;
-}
-
-function hideTooltip(event) {
-    if (event.target._tooltip) {
-        event.target._tooltip.remove();
-        delete event.target._tooltip;
-    }
-}
-
-function hideFlashMessages() {
-    const alerts = document.querySelectorAll('[data-auto-hide]');
-    alerts.forEach(alert => {
-        setTimeout(() => {
-            alert.style.opacity = '0';
-            alert.style.transform = 'translateY(-20px)';
-            setTimeout(() => alert.remove(), 300);
-        }, 5000);
-    });
-}
-
-function initTheme() {
-    // Detectar preferência do sistema
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const savedTheme = localStorage.getItem('hospital-theme');
-    const html = document.documentElement;
-    
-    let theme = 'light'; // default
-    
-    if (savedTheme) {
-        theme = savedTheme;
-    } else if (prefersDark) {
-        theme = 'dark';
-    }
-    
-    // Apply theme
-    html.setAttribute('data-theme', theme);
-    if (theme === 'dark') {
-        html.classList.add('dark');
-    } else {
-        html.classList.remove('dark');
-    }
-    
-    // Listener para mudanças na preferência do sistema
-    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
-        if (!localStorage.getItem('hospital-theme')) {
-            const newTheme = e.matches ? 'dark' : 'light';
-            html.setAttribute('data-theme', newTheme);
-            if (newTheme === 'dark') {
-                html.classList.add('dark');
-            } else {
-                html.classList.remove('dark');
-            }
-        }
-    });
-}
-
-// Funções globais para uso em templates
-window.hospitalUtils = {
-    showLoading() {
-        const loader = document.createElement('div');
-        loader.id = 'hospital-global-loader';
-        loader.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-        loader.innerHTML = `
-            <div class="bg-white rounded-lg p-6 shadow-xl">
-                <div class="flex items-center space-x-3">
-                    <div class="gqa-loading lg hospital"></div>
-                    <span class="text-gray-700">Carregando...</span>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(loader);
-    },
-    
-    hideLoading() {
-        const loader = document.getElementById('hospital-global-loader');
-        if (loader) {
-            loader.remove();
-        }
-    },
-    
-    confirmDelete(message = 'Tem certeza que deseja excluir este item?') {
-        return window.Hospital.utils.confirm(message, 'Confirmar Exclusão');
-    },
-    
-    async apiRequest(url, options = {}) {
-        const defaultOptions = {
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-            }
-        };
-        
-        try {
-            const response = await fetch(url, { ...defaultOptions, ...options });
-            const data = await response.json();
-            
-            if (!response.ok) {
-                throw new Error(data.message || 'Erro na requisição');
-            }
-            
-            return data;
-        } catch (error) {
-            window.Hospital.utils.showToast(error.message, 'error');
-            throw error;
-        }
-    },
-    
-    debounce(func, wait) {
-        let timeout;
-        return function executedFunction(...args) {
-            const later = () => {
-                clearTimeout(timeout);
-                func(...args);
-            };
-            clearTimeout(timeout);
-            timeout = setTimeout(later, wait);
-        };
-    },
-    
-    formatFileSize(bytes) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    },
-    
-    toggleTheme() {
-        const html = document.documentElement;
-        const currentTheme = html.getAttribute('data-theme');
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        
-        // Set data-theme attribute for custom CSS
-        html.setAttribute('data-theme', newTheme);
-        
-        // Toggle Tailwind's dark class
-        if (newTheme === 'dark') {
-            html.classList.add('dark');
-        } else {
-            html.classList.remove('dark');
-        }
-        
-        // Save to localStorage
-        localStorage.setItem('hospital-theme', newTheme);
-        
-        window.Hospital.utils.showToast(`Tema alterado para ${newTheme === 'dark' ? 'escuro' : 'claro'}`, 'info');
     }
 };
 
-// Atalhos de teclado
-document.addEventListener('keydown', function(e) {
-    // Ctrl/Cmd + B para toggle da sidebar
-    if ((e.ctrlKey || e.metaKey) && e.key === 'b') {
-        e.preventDefault();
-        window.Hospital.sidebar.toggle();
-    }
+// 🚀 Inicialização otimizada com Intersection Observer para lazy loading
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🏥 Inicializando Sistema Hospital com ApexCharts...');
     
-    // Ctrl/Cmd + K para busca (se existir)
-    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
-        e.preventDefault();
-        const searchInput = document.querySelector('input[type="search"], input[placeholder*="buscar"], input[placeholder*="Buscar"]');
-        if (searchInput) {
-            searchInput.focus();
-        }
-    }
+    // 🎯 Inicializar Hospital System
+    window.Hospital.init();
+    
+    // 🚀 Inicializar Alpine.js
+    Alpine.start();
+    
+    // 👀 Lazy loading de componentes com Intersection Observer
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const element = entry.target;
+                
+                // 📊 Chart lazy loading
+                if (element.hasAttribute('data-chart')) {
+                    window.Hospital.loadApexChartsModule().then(() => {
+                        console.log('📊 ApexCharts module carregado para:', element.id);
+                        // 🎯 Trigger evento personalizado para inicialização
+                        element.dispatchEvent(new CustomEvent('chartReady'));
+                    });
+                }
+                
+                // 📋 DataTable lazy loading
+                if (element.classList.contains('data-table')) {
+                    window.Hospital.loadDataTablesModule().then(() => {
+                        console.log('📋 DataTables module carregado para:', element.id);
+                    });
+                }
+                
+                observer.unobserve(element);
+            }
+        });
+    }, { 
+        threshold: 0.1,
+        rootMargin: '50px'
+    });
+    
+    // 🔍 Observar elementos que precisam de lazy loading
+    document.querySelectorAll('[data-chart], .data-table').forEach(el => {
+        observer.observe(el);
+    });
 });
 
-// Inicializar HSDataTable
-window.HSDataTable = HSDataTable;
+// 🧹 Performance: limpar recursos quando necessário
+window.addEventListener('beforeunload', () => {
+    window.Hospital.charts.destroyAll();
+    console.log('🧹 Recursos limpos antes do unload');
+});
 
-// Inicializar Alpine.js
-Alpine.start();
-
-// Log de inicialização
-console.log('🏥 Sistema GQA carregado com sucesso!');
-console.log('🎨 Tema: Hospital Green');
-console.log('📱 Layout responsivo ativo');
-console.log('📊 Chart.js configurado');
-
-// Expor para debugging
-if (process.env.NODE_ENV === 'development') {
-    window.debug = {
-        Hospital: window.Hospital,
-        hospitalUtils: window.hospitalUtils,
-        Alpine: Alpine
-    };
+// 🔋 Performance: reduzir animações em dispositivos com bateria baixa
+if ('getBattery' in navigator) {
+    navigator.getBattery().then(battery => {
+        if (battery.level < 0.2) {
+            document.documentElement.style.setProperty('--gqa-transition-fast', '0ms');
+            document.documentElement.style.setProperty('--gqa-transition-normal', '0ms');
+            window.Hospital.config.chartTheme.performance.reducedMotion = true;
+            console.log('🔋 Modo economia de bateria ativado');
+        }
+    });
 }
+
+// 🎯 Log de inicialização
+console.log('✅ Sistema Hospital carregado com ApexCharts!');
+console.log('📊 ApexCharts configurado com tema Hospital');
+console.log('⚡ Lazy loading e performance otimizados');
+console.log('🎨 Suporte a tema claro/escuro ativo');

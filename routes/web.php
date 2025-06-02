@@ -109,3 +109,8 @@ Route::get('/test-admin-debug', function () {
 if (file_exists(__DIR__.'/dashboard.php')) {
     require __DIR__.'/dashboard.php';
 }
+
+// 🧪 Rota temporária para teste dos gráficos ApexCharts
+Route::get('/test-charts', function () {
+    return view('test-charts');
+})->name('test.charts');

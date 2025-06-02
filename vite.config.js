@@ -6,96 +6,90 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
-                'resources/js/app.js'
+                'resources/js/app.js',
+                'resources/js/dashboard-components.js',
+                'resources/js/dashboard-charts.js',
+                'resources/js/charts-examples.js'
             ],
             refresh: true,
         }),
     ],
-    
-    // Otimizações de build
     build: {
+        cssMinify: 'esbuild',
+        minify: 'terser',
+        terserOptions: {
+            compress: {
+                drop_console: true,
+                drop_debugger: true,
+                pure_funcs: ['console.log'],
+                passes: 2,
+            },
+            mangle: {
+                safari10: true,
+            },
+            format: {
+                comments: false,
+            },
+        },
         rollupOptions: {
             output: {
                 manualChunks: {
-                    // Separar bibliotecas grandes em chunks
-                    'chart': ['chart.js'],
-                    'alpine': ['alpinejs'],
-                    'preline': ['preline'],
+                    // 📊 ApexCharts substituindo Chart.js - mais performático
+                    'vendor-charts': ['apexcharts'],
+                    'vendor-datatables': ['datatables.net-dt'],
+                    'vendor-alpine': ['alpinejs'],
+                    'vendor-preline': ['@preline/datatable', '@preline/dropdown', '@preline/tooltip'],
                 },
+                // Otimizar nomes de arquivos para cache
+                entryFileNames: 'assets/[name]-[hash].js',
+                chunkFileNames: 'assets/[name]-[hash].js',
+                assetFileNames: 'assets/[name]-[hash].[ext]',
+            },
+            external: [],
+            treeshake: {
+                moduleSideEffects: false,
+                propertyReadSideEffects: false,
+                tryCatchDeoptimization: false,
             },
         },
-        // Reduzir tamanho dos chunks
         chunkSizeWarningLimit: 1000,
-        // Otimizações específicas para o sistema hospitalar
-        minify: 'esbuild',
-        target: 'es2020',
-        sourcemap: process.env.NODE_ENV === 'development',
+        cssCodeSplit: true,
+        sourcemap: false, // Desabilitar sourcemap em produção
+        target: ['es2020', 'chrome87', 'firefox78', 'safari14'],
+        reportCompressedSize: false, // Acelerar build
     },
-    
-    // Server configuration para desenvolvimento
-    server: {
-        hmr: {
-            host: 'localhost',
-        },
-        watch: {
-            // Observar mudanças em módulos também
-            include: [
-                'resources/**', 
-                'Modules/**/Resources/**',
-                'app/View/Components/**'
-            ],
-        },
-        // Proxy para APIs externas se necessário
-        proxy: {
-            // Exemplo para APIs médicas ou integrações hospitalares
-            // '/api/external': 'http://localhost:8080'
-        }
-    },
-    
-    // Resolver aliases úteis para o projeto hospitalar
-    resolve: {
-        alias: {
-            '@': '/resources/js',
-            '@css': '/resources/css',
-            '@components': '/resources/js/components',
-            '@hospital': '/resources/js/hospital',
-            '@modules': '/Modules',
-            '@images': '/resources/images',
-        },
-    },
-    
-    // CSS configuration
-    css: {
-        // PostCSS será configurado via postcss.config.js
-        devSourcemap: true,
-        // Preprocessor options para variáveis CSS customizadas
-        preprocessorOptions: {
-            scss: {
-                additionalData: `
-                    @import "resources/css/variables.scss";
-                `
-            }
-        }
-    },
-    
-    // Configurações específicas para desenvolvimento
-    define: {
-        __APP_VERSION__: JSON.stringify(process.env.npm_package_version || '1.0.0'),
-        __BUILD_TIME__: JSON.stringify(new Date().toISOString()),
-        __HOSPITAL_THEME__: JSON.stringify('hospital-green'),
-    },
-    
-    // Otimização de dependências
     optimizeDeps: {
         include: [
             'alpinejs',
-            'chart.js',
-            'preline'
+            'apexcharts', // 📊 ApexCharts otimizado
+            'datatables.net-dt',
+            '@preline/datatable',
+            '@preline/dropdown', 
+            '@preline/tooltip',
         ],
-        exclude: [
-            // Excluir dependências que podem causar problemas
-        ]
+        exclude: ['@vite/client', '@vite/env'],
     },
-    
-   
-});
+    esbuild: {
+        drop: ['console', 'debugger'],
+        legalComments: 'none',
+        target: 'es2020',
+        charset: 'utf8',
+    },
+    css: {
+        devSourcemap: false,
+    },
+    server: {
+        hmr: {
+            overlay: false,
+        },
+    },
+    experimental: {
+        renderBuiltUrl(filename, { hostType }) {
+            return '/' + filename;
+        },
+    },
+    define: {
+        __VUE_OPTIONS_API__: false,
+        __VUE_PROD_DEVTOOLS__: false,
+    }
+}); 
