@@ -15,7 +15,7 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     
     <!-- Vite Assets -->
-    <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js']); ?>
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashboard-components.js']); ?>
     
     <!-- Additional styles for specific pages -->
     <?php echo $__env->yieldPushContent('styles'); ?>
@@ -59,7 +59,7 @@
                 <nav class="flex mb-6" aria-label="Breadcrumb">
                     <ol class="inline-flex items-center space-x-1 md:space-x-3">
                         <li class="inline-flex items-center">
-                            <a href="<?php echo e(route('dashboard')); ?>" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-green-600 transition-colors">
+                            <a href="<?php echo e(route('dashboard')); ?>" class="inline-flex items-center text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 transition-colors">
                                 <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
                                 </svg>
@@ -70,16 +70,16 @@
                             <?php $__currentLoopData = $breadcrumbs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $breadcrumb): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <li>
                                     <div class="flex items-center">
-                                        <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <svg class="w-6 h-6 text-gray-400 dark:text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                             <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
                                         </svg>
                                         <?php if(isset($breadcrumb['url'])): ?>
-                                            <a href="<?php echo e($breadcrumb['url']); ?>" class="ml-1 text-sm font-medium text-gray-700 hover:text-green-600 md:ml-2 transition-colors">
+                                            <a href="<?php echo e($breadcrumb['url']); ?>" class="ml-1 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-green-600 dark:hover:text-green-400 md:ml-2 transition-colors">
                                                 <?php echo e($breadcrumb['title']); ?>
 
                                             </a>
                                         <?php else: ?>
-                                            <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2"><?php echo e($breadcrumb['title']); ?></span>
+                                            <span class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 md:ml-2"><?php echo e($breadcrumb['title']); ?></span>
                                         <?php endif; ?>
                                     </div>
                                 </li>
@@ -87,10 +87,10 @@
                         <?php elseif(isset($title) && $title !== 'Dashboard'): ?>
                             <li>
                                 <div class="flex items-center">
-                                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                    <svg class="w-6 h-6 text-gray-400 dark:text-gray-500" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
                                         <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd"></path>
                                     </svg>
-                                    <span class="ml-1 text-sm font-medium text-gray-500 md:ml-2"><?php echo e($title); ?></span>
+                                    <span class="ml-1 text-sm font-medium text-gray-500 dark:text-gray-400 md:ml-2"><?php echo e($title); ?></span>
                                 </div>
                             </li>
                         <?php endif; ?>
@@ -103,9 +103,9 @@
                 <div class="mb-6">
                     <div class="flex items-center justify-between">
                         <div>
-                            <h1 class="text-3xl font-bold text-gray-900"><?php echo e($title); ?></h1>
+                            <h1 class="text-3xl font-bold text-gray-900 dark:text-white"><?php echo e($title); ?></h1>
                             <?php if(isset($description)): ?>
-                                <p class="text-gray-600 mt-2"><?php echo e($description); ?></p>
+                                <p class="text-gray-600 dark:text-gray-300 mt-2"><?php echo e($description); ?></p>
                             <?php endif; ?>
                         </div>
                         
@@ -225,7 +225,6 @@
     <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
     
     <!-- Scripts específicos da página -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <?php echo $__env->yieldPushContent('scripts'); ?>
     
     <!-- Script de inicialização -->
@@ -278,21 +277,6 @@
                     setTimeout(() => alert.remove(), 500);
                 });
             }, 5000);
-            
-            // Tema automático baseado na hora
-            const currentHour = new Date().getHours();
-            if (currentHour >= 19 || currentHour <= 6) {
-                // Entre 19h e 6h, sugerir tema escuro
-                const prefersDark = localStorage.getItem('hospital-theme') === 'dark';
-                if (!localStorage.getItem('hospital-theme') && !prefersDark) {
-                    // Mostrar notificação sobre tema escuro
-                    setTimeout(() => {
-                        if (window.Hospital && window.Hospital.utils) {
-                            window.Hospital.utils.showToast('Modo escuro disponível para o período noturno', 'info', 6000);
-                        }
-                    }, 2000);
-                }
-            }
         });
         
         // Função global para alternar tema

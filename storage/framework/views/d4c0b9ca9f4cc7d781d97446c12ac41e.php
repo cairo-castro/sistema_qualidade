@@ -277,21 +277,6 @@
                     setTimeout(() => alert.remove(), 500);
                 });
             }, 5000);
-            
-            // Tema automático baseado na hora
-            const currentHour = new Date().getHours();
-            if (currentHour >= 19 || currentHour <= 6) {
-                // Entre 19h e 6h, sugerir tema escuro
-                const prefersDark = localStorage.getItem('hospital-theme') === 'dark';
-                if (!localStorage.getItem('hospital-theme') && !prefersDark) {
-                    // Mostrar notificação sobre tema escuro
-                    setTimeout(() => {
-                        if (window.Hospital && window.Hospital.utils) {
-                            window.Hospital.utils.showToast('Modo escuro disponível para o período noturno', 'info', 6000);
-                        }
-                    }, 2000);
-                }
-            }
         });
         
         // Função global para alternar tema

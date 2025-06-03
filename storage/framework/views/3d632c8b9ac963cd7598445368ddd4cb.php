@@ -203,22 +203,14 @@
                             </div>
                         </div>
                     <?php endif; ?>
-                </div>
-
-                <!-- DataTable -->
+                </div>                <!-- DataTable -->
                 <div data-hs-datatable='{
                     "pageLength": 25,
                     "pagingOptions": {
                         "pageBtnClasses": "min-h-[38px] min-w-[38px] flex justify-center items-center text-gray-800 hover:bg-gray-100 py-2 px-3 text-sm rounded-lg focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-white/10 dark:focus:bg-white/10"
                     },
-                    "info": {
-                        "totalQty": "#datatableWithPagingInfoTotalQty"
-                    },
-                    "search": "#datatableSearch",
-                    "entries": "#datatableEntries",
                     "isResponsive": false,
                     "isShowPaging": true,
-                    "pagination": "datatableWithPagingPagination",
                     "language": {
                         "search": "",
                         "searchPlaceholder": "Buscar usuários...",
@@ -296,11 +288,10 @@
                             <?php $__currentLoopData = $users; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $user): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                                     <?php if (app(\Illuminate\Contracts\Auth\Access\Gate::class)->check('delete users')): ?>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <input type="checkbox"
+                                        <td class="px-6 py-4 whitespace-nowrap">                                            <input type="checkbox"
                                                    data-hs-datatable-row-selecting-individual=""
-                                                   class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600 user-checkbox" 
-                                                   value="<?php echo e($user->id); ?>" 
+                                                   class="w-4 h-4 text-green-600 bg-gray-100 border-gray-300 rounded focus:ring-green-500 focus:ring-2 dark:bg-gray-700 dark:border-gray-600" 
+                                                   value="<?php echo e($user->id); ?>"
                                                    <?php echo e($user->id == auth()->id() ? 'disabled' : ''); ?>>
                                         </td>
                                     <?php endif; ?>

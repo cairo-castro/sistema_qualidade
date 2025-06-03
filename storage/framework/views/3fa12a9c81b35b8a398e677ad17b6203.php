@@ -3,14 +3,14 @@
     <!-- Header da Sidebar -->
     <div class="hospital-sidebar-header">
         <div class="hospital-sidebar-logo">
-            <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
+            <div class="rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden" style="width: 4rem; height: 4rem;">
+                <img src="<?php echo e(asset('images/qualidade_logo.png')); ?>" 
+                     alt="Logo Sistema GQA" 
+                     class="w-full h-full object-contain">
             </div>
-            <div class="hospital-sidebar-logo-text ml-3 min-w-0 transition-opacity duration-300" :class="{ 'opacity-0 w-0 overflow-hidden': sidebarCollapsed }">
-                <h1 class="text-lg font-bold text-gray-900 truncate">Sistema GQA</h1>
-                <p class="text-xs text-gray-600 truncate">Gestão da Qualidade</p>
+            <div class="hospital-sidebar-logo-text min-w-0 transition-opacity duration-300" :class="{ 'opacity-0 w-0 overflow-hidden': sidebarCollapsed }">
+                <h1 class="text-lg font-bold text-gray-900 dark:text-white truncate">Sistema GQA</h1>
+                <p class="text-xs text-gray-600 dark:text-gray-300 truncate">Gestão da Qualidade</p>
             </div>
         </div>
     </div>

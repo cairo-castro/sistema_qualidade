@@ -7,7 +7,7 @@ These instructions enforce production-ready, modern PHP code generation for Lara
 ## 🧩 ENVIRONMENT DETAILS
 
 - **OS**: Windows 11 64-bit  
-- **Terminal**: Cursor with PowerShell (Admin)  
+- **Terminal**: PowerShell (Admin)  
 - **Browser**: Chrome  
 - **Stack**:  
   - Laravel 12  

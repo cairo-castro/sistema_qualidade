@@ -33,14 +33,19 @@
     
     <div class="card-body">
         <div class="chart-container">
-            <canvas id="diagnosticsChart" style="height: 300px; max-height: 300px;"></canvas>
-        </div>
-        
-        <!-- Loading Overlay -->
-        <div class="overlay" id="chart-loading" style="display: none;">
-            <div class="d-flex justify-content-center align-items-center h-100">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Carregando...</span>
+            <!-- ApexCharts Container -->
+            <div id="diagnosticsChartPartial" 
+                 data-chart="line" 
+                 class="w-100"
+                 style="min-height: 300px; height: 300px;">
+                <!-- Loading placeholder -->
+                <div class="d-flex align-items-center justify-content-center h-100">
+                    <div class="text-center">
+                        <div class="spinner-border text-primary mb-2" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <p class="text-muted small">Carregando gráfico ApexCharts...</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -81,9 +86,12 @@
                         @php
                             $data = $chartData ?? [0];
                             $trend = count($data) > 1 ? 
-                                ($data[count($data)-1] > $data[count($data)-2] ? '+' : '-') : '='
+                                ($data[count($data)-1] > $data[count($data)-2] ? '+' : '-') : '=';
+                            $lastValue = end($data);
+                            $secondLastValue = prev($data);
+                            $trendValue = $secondLastValue !== false ? abs($lastValue - $secondLastValue) : 0;
                         @endphp
-                        {{ $trend }}{{ abs(end($data) - prev($data)) }}
+                        {{ $trend }}{{ $trendValue }}
                     </h5>
                     <span class="description-text">TENDÊNCIA</span>
                 </div>
@@ -92,10 +100,33 @@
     </div>
 </div>
 
-{{-- Script específico para o gráfico --}}
 @push('scripts')
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🏥 Inicializando gráfico da partial...');
+    
+    // Aguardar ApexCharts estar disponível
+    function waitForApexCharts() {
+        return new Promise((resolve, reject) => {
+            let attempts = 0;
+            const maxAttempts = 15;
+            
+            function check() {
+                if (typeof ApexCharts !== 'undefined') {
+                    console.log('✅ ApexCharts detectado na partial');
+                    resolve(true);
+                } else if (attempts < maxAttempts) {
+                    attempts++;
+                    setTimeout(check, 300);
+                } else {
+                    console.error('❌ ApexCharts não foi carregado na partial após', maxAttempts, 'tentativas');
+                    reject(new Error('ApexCharts não foi carregado'));
+                }
+            }
+            check();
+        });
+    }
+
     // Configuração dos dados do gráfico
     const chartConfig = {
         week: {
@@ -111,46 +142,156 @@ document.addEventListener('DOMContentLoaded', function() {
             data: {!! json_encode($yearData ?? [150, 200, 175, 300, 250, 400]) !!}
         }
     };
-    
-    // Atualiza gráfico quando período muda
+
+    let diagnosticsPartialChart = null;
+
+    // Inicializar gráfico
+    async function initializeChart() {
+        try {
+            console.log('⏳ Aguardando ApexCharts...');
+            await waitForApexCharts();
+            
+            const container = document.getElementById('diagnosticsChartPartial');
+            if (!container) {
+                console.error('❌ Container diagnosticsChartPartial não encontrado');
+                return;
+            }
+
+            // Limpar container
+            container.innerHTML = '';
+
+            // Verificar tema
+            const isDark = document.documentElement.classList.contains('dark') || 
+                          document.documentElement.getAttribute('data-theme') === 'dark';
+
+            // Dados iniciais (mês)
+            const initialData = chartConfig.month;
+            
+            console.log('📊 Criando gráfico da partial com dados:', initialData);
+
+            const options = {
+                series: [{
+                    name: 'Diagnósticos',
+                    data: initialData.data,
+                    color: '#22c55e'
+                }],
+                chart: {
+                    height: 300,
+                    type: 'line',
+                    toolbar: {
+                        show: true,
+                        tools: {
+                            download: true,
+                            zoom: true,
+                            reset: true
+                        }
+                    },
+                    background: 'transparent',
+                    fontFamily: 'Inter, system-ui, sans-serif'
+                },
+                theme: {
+                    mode: isDark ? 'dark' : 'light'
+                },
+                xaxis: {
+                    categories: initialData.labels,
+                    labels: {
+                        style: {
+                            colors: isDark ? '#9ca3af' : '#6b7280'
+                        }
+                    }
+                },
+                yaxis: {
+                    min: 0,
+                    forceNiceScale: true,
+                    labels: {
+                        style: {
+                            colors: isDark ? '#9ca3af' : '#6b7280'
+                        }
+                    }
+                },
+                stroke: {
+                    curve: 'smooth',
+                    width: 3
+                },
+                grid: {
+                    borderColor: isDark ? '#374151' : '#f3f4f6'
+                },
+                tooltip: {
+                    theme: isDark ? 'dark' : 'light'
+                },
+                legend: {
+                    labels: {
+                        colors: isDark ? '#e5e7eb' : '#374151'
+                    }
+                }
+            };
+
+            diagnosticsPartialChart = new ApexCharts(container, options);
+            await diagnosticsPartialChart.render();
+
+            console.log('✅ Gráfico da partial criado com sucesso');
+
+            // Atualizar estatísticas iniciais
+            updateChartStats(initialData.data);
+
+        } catch (error) {
+            console.error('❌ Erro ao criar gráfico da partial:', error);
+            const container = document.getElementById('diagnosticsChartPartial');
+            if (container) {
+                container.innerHTML = `
+                    <div class="d-flex align-items-center justify-content-center h-100">
+                        <div class="text-center text-muted">
+                            <i class="bi bi-exclamation-triangle display-4 mb-3"></i>
+                            <p class="mb-2">Erro ao carregar gráfico</p>
+                            <button onclick="location.reload()" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-arrow-clockwise me-1"></i>Recarregar
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+    }
+
+    // Atualizar gráfico quando período muda
     document.querySelectorAll('input[name="chart-period"]').forEach(radio => {
         radio.addEventListener('change', function() {
-            if (this.checked) {
+            if (this.checked && diagnosticsPartialChart) {
                 updateChart(this.value);
             }
         });
     });
-    
+
     function updateChart(period) {
-        const loadingOverlay = document.getElementById('chart-loading');
-        
-        if (!chartConfig[period] || !window.diagnosticsChart) {
+        if (!chartConfig[period] || !diagnosticsPartialChart) {
+            console.warn('⚠️ Configuração não encontrada para período:', period);
             return;
         }
-        
-        // Mostra loading
-        loadingOverlay.style.display = 'block';
-        
-        setTimeout(() => {
-            try {
-                // Atualiza dados do gráfico
-                window.diagnosticsChart.data.labels = chartConfig[period].labels;
-                window.diagnosticsChart.data.datasets[0].data = chartConfig[period].data;
-                window.diagnosticsChart.update('active');
-                
-                // Atualiza estatísticas do footer
-                updateChartStats(chartConfig[period].data);
-                
-                console.log('Gráfico atualizado para período:', period);
-            } catch (error) {
-                console.error('Erro ao atualizar gráfico:', error);
-            } finally {
-                // Esconde loading
-                loadingOverlay.style.display = 'none';
-            }
-        }, 500);
+
+        try {
+            console.log('🔄 Atualizando gráfico da partial para período:', period);
+            
+            // Atualizar dados do gráfico
+            diagnosticsPartialChart.updateSeries([{
+                name: 'Diagnósticos',
+                data: chartConfig[period].data
+            }]);
+
+            diagnosticsPartialChart.updateOptions({
+                xaxis: {
+                    categories: chartConfig[period].labels
+                }
+            });
+
+            // Atualizar estatísticas do footer
+            updateChartStats(chartConfig[period].data);
+
+            console.log('✅ Gráfico da partial atualizado para período:', period);
+        } catch (error) {
+            console.error('❌ Erro ao atualizar gráfico da partial:', error);
+        }
     }
-    
+
     function updateChartStats(data) {
         const total = data.reduce((a, b) => a + b, 0);
         const avg = data.length > 0 ? (total / data.length).toFixed(1) : 0;
@@ -159,18 +300,21 @@ document.addEventListener('DOMContentLoaded', function() {
             (data[data.length - 1] > data[data.length - 2] ? '+' : '-') : '=';
         const trendValue = data.length > 1 ? 
             Math.abs(data[data.length - 1] - data[data.length - 2]) : 0;
-        
-        // Atualiza elementos
+
+        // Atualizar elementos
         const totalElement = document.getElementById('chart-total');
         const avgElement = document.getElementById('chart-avg');
         const maxElement = document.getElementById('chart-max');
         const trendElement = document.getElementById('chart-trend');
-        
+
         if (totalElement) totalElement.textContent = total;
         if (avgElement) avgElement.textContent = avg;
         if (maxElement) maxElement.textContent = max;
         if (trendElement) trendElement.textContent = trend + trendValue;
     }
+
+    // Inicializar com um pequeno delay para garantir que tudo esteja carregado
+    setTimeout(initializeChart, 1000);
 });
 </script>
 @endpush

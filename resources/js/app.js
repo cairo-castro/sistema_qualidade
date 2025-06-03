@@ -83,6 +83,11 @@ window.Hospital = {
             await this.loadApexChartsModule();
         }
         
+        // 🏥 Carregar ApexCharts sempre se estivermos numa página de dashboard
+        if (document.querySelector('#diagnosticsChart, #diagnosticsChartPartial')) {
+            await this.loadApexChartsModule();
+        }
+        
         if (document.querySelector('.data-table')) {
             await this.loadDataTablesModule();
         }
@@ -101,6 +106,9 @@ window.Hospital = {
             console.log('🚀 Carregando ApexCharts module...');
             const ApexCharts = await loadApexCharts();
             this.apexChartsModule = ApexCharts.default || ApexCharts;
+            
+            // 🌐 Tornar ApexCharts disponível globalmente
+            window.ApexCharts = this.apexChartsModule;
             
             // ⚡ Configurar defaults globais do ApexCharts
             this.setupApexChartsDefaults();
@@ -946,6 +954,96 @@ if ('getBattery' in navigator) {
         }
     });
 }
+
+// 🎨 Hospital Utils - Utilitários para tema e interface
+window.hospitalUtils = {
+    // 🌓 Alternar tema
+    toggleTheme() {
+        const currentTheme = window.Hospital.getCurrentTheme();
+        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+        
+        // Aplicar novo tema
+        document.documentElement.setAttribute('data-theme', newTheme);
+        
+        // Adicionar/remover classe dark para compatibilidade com Tailwind
+        if (newTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        
+        // Salvar preferência no localStorage
+        localStorage.setItem('theme', newTheme);
+        
+        // Atualizar tema dos charts
+        window.Hospital.updateChartTheme();
+        
+        // Atualizar charts existentes
+        if (window.Hospital.charts) {
+            window.Hospital.charts.updateAllThemes();
+        }
+        
+        console.log(`🎨 Tema alterado para: ${newTheme}`);
+    },
+    
+    // 🎨 Inicializar tema baseado na preferência salva ou sistema
+    initTheme() {
+        const savedTheme = localStorage.getItem('theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        let theme = 'light'; // padrão
+        
+        if (savedTheme) {
+            theme = savedTheme;
+        } else if (systemPrefersDark) {
+            theme = 'dark';
+        }
+        
+        // Aplicar tema inicial
+        document.documentElement.setAttribute('data-theme', theme);
+        
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+        
+        console.log(`🎨 Tema inicial configurado: ${theme}`);
+    },
+    
+    // 🎨 Escutar mudanças no tema do sistema
+    setupSystemThemeListener() {
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        
+        mediaQuery.addEventListener('change', (e) => {
+            // Só seguir o sistema se não há tema manual salvo
+            if (!localStorage.getItem('theme')) {
+                const newTheme = e.matches ? 'dark' : 'light';
+                
+                document.documentElement.setAttribute('data-theme', newTheme);
+                
+                if (newTheme === 'dark') {
+                    document.documentElement.classList.add('dark');
+                } else {
+                    document.documentElement.classList.remove('dark');
+                }
+                
+                // Atualizar tema dos charts
+                window.Hospital.updateChartTheme();
+                
+                if (window.Hospital.charts) {
+                    window.Hospital.charts.updateAllThemes();
+                }
+                
+                console.log(`🎨 Tema automático alterado para: ${newTheme}`);
+            }
+        });
+    }
+};
+
+// 🎨 Inicializar tema ao carregar
+window.hospitalUtils.initTheme();
+window.hospitalUtils.setupSystemThemeListener();
 
 // 🎯 Log de inicialização
 console.log('✅ Sistema Hospital carregado com ApexCharts!');

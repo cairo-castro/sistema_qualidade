@@ -156,18 +156,18 @@
                 </div>
             </div>
             
-            <!-- Top Subsetores com Não Conformidades -->
+            <!-- Top Setores com Conformidades -->
             <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600">
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Não Conformidades</h3>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Conformidades</h3>
                 <div class="space-y-3">
-                    @forelse($topNaoConformidades ?? [] as $item)
+                    @forelse($topConformidades ?? [] as $item)
                     <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
                         <div>
                             <p class="font-medium text-slate-900 dark:text-white">{{ $item['setor'] ?? 'UTI Geral' }}</p>
                             <p class="text-sm text-slate-600 dark:text-slate-300">{{ $item['subsetor'] ?? 'Medicamentos' }}</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-lg font-bold text-red-600 dark:text-red-400" x-text="formatNumber({{ $item['count'] ?? 12 }})">{{ $item['count'] ?? 12 }}</p>
+                            <p class="text-lg font-bold text-green-600 dark:text-green-400" x-text="formatNumber({{ $item['count'] ?? 12 }})">{{ $item['count'] ?? 12 }}</p>
                             <p class="text-xs text-slate-600 dark:text-slate-400">itens</p>
                         </div>
                     </div>
@@ -178,7 +178,7 @@
                             <p class="text-sm text-slate-600 dark:text-slate-300">Medicamentos</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-lg font-bold text-red-600 dark:text-red-400">12</p>
+                            <p class="text-lg font-bold text-green-600 dark:text-green-400">12</p>
                             <p class="text-xs text-slate-600 dark:text-slate-400">itens</p>
                         </div>
                     </div>
@@ -188,7 +188,7 @@
                             <p class="text-sm text-slate-600 dark:text-slate-300">Equipamentos</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-lg font-bold text-red-600 dark:text-red-400">8</p>
+                            <p class="text-lg font-bold text-green-600 dark:text-green-400">8</p>
                             <p class="text-xs text-slate-600 dark:text-slate-400">itens</p>
                         </div>
                     </div>
@@ -198,7 +198,7 @@
                             <p class="text-sm text-slate-600 dark:text-slate-300">Higienização</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-lg font-bold text-red-600 dark:text-red-400">4</p>
+                            <p class="text-lg font-bold text-green-600 dark:text-green-400">4</p>
                             <p class="text-xs text-slate-600 dark:text-slate-400">itens</p>
                         </div>
                     </div>
@@ -255,7 +255,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                     <div class="flex items-center">
                                         <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
-                                            <div class="bg-green-600 h-2 rounded-full" style="width: {{ $diagnostico['conformidade'] ?? 94 }}%"></div>
+                                            <div class="bg-green-600 h-2 rounded-full" style="width: {{ ($diagnostico['conformidade'] ?? 94) }}%"></div>
                                         </div>
                                         <span class="text-sm font-medium">{{ $diagnostico['conformidade'] ?? 94 }}%</span>
                                     </div>

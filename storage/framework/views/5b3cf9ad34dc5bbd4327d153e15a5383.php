@@ -13,11 +13,11 @@
     <!-- Cards de Estatísticas Principais -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Total de Diagnósticos -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600" x-data="{ count: <?php echo e($totalDiagnosticos ?? 0); ?> }">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600" x-data="{ count: stats.totalDiagnosticos }">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-sm font-medium text-slate-600 dark:text-slate-300">Total de Diagnósticos</h3>
-                    <p class="text-3xl font-bold text-slate-900 dark:text-white mt-2" x-text="formatNumber(count)"><?php echo e(number_format($totalDiagnosticos ?? 0)); ?></p>
+                    <p class="text-3xl font-bold text-slate-900 dark:text-white mt-2" x-text="formatNumber(stats.totalDiagnosticos)"><?php echo e(number_format($totalDiagnosticos ?? 0)); ?></p>
                     <div class="flex items-center mt-2">
                         <span class="text-sm text-emerald-600 dark:text-emerald-400 font-medium">+12% este mês</span>
                         <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -34,11 +34,11 @@
         </div>
         
         <!-- Taxa de Conformidade -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600" x-data="{ rate: <?php echo e($taxaConformidade ?? 85.4); ?> }">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600" x-data="{ rate: stats.taxaConformidade }">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-sm font-medium text-slate-600 dark:text-slate-300">Taxa de Conformidade</h3>
-                    <p class="text-3xl font-bold text-slate-900 dark:text-white mt-2" x-text="rate + '%'"><?php echo e(number_format($taxaConformidade ?? 85.4, 1)); ?>%</p>
+                    <p class="text-3xl font-bold text-slate-900 dark:text-white mt-2" x-text="formatNumber(stats.taxaConformidade) + '%'"><?php echo e(number_format($taxaConformidade ?? 85.4, 1)); ?>%</p>
                     <div class="flex items-center mt-2">
                         <span class="text-sm text-emerald-600 dark:text-emerald-400 font-medium">+2.3% este mês</span>
                         <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -55,11 +55,11 @@
         </div>
         
         <!-- Períodos Ativos -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600" x-data="{ active: <?php echo e($periodosAtivos ?? 3); ?> }">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600" x-data="{ active: stats.periodosAtivos }">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-sm font-medium text-slate-600 dark:text-slate-300">Períodos Ativos</h3>
-                    <p class="text-3xl font-bold text-slate-900 dark:text-white mt-2" x-text="active"><?php echo e($periodosAtivos ?? 3); ?></p>
+                    <p class="text-3xl font-bold text-slate-900 dark:text-white mt-2" x-text="stats.periodosAtivos"><?php echo e($periodosAtivos ?? 3); ?></p>
                     <div class="flex items-center mt-2">
                         <span class="text-sm text-blue-600 dark:text-blue-400 font-medium"><?php echo e($periodosPendentes ?? 1); ?> pendente(s)</span>
                     </div>
@@ -73,11 +73,11 @@
         </div>
         
         <!-- Itens Não Conformes -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600" x-data="{ nonConform: <?php echo e($itensNaoConformes ?? 24); ?> }">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600" x-data="{ nonConform: stats.itensNaoConformes }">
             <div class="flex items-center justify-between">
                 <div>
                     <h3 class="text-sm font-medium text-slate-600 dark:text-slate-300">Itens Não Conformes</h3>
-                    <p class="text-3xl font-bold text-slate-900 dark:text-white mt-2" x-text="nonConform"><?php echo e($itensNaoConformes ?? 24); ?></p>
+                    <p class="text-3xl font-bold text-slate-900 dark:text-white mt-2" x-text="stats.itensNaoConformes"><?php echo e($itensNaoConformes ?? 24); ?></p>
                     <div class="flex items-center mt-2">
                         <span class="text-sm text-red-600 dark:text-red-400 font-medium">Requer atenção</span>
                         <svg class="w-4 h-4 text-red-600 dark:text-red-400 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -102,20 +102,43 @@
                 <div class="flex items-center justify-between mb-6">
                     <div>
                         <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Diagnósticos por Período</h3>
-                        <p class="text-sm text-slate-600 dark:text-slate-300">Últimos 6 meses</p>
+                        <p class="text-sm text-slate-600 dark:text-slate-300">Últimos 12 meses</p>
                     </div>
                     <div class="flex space-x-2">
                         <select class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white rounded-md px-3 py-2 text-sm w-auto">
                             <option value="6m">6 meses</option>
-                            <option value="1y">1 ano</option>
+                            <option value="1y" selected>1 ano</option>
                             <option value="2y">2 anos</option>
                         </select>
+                        <button @click="reloadDashboard()" 
+                                class="gqa-btn secondary text-sm" 
+                                :disabled="loading"
+                                title="Atualizar dados">
+                            <svg class="w-4 h-4" :class="{ 'animate-spin': loading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                            </svg>
+                        </button>
                     </div>
                 </div>
                 
-                <!-- Chart Container -->
-                <div class="relative h-80 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 p-4" x-data="hospitalChart">
-                    <canvas id="diagnosticsChart" class="w-full h-full" x-init="initChart($el)"></canvas>
+                <!-- Chart Container com ApexCharts -->
+                <div class="relative h-80 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 p-4">
+                    <!-- 📊 Gráfico ApexCharts -->
+                    <div id="diagnosticsChart" 
+                         data-chart="line" 
+                         class="w-full h-full"
+                         style="min-height: 320px;">
+                        <!-- ⏳ Loading placeholder -->
+                        <div class="flex items-center justify-center h-full">
+                            <div class="text-center">
+                                <svg class="animate-spin h-8 w-8 text-green-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <p class="text-gray-500 text-sm">Carregando gráfico ApexCharts...</p>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -142,18 +165,18 @@
                 </div>
             </div>
             
-            <!-- Top Subsetores com Não Conformidades -->
+            <!-- Top Setores com Conformidades -->
             <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600">
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Não Conformidades</h3>
+                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Conformidades</h3>
                 <div class="space-y-3">
-                    <?php $__empty_1 = true; $__currentLoopData = $topNaoConformidades ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                    <?php $__empty_1 = true; $__currentLoopData = $topConformidades ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                     <div class="flex items-center justify-between p-3 bg-slate-50 dark:bg-slate-700 rounded-lg">
                         <div>
                             <p class="font-medium text-slate-900 dark:text-white"><?php echo e($item['setor'] ?? 'UTI Geral'); ?></p>
                             <p class="text-sm text-slate-600 dark:text-slate-300"><?php echo e($item['subsetor'] ?? 'Medicamentos'); ?></p>
                         </div>
                         <div class="text-right">
-                            <p class="text-lg font-bold text-red-600 dark:text-red-400"><?php echo e($item['count'] ?? 12); ?></p>
+                            <p class="text-lg font-bold text-green-600 dark:text-green-400" x-text="formatNumber(<?php echo e($item['count'] ?? 12); ?>)"><?php echo e($item['count'] ?? 12); ?></p>
                             <p class="text-xs text-slate-600 dark:text-slate-400">itens</p>
                         </div>
                     </div>
@@ -164,7 +187,7 @@
                             <p class="text-sm text-slate-600 dark:text-slate-300">Medicamentos</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-lg font-bold text-red-600 dark:text-red-400">12</p>
+                            <p class="text-lg font-bold text-green-600 dark:text-green-400">12</p>
                             <p class="text-xs text-slate-600 dark:text-slate-400">itens</p>
                         </div>
                     </div>
@@ -174,7 +197,7 @@
                             <p class="text-sm text-slate-600 dark:text-slate-300">Equipamentos</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-lg font-bold text-red-600 dark:text-red-400">8</p>
+                            <p class="text-lg font-bold text-green-600 dark:text-green-400">8</p>
                             <p class="text-xs text-slate-600 dark:text-slate-400">itens</p>
                         </div>
                     </div>
@@ -184,7 +207,7 @@
                             <p class="text-sm text-slate-600 dark:text-slate-300">Higienização</p>
                         </div>
                         <div class="text-right">
-                            <p class="text-lg font-bold text-red-600 dark:text-red-400">4</p>
+                            <p class="text-lg font-bold text-green-600 dark:text-green-400">4</p>
                             <p class="text-xs text-slate-600 dark:text-slate-400">itens</p>
                         </div>
                     </div>
@@ -209,124 +232,111 @@
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Unidade</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Setor</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Conformidade</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Data</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Ações</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Setor
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Data
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Status
+                                </th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                    Conformidade
+                                </th>
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-600">
                             <?php $__empty_1 = true; $__currentLoopData = $diagnosticosRecentes ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $diagnostico): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div>
-                                        <div class="font-medium text-gray-900 dark:text-white"><?php echo e($diagnostico['unidade'] ?? 'Hospital Central'); ?></div>
-                                        <div class="text-sm text-slate-500 dark:text-slate-400"><?php echo e($diagnostico['codigo'] ?? 'HC-001'); ?></div>
-                                    </div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white"><?php echo e($diagnostico['setor'] ?? 'UTI Geral'); ?></div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400"><?php echo e($diagnostico['subsetor'] ?? 'Monitoramento'); ?></div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    <?php echo e(isset($diagnostico['data']) ? \Carbon\Carbon::parse($diagnostico['data'])->format('d/m/Y') : '15/01/2024'); ?>
+
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div>
-                                        <div class="font-medium text-gray-900 dark:text-white"><?php echo e($diagnostico['setor'] ?? 'UTI Geral'); ?></div>
-                                        <div class="text-sm text-slate-500 dark:text-slate-400"><?php echo e($diagnostico['subsetor'] ?? 'Medicamentos'); ?></div>
-                                    </div>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                                        <?php echo e($diagnostico['status'] ?? 'Finalizado'); ?>
+
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <?php
-                                        $status = $diagnostico['status'] ?? 'Em Andamento';
-                                        $statusClass = match($status) {
-                                            'Concluído' => 'gqa-badge success',
-                                            'Em Andamento' => 'gqa-badge warning',
-                                            'Pendente' => 'gqa-badge danger',
-                                            default => 'gqa-badge info'
-                                        };
-                                    ?>
-                                    <span class="<?php echo e($statusClass); ?>"><?php echo e($status); ?></span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <?php
-                                        $conformidade = $diagnostico['conformidade'] ?? 85;
-                                        $confClass = $conformidade >= 80 ? 'text-emerald-600 dark:text-emerald-400' : ($conformidade >= 60 ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400');
-                                    ?>
-                                    <span class="font-medium <?php echo e($confClass); ?>"><?php echo e($conformidade); ?>%</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm">
-                                        <div class="text-gray-900 dark:text-white"><?php echo e($diagnostico['data'] ?? '23/05/2025'); ?></div>
-                                        <div class="text-slate-500 dark:text-slate-400"><?php echo e($diagnostico['hora'] ?? '14:30'); ?></div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex space-x-2">
-                                        <button class="gqa-btn primary sm">Ver</button>
-                                        <button class="gqa-btn ghost sm">Editar</button>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    <div class="flex items-center">
+                                        <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
+                                            <div class="bg-green-600 h-2 rounded-full" style="width: <?php echo e(($diagnostico['conformidade'] ?? 94)); ?>%"></div>
+                                        </div>
+                                        <span class="text-sm font-medium"><?php echo e($diagnostico['conformidade'] ?? 94); ?>%</span>
                                     </div>
                                 </td>
                             </tr>
                             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <!-- Dados de exemplo -->
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div>
-                                        <div class="font-medium text-gray-900 dark:text-white">Hospital Central</div>
-                                        <div class="text-sm text-slate-500 dark:text-slate-400">HC-001</div>
-                                    </div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">UTI Geral</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Monitoramento</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    15/01/2024
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div>
-                                        <div class="font-medium text-gray-900 dark:text-white">UTI Geral</div>
-                                        <div class="text-sm text-slate-500 dark:text-slate-400">Medicamentos</div>
-                                    </div>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                                        Finalizado
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="gqa-badge success">Concluído</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="font-medium text-emerald-600 dark:text-emerald-400">92%</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm">
-                                        <div class="text-gray-900 dark:text-white">23/05/2025</div>
-                                        <div class="text-slate-500 dark:text-slate-400">14:30</div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex space-x-2">
-                                        <button class="gqa-btn primary sm">Ver</button>
-                                        <button class="gqa-btn ghost sm">Editar</button>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    <div class="flex items-center">
+                                        <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
+                                            <div class="bg-green-600 h-2 rounded-full" style="width: 94%"></div>
+                                        </div>
+                                        <span class="text-sm font-medium">94%</span>
                                     </div>
                                 </td>
                             </tr>
-                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div>
-                                        <div class="font-medium text-gray-900 dark:text-white">Hospital Regional</div>
-                                        <div class="text-sm text-slate-500 dark:text-slate-400">HR-002</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Cardiologia</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Equipamentos</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    14/01/2024
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400">
+                                        Em Análise
+                                    </span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    <div class="flex items-center">
+                                        <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
+                                            <div class="bg-yellow-500 h-2 rounded-full" style="width: 87%"></div>
+                                        </div>
+                                        <span class="text-sm font-medium">87%</span>
                                     </div>
                                 </td>
+                            </tr>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div>
-                                        <div class="font-medium text-gray-900 dark:text-white">Pronto Socorro</div>
-                                        <div class="text-sm text-slate-500 dark:text-slate-400">Equipamentos</div>
-                                    </div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">Pediatria</div>
+                                    <div class="text-sm text-gray-500 dark:text-gray-400">Medicamentos</div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    13/01/2024
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="gqa-badge warning">Em Andamento</span>
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                                        Finalizado
+                                    </span>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <span class="font-medium text-amber-600 dark:text-amber-400">75%</span>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm">
-                                        <div class="text-gray-900 dark:text-white">22/05/2025</div>
-                                        <div class="text-slate-500 dark:text-slate-400">09:15</div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="flex space-x-2">
-                                        <button class="gqa-btn primary sm">Ver</button>
-                                        <button class="gqa-btn ghost sm">Editar</button>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    <div class="flex items-center">
+                                        <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
+                                            <div class="bg-green-600 h-2 rounded-full" style="width: 98%"></div>
+                                        </div>
+                                        <span class="text-sm font-medium">98%</span>
                                     </div>
                                 </td>
                             </tr>
@@ -337,274 +347,94 @@
             </div>
         </div>
         
-        <!-- Atividades e Notificações -->
-        <div class="space-y-6">
-            <!-- Últimas Atividades -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600">
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Atividades Recentes</h3>
-                <div class="space-y-4">
-                    <?php $__empty_1 = true; $__currentLoopData = $atividadesRecentes ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $atividade): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                    <div class="flex items-start space-x-3">
-                        <div class="w-2 h-2 bg-primary-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-slate-900 dark:text-white"><?php echo e($atividade['titulo'] ?? 'Diagnóstico concluído'); ?></p>
-                            <p class="text-xs text-slate-600 dark:text-slate-300"><?php echo e($atividade['descricao'] ?? 'UTI Geral - Hospital Central'); ?></p>
-                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1"><?php echo e($atividade['tempo'] ?? '5 min atrás'); ?></p>
-                        </div>
+        <!-- Atividades Recentes -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600">
+            <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Atividades Recentes</h3>
+            <div class="space-y-4">
+                <?php $__empty_1 = true; $__currentLoopData = $atividadesRecentes ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $atividade): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                            <?php echo e($atividade['titulo'] ?? 'Novo diagnóstico cadastrado'); ?>
+
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            <?php echo e($atividade['descricao'] ?? 'Setor UTI Geral'); ?>
+
+                        </p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            <?php echo e(isset($atividade['tempo']) ? $atividade['tempo'] : '2 horas atrás'); ?>
+
+                        </p>
                     </div>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                    <div class="flex items-start space-x-3">
-                        <div class="w-2 h-2 bg-primary-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-slate-900 dark:text-white">Diagnóstico concluído</p>
-                            <p class="text-xs text-slate-600 dark:text-slate-300">UTI Geral - Hospital Central</p>
-                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">5 min atrás</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <div class="w-2 h-2 bg-emerald-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-slate-900 dark:text-white">Novo período criado</p>
-                            <p class="text-xs text-slate-600 dark:text-slate-300">Maio 2025 - Hospital Regional</p>
-                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">1 hora atrás</p>
-                        </div>
-                    </div>
-                    <div class="flex items-start space-x-3">
-                        <div class="w-2 h-2 bg-amber-500 rounded-full mt-2 flex-shrink-0"></div>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-slate-900 dark:text-white">Não conformidade detectada</p>
-                            <p class="text-xs text-slate-600 dark:text-slate-300">Enfermaria - Medicamentos</p>
-                            <p class="text-xs text-slate-400 dark:text-slate-500 mt-1">3 horas atrás</p>
-                        </div>
-                    </div>
-                    <?php endif; ?>
                 </div>
-            </div>
-            
-            <!-- Ranking de Problemas -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600">
-                <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Problemas Frequentes</h3>
-                <div class="space-y-3">
-                    <?php $__empty_1 = true; $__currentLoopData = $problemasFrequentes ?? []; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $problema): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-slate-900 dark:text-white"><?php echo e($problema['nome'] ?? 'Falta de medicamentos'); ?></p>
-                            <div class="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2 mt-1">
-                                <div class="bg-danger-500 h-2 rounded-full" style="width: <?php echo e($problema['porcentagem'] ?? 45); ?>%"></div>
-                            </div>
-                        </div>
-                        <span class="text-sm font-medium text-slate-900 dark:text-white ml-3"><?php echo e($problema['ocorrencias'] ?? 12); ?></span>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                <!-- Dados de exemplo -->
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                            Novo diagnóstico cadastrado
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Setor UTI Geral
+                        </p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            2 horas atrás
+                        </p>
                     </div>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-slate-900 dark:text-white">Falta de medicamentos</p>
-                            <div class="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2 mt-1">
-                                <div class="bg-danger-500 h-2 rounded-full" style="width: 45%"></div>
-                            </div>
-                        </div>
-                        <span class="text-sm font-medium text-slate-900 dark:text-white ml-3">12</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-slate-900 dark:text-white">Equipamentos defeituosos</p>
-                            <div class="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2 mt-1">
-                                <div class="bg-warning-500 h-2 rounded-full" style="width: 30%"></div>
-                            </div>
-                        </div>
-                        <span class="text-sm font-medium text-slate-900 dark:text-white ml-3">8</span>
-                    </div>
-                    <div class="flex items-center justify-between">
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-slate-900 dark:text-white">Higienização inadequada</p>
-                            <div class="w-full bg-slate-200 dark:bg-slate-600 rounded-full h-2 mt-1">
-                                <div class="bg-info-500 h-2 rounded-full" style="width: 20%"></div>
-                            </div>
-                        </div>
-                        <span class="text-sm font-medium text-slate-900 dark:text-white ml-3">5</span>
-                    </div>
-                    <?php endif; ?>
                 </div>
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-2 h-2 bg-blue-400 rounded-full mt-2"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                            Relatório de conformidade gerado
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Taxa de 94.5% atingida
+                        </p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            4 horas atrás
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-2 h-2 bg-yellow-400 rounded-full mt-2"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                            Não conformidade detectada
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Setor Pronto Socorro
+                        </p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            6 horas atrás
+                        </p>
+                    </div>
+                </div>
+                <div class="flex items-start space-x-3">
+                    <div class="flex-shrink-0 w-2 h-2 bg-purple-400 rounded-full mt-2"></div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                            Período de diagnóstico iniciado
+                        </p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                            Janeiro 2024 - Todas as áreas
+                        </p>
+                        <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                            1 dia atrás
+                        </p>
+                    </div>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
-
+    
     <?php $__env->startPush('scripts'); ?>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('hospitalChart', () => ({
-                chart: null,
-                
-                initChart(el) {
-                    const isDark = document.documentElement.classList.contains('dark');
-                    
-                    const data = {
-                        labels: ['Dec 24', 'Jan 25', 'Feb 25', 'Mar 25', 'Apr 25', 'May 25'],
-                        datasets: [
-                            {
-                                label: 'Diagnósticos Realizados',
-                                data: [0, 0, 0, 0, 2662, 767],
-                                borderColor: isDark ? '#6366f1' : '#4f46e5',
-                                backgroundColor: isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(79, 70, 229, 0.1)',
-                                tension: 0.4,
-                                fill: true
-                            }, 
-                            {
-                                label: 'Conformidades',
-                                data: [0, 0, 0, 0, 942, 0],
-                                borderColor: isDark ? '#10b981' : '#059669',
-                                backgroundColor: isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(5, 150, 105, 0.1)',
-                                tension: 0.4,
-                                fill: true
-                            }
-                        ]
-                    };
-                    
-                    const ctx = el.getContext('2d');
-                    this.chart = new Chart(ctx, {
-                        type: 'line',
-                        data: data,
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: {
-                                    position: 'top',
-                                    labels: {
-                                        color: isDark ? '#e5e7eb' : '#374151',
-                                        font: {
-                                            size: 12
-                                        },
-                                        padding: 20,
-                                        usePointStyle: true
-                                    }
-                                },
-                                tooltip: {
-                                    mode: 'index',
-                                    intersect: false,
-                                    backgroundColor: isDark ? '#374151' : '#ffffff',
-                                    titleColor: isDark ? '#e5e7eb' : '#374151',
-                                    bodyColor: isDark ? '#e5e7eb' : '#374151',
-                                    borderColor: isDark ? '#6b7280' : '#d1d5db',
-                                    borderWidth: 1,
-                                    cornerRadius: 8,
-                                    padding: 12
-                                }
-                            },
-                            scales: {
-                                x: {
-                                    grid: {
-                                        color: isDark ? '#374151' : '#f3f4f6',
-                                        drawBorder: false
-                                    },
-                                    ticks: {
-                                        color: isDark ? '#9ca3af' : '#6b7280',
-                                        font: {
-                                            size: 11
-                                        }
-                                    },
-                                    border: {
-                                        color: isDark ? '#4b5563' : '#e5e7eb'
-                                    }
-                                },
-                                y: {
-                                    beginAtZero: true,
-                                    grid: {
-                                        color: isDark ? '#374151' : '#f3f4f6',
-                                        drawBorder: false
-                                    },
-                                    ticks: {
-                                        color: isDark ? '#9ca3af' : '#6b7280',
-                                        font: {
-                                            size: 11
-                                        },
-                                        callback: function(value) {
-                                            return new Intl.NumberFormat('pt-BR').format(value);
-                                        }
-                                    },
-                                    border: {
-                                        color: isDark ? '#4b5563' : '#e5e7eb'
-                                    }
-                                }
-                            },
-                            interaction: {
-                                mode: 'nearest',
-                                axis: 'x',
-                                intersect: false
-                            },
-                            elements: {
-                                point: {
-                                    radius: 4,
-                                    hoverRadius: 6,
-                                    backgroundColor: isDark ? '#ffffff' : '#ffffff',
-                                    borderWidth: 2
-                                },
-                                line: {
-                                    borderWidth: 2
-                                }
-                            }
-                        }
-                    });
-                    
-                    // Listen for theme changes
-                    this.setupThemeListener();
-                },
-                
-                setupThemeListener() {
-                    const observer = new MutationObserver((mutations) => {
-                        mutations.forEach((mutation) => {
-                            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                                if (this.chart) {
-                                    this.updateChartTheme();
-                                }
-                            }
-                        });
-                    });
-                    
-                    observer.observe(document.documentElement, {
-                        attributes: true,
-                        attributeFilter: ['class']
-                    });
-                },
-                
-                updateChartTheme() {
-                    const isDark = document.documentElement.classList.contains('dark');
-                    
-                    // Update dataset colors
-                    this.chart.data.datasets[0].borderColor = isDark ? '#6366f1' : '#4f46e5';
-                    this.chart.data.datasets[0].backgroundColor = isDark ? 'rgba(99, 102, 241, 0.1)' : 'rgba(79, 70, 229, 0.1)';
-                    this.chart.data.datasets[1].borderColor = isDark ? '#10b981' : '#059669';
-                    this.chart.data.datasets[1].backgroundColor = isDark ? 'rgba(16, 185, 129, 0.1)' : 'rgba(5, 150, 105, 0.1)';
-                    
-                    // Update chart options
-                    this.chart.options.plugins.legend.labels.color = isDark ? '#e5e7eb' : '#374151';
-                    this.chart.options.plugins.tooltip.backgroundColor = isDark ? '#374151' : '#ffffff';
-                    this.chart.options.plugins.tooltip.titleColor = isDark ? '#e5e7eb' : '#374151';
-                    this.chart.options.plugins.tooltip.bodyColor = isDark ? '#e5e7eb' : '#374151';
-                    this.chart.options.plugins.tooltip.borderColor = isDark ? '#6b7280' : '#d1d5db';
-                    
-                    this.chart.options.scales.x.grid.color = isDark ? '#374151' : '#f3f4f6';
-                    this.chart.options.scales.x.ticks.color = isDark ? '#9ca3af' : '#6b7280';
-                    this.chart.options.scales.x.border.color = isDark ? '#4b5563' : '#e5e7eb';
-                    
-                    this.chart.options.scales.y.grid.color = isDark ? '#374151' : '#f3f4f6';
-                    this.chart.options.scales.y.ticks.color = isDark ? '#9ca3af' : '#6b7280';
-                    this.chart.options.scales.y.border.color = isDark ? '#4b5563' : '#e5e7eb';
-                    
-                    this.chart.options.elements.point.backgroundColor = isDark ? '#ffffff' : '#ffffff';
-                    
-                    this.chart.update('none');
-                }
-            }));
-            
-            Alpine.data('formatNumber', () => {
-                return function(value) {
-                    return new Intl.NumberFormat('pt-BR').format(value);
-                };
-            });
-        });
-    </script>
+    <!-- 📊 Carregar componentes do dashboard -->
+    <?php echo app('Illuminate\Foundation\Vite')(['resources/js/dashboard-components.js', 'resources/js/dashboard-charts.js']); ?>
     <?php $__env->stopPush(); ?>
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>

@@ -26,8 +26,8 @@ class DashboardController extends Controller
             // Diagnósticos recentes
             $diagnosticosRecentes = $this->getDiagnosticosRecentes();
             
-            // Top não conformidades
-            $topNaoConformidades = $this->getTopNaoConformidades();
+            // Top conformidades
+            $topConformidades = $this->getTopConformidades();
             
             // Atividades recentes
             $atividadesRecentes = $this->getAtividadesRecentes();
@@ -40,7 +40,7 @@ class DashboardController extends Controller
                 'chartData' => $chartData['diagnosticos'],
                 'chartConformidades' => $chartData['conformidades'],
                 'diagnosticosRecentes' => $diagnosticosRecentes,
-                'topNaoConformidades' => $topNaoConformidades,
+                'topConformidades' => $topConformidades,
                 'atividadesRecentes' => $atividadesRecentes,
                 'problemasFrequentes' => $problemasFrequentes,
             ]));
@@ -322,7 +322,7 @@ public function getNotifications(Request $request)
     /**
      * Top setores com mais não conformidades
      */
-    private function getTopNaoConformidades($limit = 3)
+    private function getTopConformidades($limit = 3)
     {
         try {
             return DB::table('diagnostico as d')
@@ -334,7 +334,7 @@ public function getNotifications(Request $request)
                     DB::raw('COUNT(*) as count')
                 ])
                 ->where('d.deletado', 0)
-                ->where('d.avaliacao_resultado', 'nao_conforme')
+                ->where('d.avaliacao_resultado', 'conforme')
                 ->groupBy('s.id', 'ss.id')
                 ->orderBy('count', 'desc')
                 ->limit($limit)
@@ -349,7 +349,7 @@ public function getNotifications(Request $request)
                 ->toArray();
                 
         } catch (\Exception $e) {
-            Log::error('Erro ao obter top não conformidades: ' . $e->getMessage());
+            Log::error('Erro ao obter top conformidades: ' . $e->getMessage());
             return [];
         }
     }
