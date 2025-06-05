@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="title">Dashboard</x-slot>
-    
+
     <!-- Cards de Estatísticas Principais -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <!-- Total de Diagnósticos -->
@@ -23,7 +23,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Taxa de Conformidade -->
         <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600" x-data="{ rate: stats.taxaConformidade }">
             <div class="flex items-center justify-between">
@@ -44,7 +44,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Períodos Ativos -->
         <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600" x-data="{ active: stats.periodosAtivos }">
             <div class="flex items-center justify-between">
@@ -62,7 +62,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Itens Não Conformes -->
         <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600" x-data="{ nonConform: stats.itensNaoConformes }">
             <div class="flex items-center justify-between">
@@ -84,7 +84,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Linha Principal: Gráficos e Actions -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         <!-- Gráfico de Diagnósticos por Período -->
@@ -101,8 +101,8 @@
                             <option value="1y" selected>1 ano</option>
                             <option value="2y">2 anos</option>
                         </select>
-                        <button @click="reloadDashboard()" 
-                                class="gqa-btn secondary text-sm" 
+                        <button @click="reloadDashboard()"
+                                class="gqa-btn secondary text-sm"
                                 :disabled="loading"
                                 title="Atualizar dados">
                             <svg class="w-4 h-4" :class="{ 'animate-spin': loading }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -111,12 +111,12 @@
                         </button>
                     </div>
                 </div>
-                
+
                 <!-- Chart Container com ApexCharts -->
                 <div class="relative h-80 bg-slate-50 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-600 p-4">
                     <!-- 📊 Gráfico ApexCharts -->
-                    <div id="diagnosticsChart" 
-                         data-chart="line" 
+                    <div id="diagnosticsChart"
+                         data-chart="line"
                          class="w-full h-full"
                          style="min-height: 320px;">
                         <!-- ⏳ Loading placeholder -->
@@ -133,7 +133,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Ações Rápidas -->
         <div class="space-y-6">
             <!-- Acesso Rápido ao Módulo Diagnóstico -->
@@ -155,7 +155,7 @@
                     </button>
                 </div>
             </div>
-            
+
             <!-- Top Setores com Conformidades -->
             <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600">
                 <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Top Conformidades</h3>
@@ -207,7 +207,7 @@
             </div>
         </div>
     </div>
-    
+
     <!-- Linha Inferior: Diagnósticos Recentes e Atividades -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <!-- Diagnósticos Recentes -->
@@ -217,7 +217,7 @@
                     <h3 class="text-lg font-semibold text-slate-900 dark:text-white">Diagnósticos Recentes</h3>
                     <button class="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 text-white px-4 py-2 rounded-lg transition-colors">Ver Todos</button>
                 </div>
-                
+
                 <!-- Tabela de Diagnósticos -->
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
@@ -255,7 +255,7 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                     <div class="flex items-center">
                                         <div class="w-16 bg-gray-200 dark:bg-gray-700 rounded-full h-2 mr-3">
-                                            <div class="bg-green-600 h-2 rounded-full" style="width: {{ ($diagnostico['conformidade'] ?? 94) }}%"></div>
+                                            <div class="bg-green-600 h-2 rounded-full" style="width: '{{ ($diagnostico['conformidade'] ?? 94) }}%'"></div>
                                         </div>
                                         <span class="text-sm font-medium">{{ $diagnostico['conformidade'] ?? 94 }}%</span>
                                     </div>
@@ -335,7 +335,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Atividades Recentes -->
         <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600">
             <h3 class="text-lg font-semibold text-slate-900 dark:text-white mb-4">Atividades Recentes</h3>
@@ -417,7 +417,7 @@
             </div>
         </div>
     </div>
-    
+
     @push('scripts')
     <!-- 📊 Carregar componentes do dashboard -->
     @vite(['resources/js/dashboard-components.js', 'resources/js/dashboard-charts.js'])

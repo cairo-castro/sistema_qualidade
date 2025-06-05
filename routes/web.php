@@ -24,16 +24,33 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('/dashboard/stats', [DashboardController::class, 'getStats'])->name('dashboard.stats');
     Route::get('/dashboard/notifications', [DashboardController::class, 'getNotifications'])->name('dashboard.notifications');
-    
+
+    // Theme routes
+    Route::prefix('theme')->name('theme.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ThemeController::class, 'show'])->name('show');
+        Route::post('/update', [\App\Http\Controllers\ThemeController::class, 'update'])->name('update');
+        Route::post('/reset', [\App\Http\Controllers\ThemeController::class, 'reset'])->name('reset');
+    });
+
     // User profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    
+
     // Rota temporária para teste da sidebar
     Route::get('/test-sidebar', function () {
         return view('test-sidebar');
     })->name('test.sidebar');
+
+    // Rota para teste do gerenciador de temas
+    Route::get('/theme-test', function () {
+        return view('theme-test');
+    })->name('theme.test');
+
+    // Rota para teste aprimorado do gerenciador de temas
+    Route::get('/theme-test-enhanced', function () {
+        return view('theme-test-enhanced');
+    })->name('theme.test.enhanced');
 });
 
 // Include authentication routes
@@ -47,14 +64,14 @@ Route::get('/test-admin-debug', function () {
     try {
         // Test if we can access admin user
         $admin = \App\Models\User::where('email', 'admin@emserh.ma.gov.br')->first();
-        
+
         if (!$admin) {
             return response('Admin user not found', 404);
         }
-        
+
         // Login as admin
         \Illuminate\Support\Facades\Auth::login($admin);
-        
+
         $output = [
             'user' => $admin->name,
             'permissions' => [
@@ -66,12 +83,12 @@ Route::get('/test-admin-debug', function () {
             ],
             'all_permissions_count' => $admin->getAllPermissions()->count(),
         ];
-        
+
         // Test UserController instantiation
         try {
             $controller = new \App\Http\Controllers\Admin\UserController();
             $output['user_controller'] = 'OK';
-            
+
             // Test method call
             $request = \Illuminate\Http\Request::create('/admin/users', 'GET');
             $response = $controller->index($request);
@@ -80,12 +97,12 @@ Route::get('/test-admin-debug', function () {
             $output['user_controller_error'] = $e->getMessage();
             $output['user_controller_file'] = $e->getFile() . ':' . $e->getLine();
         }
-        
+
         // Test RoleController
         try {
             $controller = new \App\Http\Controllers\Admin\RoleController();
             $output['role_controller'] = 'OK';
-            
+
             $request = \Illuminate\Http\Request::create('/admin/roles', 'GET');
             $response = $controller->index($request);
             $output['role_controller_method'] = 'OK - ' . get_class($response);
@@ -93,9 +110,9 @@ Route::get('/test-admin-debug', function () {
             $output['role_controller_error'] = $e->getMessage();
             $output['role_controller_file'] = $e->getFile() . ':' . $e->getLine();
         }
-        
+
         return response()->json($output, 200, [], JSON_PRETTY_PRINT);
-        
+
     } catch (\Exception $e) {
         return response()->json([
             'error' => $e->getMessage(),

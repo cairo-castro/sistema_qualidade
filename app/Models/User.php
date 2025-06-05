@@ -16,6 +16,7 @@ class User extends Authenticatable
         'email',
         'password',
         'usuario_sistema_id', // FK para sua tabela usuarios (quando existir)
+        'theme_settings',
     ];
 
     /**
@@ -30,7 +31,7 @@ class User extends Authenticatable
 
     /**
      * Override username method for Laravel Auth
-     * 
+     *
      * @return string
      */
     public function username()
@@ -59,6 +60,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'theme_settings' => 'array',
         ];
     }
 
@@ -77,4 +79,49 @@ class User extends Authenticatable
     //         $this->save();
     //     }
     // }
+
+    /**
+     * Get user's theme settings with defaults
+     */
+    public function getThemeSettings()
+    {
+        return $this->theme_settings ?? [
+            'navbar_color' => null,
+            'sidebar_color' => null,
+            'background_color' => null,
+            'is_custom' => false,
+        ];
+    }
+
+    /**
+     * Check if user has custom theme
+     */
+    public function hasCustomTheme()
+    {
+        $settings = $this->getThemeSettings();
+        return $settings['is_custom'] ?? false;
+    }
+
+    /**
+     * Update theme settings
+     */
+    public function updateThemeSettings($settings)
+    {
+        $this->theme_settings = array_merge($this->getThemeSettings(), $settings);
+        $this->save();
+    }
+
+    /**
+     * Reset theme to default
+     */
+    public function resetTheme()
+    {
+        $this->theme_settings = [
+            'navbar_color' => null,
+            'sidebar_color' => null,
+            'background_color' => null,
+            'is_custom' => false,
+        ];
+        $this->save();
+    }
 }
