@@ -14,14 +14,14 @@
         <!-- Search bar (desktop) -->
         <div class="hidden md:block">
             <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <svg class="h-5 w-5 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <svg class="h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </div>
                 <input type="search"
                        placeholder="Buscar diagnósticos, pacientes..."
-                       class="gqa-input pl-10 w-80 !py-2 text-sm"
+                       class="gqa-input pl-12 w-80 !py-2 text-sm"
                        @keydown.enter="performSearch()"
                        @input.debounce.500ms="performSearch()"
                 />
@@ -42,7 +42,7 @@
 
     <!-- Right side: Actions + Notifications + User menu -->
     <div class="flex items-center space-x-3">
-        <!-- Quick Actions (desktop) -->
+        <!-- Quick Actions (desktop only) -->
         <div class="hidden lg:flex items-center space-x-2">
             <button class="gqa-btn primary">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -56,150 +56,146 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
                 </svg>
             </button>
+        </div>
 
-            <!-- Theme Controls -->
-            <div class="flex items-center space-x-1">
-                <!-- Light/Dark Mode Toggle -->
-                <button class="gqa-btn ghost"
-                        onclick="toggleHospitalTheme()"
-                        :disabled="window.hasCustomTheme"
-                        :class="{ 'opacity-50 cursor-not-allowed': window.hasCustomTheme }"
-                        :title="window.hasCustomTheme ? 'Tema personalizado ativo - modo claro/escuro desabilitado' : 'Alternar modo claro/escuro'">
+        <!-- Theme Controls - Always visible -->
+        <div class="flex items-center space-x-1">
+            <!-- Light/Dark Mode Toggle -->
+            <button class="gqa-btn ghost"
+                    onclick="toggleHospitalTheme()"
+                    :disabled="window.hasCustomTheme"
+                    :class="{ 'opacity-50 cursor-not-allowed': window.hasCustomTheme }"
+                    :title="window.hasCustomTheme ? 'Tema personalizado ativo - modo claro/escuro desabilitado' : 'Alternar modo claro/escuro'">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                </svg>
+            </button>
+
+            <!-- Custom Theme Manager -->
+            <div class="relative" x-data="themeManager">
+                <button @click="open = !open"
+                        class="gqa-btn ghost"
+                        title="Personalizar cores do tema">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-5m-5 8V9a2 2 0 012-2h4a2 2 0 012 2v8a2 2 0 01-2 2h-4a2 2 0 01-2-2z"></path>
                     </svg>
+                    <span x-show="isCustomActive" class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></span>
                 </button>
 
-                <!-- Custom Theme Manager -->
-                <div class="relative" x-data="themeManager">
-                    <button @click="open = !open"
-                            class="gqa-btn ghost"
-                            title="Personalizar cores do tema">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-5m-5 8V9a2 2 0 012-2h4a2 2 0 012 2v8a2 2 0 01-2 2h-4a2 2 0 01-2-2z"></path>
-                        </svg>
-                        <span x-show="isCustomActive" class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></span>
-                    </button>
+                <!-- Theme Dropdown - Responsive width -->
+                <div x-show="open"
+                     @click.outside="open = false"
+                     x-transition:enter="transition ease-out duration-200"
+                     x-transition:enter-start="opacity-0 scale-95"
+                     x-transition:enter-end="opacity-100 scale-100"
+                     x-transition:leave="transition ease-in duration-150"
+                     x-transition:leave-start="opacity-100 scale-100"
+                     x-transition:leave-end="opacity-0 scale-95"
+                     class="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 dark:ring-gray-600 z-50"
+                     style="display: none;">
 
-                    <!-- Theme Dropdown -->
-                    <div x-show="open"
-                         @click.outside="open = false"
-                         x-transition:enter="transition ease-out duration-200"
-                         x-transition:enter-start="opacity-0 scale-95"
-                         x-transition:enter-end="opacity-100 scale-100"
-                         x-transition:leave="transition ease-in duration-150"
-                         x-transition:leave-start="opacity-100 scale-100"
-                         x-transition:leave-end="opacity-0 scale-95"
-                         class="absolute right-0 mt-2 w-80 bg-white dark:bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 dark:ring-gray-600 z-50"
-                         style="display: none;">
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-600">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Tema Personalizado</h3>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Personalize as cores da sua interface</p>
+                    </div>
 
-                        <div class="p-4 border-b border-gray-200 dark:border-gray-600">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Tema Personalizado</h3>
-                            <p class="text-sm text-gray-600 dark:text-gray-400">Personalize as cores da sua interface</p>
+                    <div class="p-4 space-y-4">
+                        <!-- Status indicator -->
+                        <div x-show="isCustomActive" class="flex items-center p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                            <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
+                            <span class="text-sm text-green-800 dark:text-green-300 font-medium">Tema personalizado ativo</span>
                         </div>
 
-                        <div class="p-4 space-y-4">
-                            <!-- Custom Theme Status -->
-                            <div x-show="isCustomActive" class="mb-4 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-                                <div class="flex items-center">
-                                    <svg class="w-4 h-4 text-green-600 dark:text-green-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                                    </svg>
-                                    <span class="text-sm text-green-800 dark:text-green-300 font-medium">Tema personalizado ativo</span>
-                                </div>
-                            </div>
-
-                            <!-- Navbar Color -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Cor da Barra Superior
-                                </label>
-                                <div class="flex items-center space-x-3">
-                                    <div class="relative">
-                                        <input type="color"
-                                               x-model="colors.navbar"
-                                               @input="updateColor('navbar', $event.target.value)"
-                                               class="w-12 h-8 rounded border border-gray-300 cursor-pointer">
-                                        <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-md"
-                                             :style="{ backgroundColor: colors.navbar }"></div>
-                                    </div>
-                                    <input type="text"
+                        <!-- Navbar Color -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Cor da Barra Superior
+                            </label>
+                            <div class="flex items-center space-x-3">
+                                <div class="relative">
+                                    <input type="color"
                                            x-model="colors.navbar"
                                            @input="updateColor('navbar', $event.target.value)"
-                                           @focus="$event.target.select()"
-                                           class="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                           placeholder="#ffffff"
-                                           maxlength="7">
-                                    <div class="text-xs text-gray-500 dark:text-gray-400"
-                                         x-text="getContrastingTextColor(colors.navbar) === '#ffffff' ? 'Escuro' : 'Claro'"></div>
+                                           class="w-12 h-8 rounded border border-gray-300 cursor-pointer">
+                                    <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-md"
+                                         :style="{ backgroundColor: colors.navbar }"></div>
                                 </div>
+                                <input type="text"
+                                       x-model="colors.navbar"
+                                       @input="updateColor('navbar', $event.target.value)"
+                                       @focus="$event.target.select()"
+                                       class="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                       placeholder="#ffffff"
+                                       maxlength="7">
+                                <div class="text-xs text-gray-500 dark:text-gray-400"
+                                     x-text="getContrastingTextColor(colors.navbar) === '#ffffff' ? 'Escuro' : 'Claro'"></div>
                             </div>
+                        </div>
 
-                            <!-- Sidebar Color -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Cor da Barra Lateral
-                                </label>
-                                <div class="flex items-center space-x-3">
-                                    <div class="relative">
-                                        <input type="color"
-                                               x-model="colors.sidebar"
-                                               @input="updateColor('sidebar', $event.target.value)"
-                                               class="w-12 h-8 rounded border border-gray-300 cursor-pointer">
-                                        <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-md"
-                                             :style="{ backgroundColor: colors.sidebar }"></div>
-                                    </div>
-                                    <input type="text"
+                        <!-- Sidebar Color -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Cor da Barra Lateral
+                            </label>
+                            <div class="flex items-center space-x-3">
+                                <div class="relative">
+                                    <input type="color"
                                            x-model="colors.sidebar"
                                            @input="updateColor('sidebar', $event.target.value)"
-                                           @focus="$event.target.select()"
-                                           class="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                           placeholder="#ffffff"
-                                           maxlength="7">
-                                    <div class="text-xs text-gray-500 dark:text-gray-400"
-                                         x-text="getContrastingTextColor(colors.sidebar) === '#ffffff' ? 'Escuro' : 'Claro'"></div>
+                                           class="w-12 h-8 rounded border border-gray-300 cursor-pointer">
+                                    <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-md"
+                                         :style="{ backgroundColor: colors.sidebar }"></div>
                                 </div>
+                                <input type="text"
+                                       x-model="colors.sidebar"
+                                       @input="updateColor('sidebar', $event.target.value)"
+                                       @focus="$event.target.select()"
+                                       class="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                       placeholder="#ffffff"
+                                       maxlength="7">
+                                <div class="text-xs text-gray-500 dark:text-gray-400"
+                                     x-text="getContrastingTextColor(colors.sidebar) === '#ffffff' ? 'Escuro' : 'Claro'"></div>
                             </div>
+                        </div>
 
-                            <!-- Background Color -->
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                    Cor de Fundo
-                                </label>
-                                <div class="flex items-center space-x-3">
-                                    <div class="relative">
-                                        <input type="color"
-                                               x-model="colors.background"
-                                               @input="updateColor('background', $event.target.value)"
-                                               class="w-12 h-8 rounded border border-gray-300 cursor-pointer">
-                                        <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-md"
-                                             :style="{ backgroundColor: colors.background }"></div>
-                                    </div>
-                                    <input type="text"
+                        <!-- Background Color -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Cor de Fundo
+                            </label>
+                            <div class="flex items-center space-x-3">
+                                <div class="relative">
+                                    <input type="color"
                                            x-model="colors.background"
                                            @input="updateColor('background', $event.target.value)"
-                                           @focus="$event.target.select()"
-                                           class="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                           placeholder="#ffffff"
-                                           maxlength="7">
-                                    <div class="text-xs text-gray-500 dark:text-gray-400"
-                                         x-text="getContrastingTextColor(colors.background) === '#ffffff' ? 'Escuro' : 'Claro'"></div>
+                                           class="w-12 h-8 rounded border border-gray-300 cursor-pointer">
+                                    <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-md"
+                                         :style="{ backgroundColor: colors.background }"></div>
                                 </div>
+                                <input type="text"
+                                       x-model="colors.background"
+                                       @input="updateColor('background', $event.target.value)"
+                                       @focus="$event.target.select()"
+                                       class="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                       placeholder="#ffffff"
+                                       maxlength="7">
+                                <div class="text-xs text-gray-500 dark:text-gray-400"
+                                     x-text="getContrastingTextColor(colors.background) === '#ffffff' ? 'Escuro' : 'Claro'"></div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="p-4 border-t border-gray-200 dark:border-gray-600 flex justify-between">
-                            <button @click="resetTheme()"
-                                    class="px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
-                                Resetar para Padrão
-                            </button>
-                            <button @click="saveTheme()"
-                                    :disabled="loading"
-                                    class="px-4 py-1 text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded transition-colors">
-                                <span x-show="!loading">Salvar Tema</span>
-                                <span x-show="loading">Salvando...</span>
-                            </button>
-                        </div>
+                    <div class="p-4 border-t border-gray-200 dark:border-gray-600 flex justify-between">
+                        <button @click="resetTheme()"
+                                class="px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
+                            Resetar para Padrão
+                        </button>
+                        <button @click="saveTheme()"
+                                :disabled="loading"
+                                class="px-4 py-1 text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded transition-colors">
+                            <span x-show="!loading">Salvar Tema</span>
+                            <span x-show="loading">Salvando...</span>
+                        </button>
                     </div>
                 </div>
             </div>

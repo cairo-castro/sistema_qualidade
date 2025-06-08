@@ -7,7 +7,7 @@ return [
     |--------------------------------------------------------------------------
     */
 
-    'name' => env('SISTEMA_NAME', 'Sistema da Qualiade Assistencial'),
+    'name' => env('SISTEMA_NAME', 'Sistema da Qualidade Assistencial'),
     'version' => '1.0.0',
     'company' => env('SISTEMA_COMPANY', 'EMSERH'),
     
@@ -61,7 +61,7 @@ return [
     |--------------------------------------------------------------------------
     */
     'mail' => [
-        'from_name' => env('MAIL_FROM_NAME', 'Sistema da Qualiade Assistencial'),
+        'from_name' => env('MAIL_FROM_NAME', 'Sistema da Qualidade Assistencial'),
         'support_email' => env('SUPPORT_EMAIL', 'suporte@empresa.com'),
         'notifications_enabled' => env('MAIL_NOTIFICATIONS', true),
     ],
