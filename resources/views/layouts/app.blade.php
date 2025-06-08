@@ -46,31 +46,43 @@
             @endif
         }
 
-        .hospital-navbar > *:not(.gqa-dropdown):not([x-show]):not([x-data]),
-        .hospital-navbar button:not(.gqa-dropdown *):not(.gqa-dropdown-item),
-        .hospital-navbar a:not(.gqa-dropdown *):not(.gqa-dropdown-item),
-        .hospital-navbar span:not(.gqa-dropdown *):not(.gqa-dropdown-item),
-        .hospital-navbar div:not(.gqa-dropdown):not([x-show]):not([x-data]),
-        .hospital-navbar input:not(.gqa-dropdown *),
-        .hospital-navbar svg:not(.gqa-dropdown *) {
+        /* Apply navbar colors to most elements, but preserve dropdown styling */
+        .hospital-navbar > *,
+        .hospital-navbar button,
+        .hospital-navbar a,
+        .hospital-navbar span,
+        .hospital-navbar div,
+        .hospital-navbar input,
+        .hospital-navbar svg {
             @if($userTheme['navbar_color'])
                 color: var(--custom-navbar-text) !important;
                 stroke: var(--custom-navbar-text) !important;
                 fill: var(--custom-navbar-text) !important;
-                border-color: var(--custom-navbar-text) !important;
             @endif
         }
 
-        /* Preserve dropdown colors - they should remain as designed */
-        .hospital-navbar .gqa-dropdown,
-        .hospital-navbar .gqa-dropdown *,
-        .hospital-navbar .gqa-dropdown-item,
+        /* Preserve dropdown and overlay styling - reset to default */
+        .hospital-navbar [class*="dropdown"],
+        .hospital-navbar [class*="dropdown"] *,
+        .hospital-navbar .absolute,
+        .hospital-navbar .absolute *,
+        .hospital-navbar [x-show],
         .hospital-navbar [x-show] *,
-        .hospital-navbar [x-data] .bg-white,
-        .hospital-navbar [x-data] .bg-white * {
-            color: initial !important;
-            background-color: initial !important;
-            border-color: initial !important;
+        .hospital-navbar .shadow-xl,
+        .hospital-navbar .shadow-xl *,
+        .hospital-navbar [class*="bg-white"],
+        .hospital-navbar [class*="bg-white"] *,
+        .hospital-navbar [class*="bg-gray"],
+        .hospital-navbar [class*="bg-gray"] *,
+        .hospital-navbar [class*="text-gray"],
+        .hospital-navbar [class*="text-gray"] *,
+        .hospital-navbar [class*="border-gray"],
+        .hospital-navbar [class*="border-gray"] * {
+            color: revert !important;
+            background-color: revert !important;
+            border-color: revert !important;
+            stroke: revert !important;
+            fill: revert !important;
         }
 
         .hospital-sidebar {
@@ -133,10 +145,21 @@
             @endif
         }
 
-        /* Enhanced contrast for interactive elements */
-        .hospital-navbar button,
-        .hospital-navbar .gqa-btn {
+        /* Enhanced contrast for interactive elements - FIXED NAVBAR BUTTONS */
+        .hospital-navbar button:not(.gqa-dropdown *):not(.gqa-dropdown-item):not([x-show] *):not([x-data] *),
+        .hospital-navbar .gqa-btn:not(.gqa-dropdown *):not(.gqa-dropdown-item):not([x-show] *):not([x-data] *) {
             @if($userTheme['navbar_color'])
+                color: var(--custom-navbar-text) !important;
+                border-color: var(--custom-navbar-text) !important;
+                stroke: var(--custom-navbar-text) !important;
+                fill: var(--custom-navbar-text) !important;
+            @endif
+        }
+
+        /* Fix specific navbar button issues */
+        .hospital-navbar .gqa-btn.ghost:not(.gqa-dropdown *):not(.gqa-dropdown-item):not([x-show] *):not([x-data] *) {
+            @if($userTheme['navbar_color'])
+                background-color: transparent !important;
                 color: var(--custom-navbar-text) !important;
                 border-color: var(--custom-navbar-text) !important;
             @endif
@@ -150,7 +173,19 @@
                     $hoverBg = $isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
                 @endphp
                 background-color: {{ $hoverBg }} !important;
+                color: var(--custom-navbar-text) !important;
             @endif
+        }
+
+        /* Reset hover for dropdown elements */
+        .hospital-navbar [class*="dropdown"] button:hover,
+        .hospital-navbar [class*="dropdown"] .gqa-btn:hover,
+        .hospital-navbar .absolute button:hover,
+        .hospital-navbar .absolute .gqa-btn:hover,
+        .hospital-navbar [x-show] button:hover,
+        .hospital-navbar [x-show] .gqa-btn:hover {
+            background-color: revert !important;
+            color: revert !important;
         }
 
         .hospital-sidebar .hospital-nav-item {
@@ -320,6 +355,11 @@
     <div class="hospital-layout">
         <!-- Sidebar -->
         @include('layouts.partials.sidebar')
+
+        <!-- Mobile Sidebar Overlay -->
+        <div class="mobile-sidebar-overlay" 
+             @click="sidebarOpen = false; $el.classList.remove('active'); document.querySelector('.hospital-sidebar').classList.remove('mobile-open'); document.body.style.overflow = ''"
+             x-show="sidebarOpen && window.innerWidth < 1024"></div>
 
         <!-- Main Content -->
         <main class="hospital-main" :class="{ 'sidebar-collapsed': sidebarCollapsed }">

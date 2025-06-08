@@ -46,10 +46,15 @@ document.addEventListener('alpine:init', () => {
             }
         ],
         
-        // 🎯 Inicialização do componente
+        // 🔔 Computed property para verificar se há notificações novas
+        get hasNew() {
+            return this.notifications.some(n => !n.read);
+        },
+          // 🎯 Inicialização do componente
         init() {
             console.log('🏥 Componente hospitalDashboard inicializado');
             
+                        
             try {
                 // 🔄 Sincronizar estado da sidebar
                 this.updateSidebarState();
@@ -58,6 +63,28 @@ document.addEventListener('alpine:init', () => {
                 this.$watch('sidebarCollapsed', (value) => {
                     localStorage.setItem('hospital-sidebar-collapsed', value);
                     this.updateSidebarClasses();
+                });
+                
+                // 📱 Handle window resize to properly manage sidebar state
+                window.addEventListener('resize', () => {
+                    if (window.innerWidth >= 1024) {
+                        // Desktop: close mobile sidebar if open
+                        if (this.sidebarOpen) {
+                            this.sidebarOpen = false;
+                            const sidebar = document.querySelector('.hospital-sidebar');
+                            const overlay = document.querySelector('.mobile-sidebar-overlay');
+                            
+                            if (sidebar) {
+                                sidebar.classList.remove('mobile-open');
+                            }
+                            
+                            if (overlay) {
+                                overlay.classList.remove('active');
+                            }
+                            
+                            document.body.style.overflow = '';
+                        }
+                    }
                 });
                 
                 // ⏳ Aguardar DOM estar completamente pronto antes de inicializar gráficos
@@ -108,10 +135,36 @@ document.addEventListener('alpine:init', () => {
                 console.error('❌ Erro ao atualizar classes da sidebar:', error);
             }
         },
-        
-        // 📱 Toggle da sidebar
+          // 📱 Toggle da sidebar
         toggleSidebar() {
-            this.sidebarCollapsed = !this.sidebarCollapsed;
+            // Check if we're on mobile (window width < 1024px)
+            if (window.innerWidth < 1024) {
+                // Mobile: toggle the mobile sidebar
+                this.sidebarOpen = !this.sidebarOpen;
+                
+                // Add/remove mobile-open class to sidebar
+                const sidebar = document.querySelector('.hospital-sidebar');
+                const overlay = document.querySelector('.mobile-sidebar-overlay');
+                
+                if (sidebar) {
+                    sidebar.classList.toggle('mobile-open', this.sidebarOpen);
+                }
+                
+                if (overlay) {
+                    overlay.classList.toggle('active', this.sidebarOpen);
+                }
+                
+                // Prevent body scroll when sidebar is open on mobile
+                if (this.sidebarOpen) {
+                    document.body.style.overflow = 'hidden';
+                } else {
+                    document.body.style.overflow = '';
+                }
+            } else {
+                // Desktop: toggle collapsed state
+                this.sidebarCollapsed = !this.sidebarCollapsed;
+                localStorage.setItem('hospital-sidebar-collapsed', this.sidebarCollapsed);
+            }
         },
         
         // 📱 Toggle mobile da sidebar
@@ -195,7 +248,7 @@ document.addEventListener('alpine:init', () => {
                 this.loading = false;
             }
         },
-        
+
         // 🎉 Mostrar toast notification
         showToast(message, type = 'info', duration = 3000) {
             try {
@@ -230,13 +283,12 @@ document.addEventListener('alpine:init', () => {
                 
             } catch (error) {
                 console.error('❌ Erro ao mostrar toast:', error);
+                console.log(`📢 ${type.toUpperCase()}: ${message}`);
             }
-        }
-    }));
-    
-    // 🔢 Componente de formatação de números - Mais seguro
-    Alpine.data('formatNumber', () => {
-        return function(value) {
+        },
+
+        // 🔢 Formatar números com segurança
+        formatNumber(value) {
             try {
                 if (value === null || value === undefined || value === '') return '0';
                 
@@ -248,12 +300,10 @@ document.addEventListener('alpine:init', () => {
                 console.error('❌ Erro ao formatar número:', error);
                 return '0';
             }
-        };
-    });
-    
-    // 💰 Componente de formatação de moeda - Mais seguro
-    Alpine.data('formatCurrency', () => {
-        return function(value) {
+        },
+
+        // 💰 Formatar moeda com segurança
+        formatCurrency(value) {
             try {
                 if (value === null || value === undefined || value === '') return 'R$ 0,00';
                 
@@ -268,12 +318,10 @@ document.addEventListener('alpine:init', () => {
                 console.error('❌ Erro ao formatar moeda:', error);
                 return 'R$ 0,00';
             }
-        };
-    });
-    
-    // 📅 Componente de formatação de data - Mais seguro
-    Alpine.data('formatDate', () => {
-        return function(date) {
+        },
+
+        // 📅 Formatar data com segurança
+        formatDate(date) {
             try {
                 if (!date) return '';
                 
@@ -289,8 +337,8 @@ document.addEventListener('alpine:init', () => {
                 console.error('❌ Erro ao formatar data:', error);
                 return '';
             }
-        };
-    });
+        }
+    }));
     
     console.log('✅ Componentes Alpine.js do Dashboard carregados!');
 });
@@ -350,4 +398,4 @@ document.addEventListener('alpine:initialized', () => {
     console.log('✅ Alpine.js inicializado completamente');
 });
 
-console.log('📊 Dashboard Components carregado e pronto!'); 
+console.log('📊 Dashboard Components carregado e pronto!');

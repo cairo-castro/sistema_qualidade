@@ -13,6 +13,62 @@ const loadPrelineComponents = () => Promise.all([
 import Alpine from 'alpinejs';
 window.Alpine = Alpine;
 
+// 🌐 Global variables needed by Alpine templates
+window.themeManager = null;
+window.isCustomActive = window.hasCustomTheme || false;
+window.colors = {
+    navbar: window.userTheme?.navbar_color || '#ffffff',
+    sidebar: window.userTheme?.sidebar_color || '#ffffff', 
+    background: window.userTheme?.background_color || '#f9fafb'
+};
+
+// 🎨 Global function for text color contrast calculation
+window.getContrastingTextColor = function(hexColor) {
+    if (!hexColor) return '#1f2937';
+    
+    try {
+        // Remove # if present
+        const cleanHex = hexColor.replace('#', '');
+        
+        // Validate hex format
+        if (!/^[0-9A-Fa-f]{6}$/.test(cleanHex)) {
+            return '#1f2937'; // Default dark text
+        }
+
+        // Convert hex to RGB
+        const r = parseInt(cleanHex.slice(0, 2), 16);
+        const g = parseInt(cleanHex.slice(2, 4), 16);
+        const b = parseInt(cleanHex.slice(4, 6), 16);
+
+        // Calculate relative luminance using sRGB colorspace
+        const rsRGB = r / 255;
+        const gsRGB = g / 255;
+        const bsRGB = b / 255;
+
+        const rLinear = rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
+        const gLinear = gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
+        const bLinear = bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
+
+        const luminance = 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
+
+        // Use WCAG contrast ratio guidelines
+        return luminance > 0.179 ? '#1f2937' : '#ffffff';
+    } catch (error) {
+        console.warn('Error calculating contrasting text color:', error);
+        return '#1f2937'; // Default dark text
+    }
+};
+
+// 🔄 Update global variables when theme changes
+window.updateGlobalThemeVars = function() {
+    window.isCustomActive = window.hasCustomTheme || false;
+    if (window.userTheme) {
+        window.colors.navbar = window.userTheme.navbar_color || '#ffffff';
+        window.colors.sidebar = window.userTheme.sidebar_color || '#ffffff';
+        window.colors.background = window.userTheme.background_color || '#f9fafb';
+    }
+};
+
 // Configurações globais otimizadas do Sistema
 window.Hospital = {
     config: {
@@ -1167,11 +1223,25 @@ document.addEventListener('alpine:init', () => {
                             navbar.style.setProperty('background-color', color, 'important');
                             navbar.style.setProperty('color', textColor, 'important');
 
-                            // Update all interactive elements in navbar (excluding dropdowns)
-                            const interactiveElements = navbar.querySelectorAll('button:not(.gqa-dropdown *):not(.gqa-dropdown-item), a:not(.gqa-dropdown *):not(.gqa-dropdown-item), .gqa-btn:not(.gqa-dropdown *), .btn:not(.gqa-dropdown *), input[type="search"]:not(.gqa-dropdown *)');
+                            // Update all interactive elements in navbar (excluding dropdowns) - ENHANCED SELECTORS
+                            const interactiveElements = navbar.querySelectorAll(`
+                                button:not(.gqa-dropdown *):not(.gqa-dropdown-item):not([x-show] *):not([x-data] *):not(.absolute *),
+                                a:not(.gqa-dropdown *):not(.gqa-dropdown-item):not([x-show] *):not([x-data] *):not(.absolute *),
+                                .gqa-btn:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                .btn:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                input[type="search"]:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *)
+                            `.replace(/\s+/g, ' ').trim());
+                            
                             interactiveElements.forEach(el => {
+                                // Skip elements inside dropdowns or Alpine.js components
+                                if (el.closest('[x-show]') || el.closest('[x-data]') || el.closest('.absolute') || el.closest('.gqa-dropdown')) {
+                                    return;
+                                }
+                                
                                 el.style.setProperty('color', textColor, 'important');
                                 el.style.setProperty('border-color', textColor, 'important');
+                                el.style.setProperty('stroke', textColor, 'important');
+                                el.style.setProperty('fill', textColor, 'important');
 
                                 // Special handling for search input
                                 if (el.tagName === 'INPUT') {
@@ -1180,22 +1250,66 @@ document.addEventListener('alpine:init', () => {
                                 }
                             });
 
-                            // Update text elements including page headers and brand (excluding dropdowns)
-                            const textElements = navbar.querySelectorAll('span:not(.gqa-dropdown *), p:not(.gqa-dropdown *), div:not(.gqa-dropdown):not([x-show]):not([x-data]), h1:not(.gqa-dropdown *), h2:not(.gqa-dropdown *), h3:not(.gqa-dropdown *), h4:not(.gqa-dropdown *), h5:not(.gqa-dropdown *), h6:not(.gqa-dropdown *), .page-header:not(.gqa-dropdown *), .navbar-brand:not(.gqa-dropdown *), .brand:not(.gqa-dropdown *), .logo:not(.gqa-dropdown *), .logo-text:not(.gqa-dropdown *)');
+                            // Update text elements including page headers and brand (excluding dropdowns) - ENHANCED
+                            const textElements = navbar.querySelectorAll(`
+                                span:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                p:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                div:not(.gqa-dropdown):not([x-show]):not([x-data]):not(.absolute),
+                                h1:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                h2:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                h3:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                h4:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                h5:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                h6:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                .page-header:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                .navbar-brand:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                .brand:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                .logo:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
+                                .logo-text:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *)
+                            `.replace(/\s+/g, ' ').trim());
+                            
                             textElements.forEach(el => {
+                                // Double-check to avoid dropdown elements
+                                if (el.closest('[x-show]') || el.closest('[x-data]') || el.closest('.absolute') || el.closest('.gqa-dropdown')) {
+                                    return;
+                                }
                                 el.style.setProperty('color', textColor, 'important');
                             });
 
-                            // Update SVG icons in navbar (excluding dropdowns)
-                            const svgIcons = navbar.querySelectorAll('svg:not(.gqa-dropdown *)');
+                            // Update SVG icons in navbar (excluding dropdowns) - ENHANCED
+                            const svgIcons = navbar.querySelectorAll(`
+                                svg:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *)
+                            `.replace(/\s+/g, ' ').trim());
+                            
                             svgIcons.forEach(icon => {
+                                // Skip dropdown icons
+                                if (icon.closest('[x-show]') || icon.closest('[x-data]') || icon.closest('.absolute') || icon.closest('.gqa-dropdown')) {
+                                    return;
+                                }
                                 icon.style.setProperty('color', textColor, 'important');
                                 icon.style.setProperty('stroke', textColor, 'important');
                             });
 
                             // Update badges and quick stats in navbar (excluding dropdowns) - COMPLETE BADGE STYLING
-                            const badges = navbar.querySelectorAll('.badge:not(.gqa-dropdown *), .hospital-badge:not(.gqa-dropdown *), .quick-stat:not(.gqa-dropdown *), [class*="badge"]:not(.gqa-dropdown *), [class*="stat"]:not(.gqa-dropdown *), .bg-green-50, .dark\\:bg-green-900\\/20, [class*="bg-"]:not(.gqa-dropdown *)');
+                            const badgeSelectors = [
+                                '.badge:not(.gqa-dropdown *)', 
+                                '.hospital-badge:not(.gqa-dropdown *)', 
+                                '.quick-stat:not(.gqa-dropdown *)', 
+                                '[class*="badge"]:not(.gqa-dropdown *)', 
+                                '[class*="stat"]:not(.gqa-dropdown *)', 
+                                '.bg-green-50:not(.gqa-dropdown *)', 
+                                '.dark\\:bg-green-900\\/20:not(.gqa-dropdown *)',
+                                '[class*="bg-"][class*="50"]:not(.gqa-dropdown *)',
+                                '[class*="bg-"][class*="100"]:not(.gqa-dropdown *)'
+                            ].join(', ');
+                            
+                            const badges = navbar.querySelectorAll(badgeSelectors);
                             badges.forEach(badge => {
+                                // Skip if this badge is inside a dropdown or Alpine component
+                                if (badge.closest('.gqa-dropdown') || badge.closest('[x-show]') || badge.closest('[x-data]')) {
+                                    return;
+                                }
+                                
                                 const isDark = textColor === '#ffffff';
                                 
                                 // Set badge background and text colors based on navbar contrast
@@ -1451,7 +1565,7 @@ document.addEventListener('alpine:init', () => {
                                         '.metric-value, .stat-value, .number',
                                         '.card-header, .card-body, .card-footer',
                                         '.text-sm, .text-lg, .text-xl',
-                                        '.font-bold, .font-semibold, .font-medium',
+                                        '.font-bold', '.font-semibold', '.font-medium',
                                         '[class*="text-"]'
                                     ];
 
@@ -1570,15 +1684,14 @@ document.addEventListener('alpine:init', () => {
                     // Hide light/dark mode toggle
                     this.hideLightDarkToggle();
 
-                    // Show success message
-                    window.Hospital.utils.showToast('Tema salvo com sucesso!', 'success');
+                    // Close the theme panel
                     this.open = false;
                 } else {
                     throw new Error(data.message || 'Falha ao salvar tema');
                 }
             } catch (error) {
                 console.error('Theme save error:', error);
-                window.Hospital.utils.showToast('Falha ao salvar tema: ' + error.message, 'error');
+                // Silent error handling - no toast notification
             } finally {
                 this.loading = false;
             }
@@ -1615,15 +1728,14 @@ document.addEventListener('alpine:init', () => {
                     // Show light/dark mode toggle again
                     this.showLightDarkToggle();
 
-                    // Show success message
-                    window.Hospital.utils.showToast('Tema resetado para o padrão', 'success');
+                    // Close the theme panel
                     this.open = false;
                 } else {
                     throw new Error(data.message || 'Falha ao resetar tema');
                 }
             } catch (error) {
                 console.error('Theme reset error:', error);
-                window.Hospital.utils.showToast('Falha ao resetar tema: ' + error.message, 'error');
+                // Silent error handling - no toast notification
             } finally {
                 this.loading = false;
             }

@@ -16,11 +16,14 @@ function waitForApexCharts() {
         function check() {
             if (typeof ApexCharts !== 'undefined') {
                 isApexChartsReady = true;
+                console.log('✅ ApexCharts carregado com sucesso');
                 resolve(true);
             } else if (initAttempts < maxInitAttempts) {
                 initAttempts++;
+                console.log(`⏳ Aguardando ApexCharts... Tentativa ${initAttempts}/${maxInitAttempts}`);
                 setTimeout(check, 200);
             } else {
+                console.error('❌ ApexCharts não foi carregado após várias tentativas');
                 reject(new Error('ApexCharts não foi carregado após várias tentativas'));
             }
         }
@@ -43,6 +46,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }, 300);
 });
+
+/**
+ * 📊 Mostrar mensagem de fallback quando gráficos não carregam
+ */
+function showFallbackMessage() {
+    const container = document.getElementById('diagnosticsChart');
+    if (container) {
+        container.innerHTML = `
+            <div class="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+                <svg class="w-12 h-12 mb-4 text-gray-300 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                </svg>
+                <p class="text-sm font-medium mb-2">Gráfico temporariamente indisponível</p>
+                <p class="text-xs text-center">Os dados estão sendo processados. Tente recarregar a página.</p>
+                <button onclick="location.reload()" class="mt-4 px-4 py-2 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition-colors">
+                    Recarregar Página
+                </button>
+            </div>
+        `;
+    }
+}
 
 /**
  * 📈 Inicializar todos os gráficos do dashboard
@@ -544,26 +568,6 @@ function showChartError(container, errorMessage = 'Erro desconhecido') {
                 <button onclick="location.reload()" class="mt-3 px-4 py-2 text-xs bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 rounded transition-colors">
                     Recarregar
                 </button>
-            </div>
-        </div>
-    `;
-}
-
-/**
- * 💬 Mostrar mensagem de fallback
- */
-function showFallbackMessage() {
-    const container = document.getElementById('diagnosticsChart');
-    if (!container) return;
-
-    container.innerHTML = `
-        <div class="flex items-center justify-center h-full min-h-[300px]">
-            <div class="text-center text-gray-500 dark:text-gray-400">
-                <svg class="w-12 h-12 mx-auto mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                </svg>
-                <p class="text-sm font-medium">Carregando biblioteca de gráficos...</p>
-                <p class="text-xs mt-1">Aguarde um momento</p>
             </div>
         </div>
     `;
