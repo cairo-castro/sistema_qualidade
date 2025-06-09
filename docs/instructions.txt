@@ -1,0 +1,137 @@
+Documento de Contexto para IA – Projeto de Gestão da Qualidade Hospitalar
+1. Visão Geral do Projeto
+Desenvolvemos um sistema de Gestão da Qualidade Hospitalar usando Laravel 12 como backend principal, focando em modularidade, segurança, performance e UX moderna para ambientes hospitalares.
+
+2. Stack e Ferramentas
+Backend: Laravel 12 (PHP 8+)
+
+Frontend:
+
+Alpine.js (JS reativo minimalista)
+
+Tailwind CSS (utilitário CSS)
+
+Preline UI (componentes UI pré-montados, baseados em Tailwind)
+
+Permissões e RBAC:
+
+Spatie Laravel Permission (controle granular de papéis e permissões)
+
+Modularização:
+
+Nwidart/laravel-modules (cada módulo isolado, facilitando manutenção e escalabilidade)
+
+Banco de Dados: MySQL 8+
+
+Ambiente de Desenvolvimento:
+
+SO: Windows 11
+
+IDE: VS Code com extensões para PHP, Blade, Tailwind, Alpine.js
+
+3. Padrões de Código e Boas Práticas
+3.1. Backend (Laravel)
+Clean Code:
+
+Priorize clareza e legibilidade; evite verbosidade excessiva.
+
+Métodos pequenos e com responsabilidade única.
+
+Eloquent ORM:
+
+Prefira queries otimizadas e evite N+1 (use eager loading: with(), load()).
+
+Validação:
+
+Use Form Requests para validação de dados e políticas de acesso.
+
+Controllers:
+
+Controllers finos, lógica complexa em Services ou Actions.
+
+Service Providers:
+
+Use para registrar bindings, event listeners e customizações globais.
+
+Segurança:
+
+Sempre utilize middlewares nativos do Laravel para autenticação/autorização.
+
+Utilize CSRF, validação de entrada e sanitize outputs.
+
+Migrations e Seeders:
+
+Controle rigoroso da estrutura do banco, sem alterar dados em migrations.
+
+Testes:
+
+Prefira Feature e Unit tests para funcionalidades críticas.
+
+3.2. Frontend (Alpine.js + Tailwind + Preline)
+Componentização:
+
+Use componentes Preline para uniformizar UI e UX.
+
+Responsividade:
+
+Use utilitários do Tailwind para mobile-first.
+
+Scripts:
+
+Scripts reativos e simples via Alpine.js; evite JS customizado complexo quando possível.
+
+Acessibilidade:
+
+Sempre que possível, siga boas práticas de acessibilidade (ARIA, contraste, navegação via teclado).
+
+3.3. Permissões (Spatie)
+Defina roles e permissões explicitamente.
+
+Nunca hardcode permissões no código; use policies e gates do Laravel.
+
+Controle de acesso granular por módulo e operação.
+
+3.4. Modularização (Nwidart)
+Cada módulo tem Controllers, Models, Views, Migrations e Rotas próprios.
+
+Dependências entre módulos devem ser explícitas.
+
+Facilite ativação/desativação de módulos sem impactar o core.
+
+3.5. Banco de Dados (MySQL)
+Normalização até 3FN para dados principais.
+
+Use índices em colunas frequentemente consultadas.
+
+Relacionamentos bem definidos (FKs, onDelete cascade/restrict conforme regra de negócio).
+
+4. Performance
+Use cache (cache() helpers, Redis/Memcached) para consultas pesadas.
+
+Minimize queries duplicadas.
+
+Evite processamento pesado em requests síncronos – use filas e jobs.
+
+Prefira assets versionados e minificados (Vite/Laravel Mix).
+
+5. Segurança
+HTTPS obrigatório.
+
+Senhas sempre criptografadas (bcrypt/argon2i).
+
+Política forte de senhas.
+
+Validação de arquivos upload (extensão, tamanho, MIME).
+
+Nunca exponha dados sensíveis em responses.
+
+Auditoria de ações críticas no sistema.
+
+6. Convenções Gerais
+Use nomes em inglês para código; português apenas em textos para usuário final.
+
+Organização dos diretórios conforme padrão Laravel + Nwidart modules.
+
+Código sempre documentado com PHPDoc, quando relevante.
+
+Priorize reutilização de componentes/blades para evitar repetição.

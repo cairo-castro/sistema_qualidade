@@ -18,18 +18,18 @@ window.themeManager = null;
 window.isCustomActive = window.hasCustomTheme || false;
 window.colors = {
     navbar: window.userTheme?.navbar_color || '#ffffff',
-    sidebar: window.userTheme?.sidebar_color || '#ffffff', 
+    sidebar: window.userTheme?.sidebar_color || '#ffffff',
     background: window.userTheme?.background_color || '#f9fafb'
 };
 
 // 🎨 Global function for text color contrast calculation
 window.getContrastingTextColor = function(hexColor) {
     if (!hexColor) return '#1f2937';
-    
+
     try {
         // Remove # if present
         const cleanHex = hexColor.replace('#', '');
-        
+
         // Validate hex format
         if (!/^[0-9A-Fa-f]{6}$/.test(cleanHex)) {
             return '#1f2937'; // Default dark text
@@ -1126,6 +1126,32 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        // 🔄 Update custom theme active status
+        updateIsCustomActive() {
+            this.isCustomActive = window.hasCustomTheme || false;
+            window.isCustomActive = this.isCustomActive;
+        },
+
+        // 🫥 Hide light/dark toggle when custom theme is active
+        hideLightDarkToggle() {
+            const toggleButton = document.querySelector('button[onclick="toggleHospitalTheme()"]');
+            if (toggleButton) {
+                toggleButton.disabled = true;
+                toggleButton.classList.add('opacity-50', 'cursor-not-allowed');
+                toggleButton.title = 'Tema personalizado ativo - modo claro/escuro desabilitado';
+            }
+        },
+
+        // 👁️ Show light/dark toggle when custom theme is not active
+        showLightDarkToggle() {
+            const toggleButton = document.querySelector('button[onclick="toggleHospitalTheme()"]');
+            if (toggleButton) {
+                toggleButton.disabled = false;
+                toggleButton.classList.remove('opacity-50', 'cursor-not-allowed');
+                toggleButton.title = 'Alternar modo claro/escuro';
+            }
+        },
+
         // Switch to light mode when starting theme customization if currently in dark mode
         startCustomization() {
             const currentTheme = window.Hospital.getCurrentTheme();
@@ -1143,7 +1169,9 @@ document.addEventListener('alpine:init', () => {
 
                 console.log('🎨 Modo escuro desativado automaticamente para personalização');
             }
-        },        updateColor(type, value) {
+        },
+
+        updateColor(type, value) {
             // Start customization process (switch to light mode if needed)
             this.startCustomization();
 
@@ -1217,27 +1245,27 @@ document.addEventListener('alpine:init', () => {
                         root.style.setProperty('--custom-navbar-bg', color);
                         root.style.setProperty('--custom-navbar-text', textColor);
 
-                        // Use more specific selector to avoid conflict with sidebar and dropdowns
+                        // Use more specific selector to avoid conflict with sidebar
                         const navbar = document.querySelector('.hospital-navbar');
                         if (navbar) {
                             navbar.style.setProperty('background-color', color, 'important');
                             navbar.style.setProperty('color', textColor, 'important');
 
-                            // Update all interactive elements in navbar (excluding dropdowns) - ENHANCED SELECTORS
+                            // Update all interactive elements in navbar (including dropdowns)
                             const interactiveElements = navbar.querySelectorAll(`
-                                button:not(.gqa-dropdown *):not(.gqa-dropdown-item):not([x-show] *):not([x-data] *):not(.absolute *),
-                                a:not(.gqa-dropdown *):not(.gqa-dropdown-item):not([x-show] *):not([x-data] *):not(.absolute *),
-                                .gqa-btn:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                .btn:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                input[type="search"]:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *)
+                                button:not(.absolute button):not([x-show] button),
+                                a:not(.absolute a):not([x-show] a),
+                                .gqa-btn:not(.absolute .gqa-btn):not([x-show] .gqa-btn),
+                                .btn:not(.absolute .btn):not([x-show] .btn),
+                                input[type="search"]:not(.absolute input):not([x-show] input)
                             `.replace(/\s+/g, ' ').trim());
-                            
+
                             interactiveElements.forEach(el => {
-                                // Skip elements inside dropdowns or Alpine.js components
-                                if (el.closest('[x-show]') || el.closest('[x-data]') || el.closest('.absolute') || el.closest('.gqa-dropdown')) {
+                                // Skip elements that are inside dropdown menus (positioned absolute)
+                                if (el.closest('.absolute') || el.closest('[x-show]')) {
                                     return;
                                 }
-                                
+
                                 el.style.setProperty('color', textColor, 'important');
                                 el.style.setProperty('border-color', textColor, 'important');
                                 el.style.setProperty('stroke', textColor, 'important');
@@ -1250,72 +1278,72 @@ document.addEventListener('alpine:init', () => {
                                 }
                             });
 
-                            // Update text elements including page headers and brand (excluding dropdowns) - ENHANCED
+                            // Update text elements including page headers and brand (excluding dropdown menus)
                             const textElements = navbar.querySelectorAll(`
-                                span:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                p:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                div:not(.gqa-dropdown):not([x-show]):not([x-data]):not(.absolute),
-                                h1:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                h2:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                h3:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                h4:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                h5:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                h6:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                .page-header:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                .navbar-brand:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                .brand:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                .logo:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *),
-                                .logo-text:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *)
+                                span:not(.absolute span):not([x-show] span),
+                                p:not(.absolute p):not([x-show] p),
+                                div:not(.absolute):not([x-show]):not(.gqa-dropdown),
+                                h1:not(.absolute h1):not([x-show] h1),
+                                h2:not(.absolute h2):not([x-show] h2),
+                                h3:not(.absolute h3):not([x-show] h3),
+                                h4:not(.absolute h4):not([x-show] h4),
+                                h5:not(.absolute h5):not([x-show] h5),
+                                h6:not(.absolute h6):not([x-show] h6),
+                                .page-header:not(.absolute .page-header):not([x-show] .page-header),
+                                .navbar-brand:not(.absolute .navbar-brand):not([x-show] .navbar-brand),
+                                .brand:not(.absolute .brand):not([x-show] .brand),
+                                .logo:not(.absolute .logo):not([x-show] .logo),
+                                .logo-text:not(.absolute .logo-text):not([x-show] .logo-text)
                             `.replace(/\s+/g, ' ').trim());
-                            
+
                             textElements.forEach(el => {
                                 // Double-check to avoid dropdown elements
-                                if (el.closest('[x-show]') || el.closest('[x-data]') || el.closest('.absolute') || el.closest('.gqa-dropdown')) {
+                                if (el.closest('.absolute') || el.closest('[x-show]')) {
                                     return;
                                 }
                                 el.style.setProperty('color', textColor, 'important');
                             });
 
-                            // Update SVG icons in navbar (excluding dropdowns) - ENHANCED
+                            // Update SVG icons in navbar (excluding dropdown menus)
                             const svgIcons = navbar.querySelectorAll(`
-                                svg:not(.gqa-dropdown *):not([x-show] *):not([x-data] *):not(.absolute *)
+                                svg:not(.absolute svg):not([x-show] svg)
                             `.replace(/\s+/g, ' ').trim());
-                            
+
                             svgIcons.forEach(icon => {
                                 // Skip dropdown icons
-                                if (icon.closest('[x-show]') || icon.closest('[x-data]') || icon.closest('.absolute') || icon.closest('.gqa-dropdown')) {
+                                if (icon.closest('.absolute') || icon.closest('[x-show]')) {
                                     return;
                                 }
                                 icon.style.setProperty('color', textColor, 'important');
                                 icon.style.setProperty('stroke', textColor, 'important');
                             });
 
-                            // Update badges and quick stats in navbar (excluding dropdowns) - COMPLETE BADGE STYLING
+                            // Update badges and quick stats in navbar (excluding dropdown menus)
                             const badgeSelectors = [
-                                '.badge:not(.gqa-dropdown *)', 
-                                '.hospital-badge:not(.gqa-dropdown *)', 
-                                '.quick-stat:not(.gqa-dropdown *)', 
-                                '[class*="badge"]:not(.gqa-dropdown *)', 
-                                '[class*="stat"]:not(.gqa-dropdown *)', 
-                                '.bg-green-50:not(.gqa-dropdown *)', 
-                                '.dark\\:bg-green-900\\/20:not(.gqa-dropdown *)',
-                                '[class*="bg-"][class*="50"]:not(.gqa-dropdown *)',
-                                '[class*="bg-"][class*="100"]:not(.gqa-dropdown *)'
+                                '.badge:not(.absolute .badge):not([x-show] .badge)',
+                                '.hospital-badge:not(.absolute .hospital-badge):not([x-show] .hospital-badge)',
+                                '.quick-stat:not(.absolute .quick-stat):not([x-show] .quick-stat)',
+                                '[class*="badge"]:not(.absolute [class*="badge"]):not([x-show] [class*="badge"])',
+                                '[class*="stat"]:not(.absolute [class*="stat"]):not([x-show] [class*="stat"])',
+                                '.bg-green-50:not(.absolute .bg-green-50):not([x-show] .bg-green-50)',
+                                '.dark\\:bg-green-900\\/20:not(.absolute .dark\\:bg-green-900\\/20):not([x-show] .dark\\:bg-green-900\\/20)',
+                                '[class*="bg-"][class*="50"]:not(.absolute [class*="bg-"][class*="50"]):not([x-show] [class*="bg-"][class*="50"])',
+                                '[class*="bg-"][class*="100"]:not(.absolute [class*="bg-"][class*="100"]):not([x-show] [class*="bg-"][class*="100"])'
                             ].join(', ');
-                            
+
                             const badges = navbar.querySelectorAll(badgeSelectors);
                             badges.forEach(badge => {
-                                // Skip if this badge is inside a dropdown or Alpine component
-                                if (badge.closest('.gqa-dropdown') || badge.closest('[x-show]') || badge.closest('[x-data]')) {
+                                // Skip if this badge is inside a dropdown
+                                if (badge.closest('.absolute') || badge.closest('[x-show]')) {
                                     return;
                                 }
-                                
+
                                 const isDark = textColor === '#ffffff';
-                                
+
                                 // Set badge background and text colors based on navbar contrast
                                 const badgeBg = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)';
                                 const badgeTextColor = isDark ? '#ffffff' : '#1f2937';
-                                
+
                                 badge.style.setProperty('background-color', badgeBg, 'important');
                                 badge.style.setProperty('color', badgeTextColor, 'important');
                                 badge.style.setProperty('border-color', badgeTextColor, 'important');
@@ -1324,7 +1352,7 @@ document.addEventListener('alpine:init', () => {
                                 const badgeTextElements = badge.querySelectorAll('span, div, p, small, .w-2, .animate-pulse');
                                 badgeTextElements.forEach(textEl => {
                                     textEl.style.setProperty('color', badgeTextColor, 'important');
-                                    
+
                                     // Handle indicator dots (like the green pulse dot)
                                     if (textEl.classList.contains('w-2') || textEl.classList.contains('animate-pulse')) {
                                         const indicatorColor = isDark ? '#4ade80' : '#22c55e';
@@ -1335,6 +1363,48 @@ document.addEventListener('alpine:init', () => {
                                 // Apply to any direct text content
                                 if (badge.firstChild && badge.firstChild.nodeType === Node.TEXT_NODE) {
                                     badge.style.setProperty('color', badgeTextColor, 'important');
+                                }
+                            });
+
+                            // 🆕 NEW: Update dropdown menus with proper theming
+                            const dropdownMenus = document.querySelectorAll('.absolute[x-show], [x-show].absolute, .gqa-dropdown[x-show], [class*="dropdown"][x-show]');
+                            dropdownMenus.forEach(dropdown => {
+                                // Only process dropdowns that are children/descendants of the navbar
+                                if (dropdown.closest('.hospital-navbar')) {
+                                    this.updateDropdownStyling(dropdown, textColor);
+                                }
+                            });
+
+                            // 🔄 Setup observer for dynamically shown dropdowns
+                            if (!navbar._dropdownObserver) {
+                                navbar._dropdownObserver = new MutationObserver((mutations) => {
+                                    mutations.forEach((mutation) => {
+                                        if (mutation.type === 'attributes' &&
+                                            (mutation.attributeName === 'x-show' || mutation.attributeName === 'style')) {
+                                            const dropdown = mutation.target;
+                                            if (dropdown.matches('.absolute[x-show], [x-show].absolute, .gqa-dropdown[x-show], [class*="dropdown"][x-show]') &&
+                                                dropdown.closest('.hospital-navbar')) {
+                                                // Apply dropdown styling when it becomes visible
+                                                setTimeout(() => {
+                                                    this.updateDropdownStyling(dropdown, textColor);
+                                                }, 10);
+                                            }
+                                        }
+                                    });
+                                });
+
+                                navbar._dropdownObserver.observe(navbar, {
+                                    attributes: true,
+                                    subtree: true,
+                                    attributeFilter: ['x-show', 'style', 'class']
+                                });
+                            }
+
+                            // 🆕 Also apply to any visible dropdowns immediately
+                            const visibleDropdowns = navbar.querySelectorAll('.absolute:not([style*="display: none"]), [x-show]:not([style*="display: none"])');
+                            visibleDropdowns.forEach(dropdown => {
+                                if (dropdown.offsetParent !== null) { // Check if actually visible
+                                    this.updateDropdownStyling(dropdown, textColor);
                                 }
                             });
                         }
@@ -1616,12 +1686,12 @@ document.addEventListener('alpine:init', () => {
                         globalBadges.forEach(badge => {
                             if (!badge.closest('.hospital-navbar') && !badge.closest('.hospital-sidebar')) {
                                 const isDark = textColor === '#ffffff';
-                                
+
                                 // Use proper contrast for badge backgrounds and text
                                 const badgeBg = isDark ? 'rgba(55, 65, 81, 0.8)' : 'rgba(249, 250, 251, 0.9)';
                                 const badgeTextColor = isDark ? '#f3f4f6' : '#1f2937';
                                 const badgeBorder = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
-                                
+
                                 badge.style.setProperty('background-color', badgeBg, 'important');
                                 badge.style.setProperty('color', badgeTextColor, 'important');
                                 badge.style.setProperty('border-color', badgeBorder, 'important');
@@ -1632,9 +1702,9 @@ document.addEventListener('alpine:init', () => {
                                     // Apply text color to all text-containing elements
                                     if (el.nodeType === Node.ELEMENT_NODE) {
                                         el.style.setProperty('color', badgeTextColor, 'important');
-                                        
+
                                         // Handle special indicator elements (dots, icons, etc.)
-                                        if (el.classList.contains('w-2') || el.classList.contains('animate-pulse') || 
+                                        if (el.classList.contains('w-2') || el.classList.contains('animate-pulse') ||
                                             el.classList.contains('bg-green-500') || el.classList.contains('rounded-full')) {
                                             const indicatorColor = isDark ? '#10b981' : '#059669';
                                             el.style.setProperty('background-color', indicatorColor, 'important');
@@ -1657,89 +1727,90 @@ document.addEventListener('alpine:init', () => {
             }, 50); // 50ms debounce
         },
 
-        async saveTheme() {
-            this.loading = true;
+        // 🆕 Helper method for dropdown styling
+        updateDropdownStyling(dropdown, navbarTextColor) {
+            const isDark = navbarTextColor === '#ffffff';
 
-            try {
-                const response = await fetch('/theme/update', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    },
-                    body: JSON.stringify({
-                        navbar_color: this.colors.navbar,
-                        sidebar_color: this.colors.sidebar,
-                        background_color: this.colors.background,
-                        is_custom: true
-                    })
-                });
+            // Add the specific CSS class for navbar dropdowns
+            dropdown.classList.add('hospital-navbar-dropdown');
 
-                const data = await response.json();                if (data.success) {
-                    // Update global state
-                    window.hasCustomTheme = true;
-                    window.userTheme = data.theme_settings;
-                    this.updateIsCustomActive();
+            // Set CSS variables for dropdown theming
+            const root = document.documentElement;
+            const dropdownBg = isDark ? '#1f2937' : '#ffffff';
+            const dropdownTextColor = isDark ? '#f3f4f6' : '#1f2937';
+            const dropdownBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            const dropdownShadow = isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)';
+            const dropdownHoverBg = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
 
-                    // Hide light/dark mode toggle
-                    this.hideLightDarkToggle();
+            // Set CSS custom properties for dropdown styling
+            root.style.setProperty('--navbar-dropdown-bg', dropdownBg);
+            root.style.setProperty('--navbar-dropdown-text', dropdownTextColor);
+            root.style.setProperty('--navbar-dropdown-border', dropdownBorder);
+            root.style.setProperty('--navbar-dropdown-shadow', `0 10px 15px -3px ${dropdownShadow}, 0 4px 6px -2px rgba(0,0,0,0.05)`);
+            root.style.setProperty('--navbar-dropdown-hover-bg', dropdownHoverBg);
 
-                    // Close the theme panel
-                    this.open = false;
-                } else {
-                    throw new Error(data.message || 'Falha ao salvar tema');
+            // Apply specific styles to ensure proper theming
+            dropdown.style.setProperty('background-color', dropdownBg, 'important');
+            dropdown.style.setProperty('color', dropdownTextColor, 'important');
+            dropdown.style.setProperty('border-color', dropdownBorder, 'important');
+            dropdown.style.setProperty('box-shadow', `0 10px 15px -3px ${dropdownShadow}, 0 4px 6px -2px rgba(0,0,0,0.05)`, 'important');
+
+            // Update all dropdown items within this dropdown
+            const dropdownItems = dropdown.querySelectorAll('.gqa-dropdown-item, button, a, span, div, p');
+            dropdownItems.forEach(item => {
+                // Skip elements with specific color classes (like red logout button)
+                if (!item.classList.contains('text-red-600') &&
+                    !item.classList.contains('text-red-400') &&
+                    !item.classList.contains('text-red-500')) {
+                    item.style.setProperty('color', dropdownTextColor, 'important');
                 }
-            } catch (error) {
-                console.error('Theme save error:', error);
-                // Silent error handling - no toast notification
-            } finally {
-                this.loading = false;
-            }
-        },
 
-        async resetTheme() {
-            this.loading = true;
-
-            try {
-                const response = await fetch('/theme/reset', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                // Add hover listeners for proper hover effects
+                if (item.tagName === 'A' || item.tagName === 'BUTTON' || item.classList.contains('gqa-dropdown-item')) {
+                    // Remove existing listeners to avoid duplicates
+                    if (item._dropdownHoverEnter) {
+                        item.removeEventListener('mouseenter', item._dropdownHoverEnter);
+                        item.removeEventListener('mouseleave', item._dropdownHoverLeave);
                     }
-                });
 
-                const data = await response.json();                if (data.success) {
-                    // Reset colors to defaults
-                    this.colors = {
-                        navbar: '#ffffff',
-                        sidebar: '#ffffff',
-                        background: '#f9fafb'
+                    item._dropdownHoverEnter = () => {
+                        if (!item.classList.contains('text-red-600') &&
+                            !item.classList.contains('text-red-400') &&
+                            !item.classList.contains('text-red-500')) {
+                            item.style.setProperty('background-color', dropdownHoverBg, 'important');
+                            item.style.setProperty('color', dropdownTextColor, 'important');
+                        }
                     };
 
-                    // Remove custom styles
-                    this.removeCustomStyles();
+                    item._dropdownHoverLeave = () => {
+                        item.style.removeProperty('background-color');
+                        if (!item.classList.contains('text-red-600') &&
+                            !item.classList.contains('text-red-400') &&
+                            !item.classList.contains('text-red-500')) {
+                            item.style.setProperty('color', dropdownTextColor, 'important');
+                        }
+                    };
 
-                    // Update global state
-                    window.hasCustomTheme = false;
-                    window.userTheme = data.theme_settings;
-                    this.updateIsCustomActive();
-
-                    // Show light/dark mode toggle again
-                    this.showLightDarkToggle();
-
-                    // Close the theme panel
-                    this.open = false;
-                } else {
-                    throw new Error(data.message || 'Falha ao resetar tema');
+                    item.addEventListener('mouseenter', item._dropdownHoverEnter);
+                    item.addEventListener('mouseleave', item._dropdownHoverLeave);
                 }
-            } catch (error) {
-                console.error('Theme reset error:', error);
-                // Silent error handling - no toast notification
-            } finally {
-                this.loading = false;
-            }
-        },        removeCustomStyles() {
+            });
+
+            // Update SVG icons in dropdown
+            const svgIcons = dropdown.querySelectorAll('svg');
+            svgIcons.forEach(icon => {
+                // Don't change color of red icons (logout button)
+                if (!icon.closest('.text-red-600') &&
+                    !icon.closest('.text-red-400') &&
+                    !icon.closest('.text-red-500')) {
+                    icon.style.setProperty('color', dropdownTextColor, 'important');
+                    icon.style.setProperty('stroke', dropdownTextColor, 'important');
+                    icon.style.setProperty('fill', dropdownTextColor, 'important');
+                }
+            });
+        },
+
+        removeCustomStyles() {
             const root = document.documentElement;
             const customStyleElement = document.getElementById('user-theme-styles');
 
@@ -1753,14 +1824,18 @@ document.addEventListener('alpine:init', () => {
             const customProperties = [
                 '--custom-navbar-bg', '--custom-navbar-text',
                 '--custom-sidebar-bg', '--custom-sidebar-text',
-                '--custom-background', '--custom-background-text'
+                '--custom-background', '--custom-background-text',
+                // 🆕 Remove navbar dropdown theme variables
+                '--navbar-dropdown-bg', '--navbar-dropdown-text',
+                '--navbar-dropdown-border', '--navbar-dropdown-shadow',
+                '--navbar-dropdown-hover-bg'
             ];
 
             customProperties.forEach(prop => {
                 root.style.removeProperty(prop);
             });
 
-            // Comprehensive selectors for all potentially affected elements
+            // Enhanced selectors including dropdown elements
             const allSelectors = [
                 // Main layout elements
                 'body', '.hospital-layout', '.hospital-content', '.main-content', '.content',
@@ -1794,11 +1869,15 @@ document.addEventListener('alpine:init', () => {
                 '.card-title', '.card-text', '.card-subtitle', '.metric-value', '.stat-value', '.number',
                 '.card-header', '.card-body', '.card-footer',
                 '.card button', '.card .btn', '.card .gqa-btn',
-                '.card .badge', '.card .hospital-badge', '.card .tag', '.card .chip',
 
                 // Global elements
                 '.page-header', '.content-header', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                '.quick-stat', '.stat-badge', '.hospital-badge', '[class*="stat"]'
+                '.quick-stat', '.stat-badge', '.hospital-badge', '[class*="stat"]',
+
+                // 🆕 Dropdown selectors
+                '.absolute[x-show]', '[x-show].absolute', '.gqa-dropdown[x-show]', '[class*="dropdown"][x-show]',
+                '.dropdown-menu', '.gqa-dropdown-menu', '[role="menu"]', '[role="menuitem"]',
+                '.dropdown-item', '.gqa-dropdown-item'
             ];
 
             // Remove styles from all potential elements with comprehensive cleanup
@@ -1828,10 +1907,30 @@ document.addEventListener('alpine:init', () => {
                             delete element._themeHoverEnter;
                             delete element._themeHoverLeave;
                         }
+
+                        // 🆕 Remove dropdown hover listeners
+                        if (element._dropdownHoverEnter) {
+                            element.removeEventListener('mouseenter', element._dropdownHoverEnter);
+                            element.removeEventListener('mouseleave', element._dropdownHoverLeave);
+                            delete element._dropdownHoverEnter;
+                            delete element._dropdownHoverLeave;
+                        }
+
+                        // 🆕 Remove hospital-navbar-dropdown class
+                        element.classList.remove('hospital-navbar-dropdown');
                     });
                 } catch (error) {
                     // Ignore selector errors for complex selectors
                     console.warn('Selector cleanup warning (ignored):', selector, error.message);
+                }
+            });
+
+            // 🆕 Clean up dropdown observers
+            const navbars = document.querySelectorAll('.hospital-navbar');
+            navbars.forEach(navbar => {
+                if (navbar._dropdownObserver) {
+                    navbar._dropdownObserver.disconnect();
+                    delete navbar._dropdownObserver;
                 }
             });
 
@@ -1881,50 +1980,134 @@ document.addEventListener('alpine:init', () => {
                 document.body.offsetHeight;
             }, 50);
 
-            console.log('🎨 Todos os estilos customizados foram completamente removidos');
+            console.log('🎨 Todos os estilos customizados foram completamente removidos (incluindo dropdowns)');
         },
 
-        updateIsCustomActive() {
-            this.isCustomActive = window.hasCustomTheme;
-        },
+        // 💾 Save theme to server
+        async saveTheme() {
+            this.loading = true;
+            try {
+                const response = await fetch('/theme/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify({
+                        navbar_color: this.colors.navbar,
+                        sidebar_color: this.colors.sidebar,
+                        background_color: this.colors.background,
+                        is_custom: true
+                    })
+                });
 
-        hideLightDarkToggle() {
-            const toggle = document.querySelector('[onclick="toggleHospitalTheme()"]');
-            if (toggle) {
-                toggle.style.display = 'none';
+                const data = await response.json();
+
+                if (data.success) {
+                    // Update global variables
+                    window.userTheme = data.theme_settings;
+                    window.hasCustomTheme = true;
+                    this.isCustomActive = true;
+                    window.isCustomActive = true;
+
+                    // Update global colors
+                    window.updateGlobalThemeVars();
+
+                    // Hide light/dark toggle
+                    this.hideLightDarkToggle();
+
+                    // Show success message
+                    this.showMessage('Tema salvo com sucesso!', 'success');
+                    this.open = false;
+                } else {
+                    this.showMessage('Erro ao salvar tema: ' + (data.message || 'Erro desconhecido'), 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao salvar tema:', error);
+                this.showMessage('Erro ao salvar tema. Tente novamente.', 'error');
+            } finally {
+                this.loading = false;
             }
         },
 
-        showLightDarkToggle() {
-            const toggle = document.querySelector('[onclick="toggleHospitalTheme()"]');
-            if (toggle) {
-                toggle.style.display = 'block';
+        // 🔄 Reset theme to default
+        async resetTheme() {
+            this.loading = true;
+            try {
+                const response = await fetch('/theme/reset', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Reset colors to default
+                    this.colors = {
+                        navbar: '#ffffff',
+                        sidebar: '#ffffff',
+                        background: '#f9fafb'
+                    };
+
+                    // Update global variables
+                    window.userTheme = data.theme_settings;
+                    window.hasCustomTheme = false;
+                    this.isCustomActive = false;
+                    window.isCustomActive = false;
+
+                    // Update global colors
+                    window.updateGlobalThemeVars();
+
+                    // Remove all custom styles
+                    this.removeCustomStyles();
+
+                    // Show light/dark toggle again
+                    this.showLightDarkToggle();
+
+                    // Show success message
+                    this.showMessage('Tema resetado para o padrão!', 'success');
+                    this.open = false;
+                } else {
+                    this.showMessage('Erro ao resetar tema: ' + (data.message || 'Erro desconhecido'), 'error');
+                }
+            } catch (error) {
+                console.error('Erro ao resetar tema:', error);
+                this.showMessage('Erro ao resetar tema. Tente novamente.', 'error');
+            } finally {
+                this.loading = false;
             }
         },
 
-        disableLightDarkToggle() {
-            const toggle = document.querySelector('[onclick="toggleHospitalTheme()"]');
-            if (toggle) {
-                toggle.disabled = true;
-                toggle.classList.add('opacity-50', 'cursor-not-allowed');
-                toggle.title = 'Tema personalizado ativo - modo claro/escuro desabilitado';
-            }
-        },
+        // 📢 Show message to user
+        showMessage(message, type = 'info') {
+            // Create toast notification
+            const toast = document.createElement('div');
+            toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg text-white transition-all duration-300 transform translate-x-full ${
+                type === 'success' ? 'bg-green-600' :
+                type === 'error' ? 'bg-red-600' :
+                'bg-blue-600'
+            }`;
+            toast.textContent = message;
 
-        enableLightDarkToggle() {
-            const toggle = document.querySelector('[onclick="toggleHospitalTheme()"]');
-            if (toggle) {
-                toggle.disabled = false;
-                toggle.classList.remove('opacity-50', 'cursor-not-allowed');
-                toggle.title = 'Alternar modo claro/escuro';
-            }
+            document.body.appendChild(toast);
+
+            // Animate in
+            setTimeout(() => {
+                toast.classList.remove('translate-x-full');
+            }, 100);
+
+            // Remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.parentNode.removeChild(toast);
+                    }
+                }, 300);
+            }, 5000);
         }
     }));
 });
-
-// 🎯 Log de inicialização
-console.log('✅ Sistema Hospital carregado com ApexCharts!');
-console.log('📊 ApexCharts configurado com tema Hospital');
-console.log('⚡ Lazy loading e performance otimizados');
-console.log('🎨 Suporte a tema claro/escuro ativo');
-console.log('🎨 Theme Manager inicializado!');

@@ -582,6 +582,51 @@ body {
   z-index: 50;
 }
 
+/* 🎨 NAVBAR DROPDOWN THEMING - Classes específicas para dropdowns na navbar */
+.hospital-navbar-dropdown {
+  background-color: var(--navbar-dropdown-bg, #ffffff) !important;
+  color: var(--navbar-dropdown-text, #1f2937) !important;
+  border-color: var(--navbar-dropdown-border, rgba(0,0,0,0.1)) !important;
+  box-shadow: var(--navbar-dropdown-shadow, 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05)) !important;
+}
+
+.hospital-navbar-dropdown .gqa-dropdown-item,
+.hospital-navbar-dropdown button,
+.hospital-navbar-dropdown a,
+.hospital-navbar-dropdown span,
+.hospital-navbar-dropdown div,
+.hospital-navbar-dropdown p {
+  color: var(--navbar-dropdown-text, #1f2937) !important;
+}
+
+.hospital-navbar-dropdown .gqa-dropdown-item:hover,
+.hospital-navbar-dropdown button:hover,
+.hospital-navbar-dropdown a:hover {
+  background-color: var(--navbar-dropdown-hover-bg, rgba(0,0,0,0.05)) !important;
+  color: var(--navbar-dropdown-text, #1f2937) !important;
+}
+
+.hospital-navbar-dropdown svg {
+  color: var(--navbar-dropdown-text, #1f2937) !important;
+  stroke: var(--navbar-dropdown-text, #1f2937) !important;
+  fill: var(--navbar-dropdown-text, #1f2937) !important;
+}
+
+/* Reset para elementos específicos dentro do dropdown */
+.hospital-navbar-dropdown .text-red-600,
+.hospital-navbar-dropdown .text-red-400 {
+  color: #dc2626 !important;
+}
+
+.hospital-navbar-dropdown .text-red-500 {
+  color: #ef4444 !important;
+}
+
+.hospital-navbar-dropdown .hover\\:bg-red-50:hover,
+.hospital-navbar-dropdown .dark\\:hover\\:bg-red-900\\/20:hover {
+  background-color: rgba(239, 68, 68, 0.1) !important;
+}
+
 .gqa-dropdown-item {
   display: block;
   width: 100%;
