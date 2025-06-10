@@ -72,17 +72,18 @@
             </button>
 
             <!-- Custom Theme Manager -->
-            <div class="relative" x-data="themeManager">
-                <button @click="open = !open"
+            <div class="relative" x-data="themeManager" x-init="console.log('ThemeManager component initialized')">
+                <button @click="toggle(); console.log('Theme button clicked, open:', open)"
                         class="gqa-btn ghost"
-                        title="Personalizar cores do tema">
+                        title="Personalizar cores do tema"
+                        x-bind:class="{ 'bg-green-100 text-green-600': open }">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-5m-5 8V9a2 2 0 012-2h4a2 2 0 012 2v8a2 2 0 01-2 2h-4a2 2 0 01-2-2z"></path>
                     </svg>
-                    <span x-show="isCustomActive" class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></span>
+                    <span x-show="window.hasCustomTheme" class="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full"></span>
                 </button>
 
-                <!-- Theme Dropdown - Responsive width -->
+                <!-- Theme Manager Dropdown - Versão Completa -->
                 <div x-show="open"
                      @click.outside="open = false"
                      x-transition:enter="transition ease-out duration-200"
@@ -94,122 +95,203 @@
                      class="absolute right-0 mt-2 w-80 sm:w-96 bg-white dark:bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 dark:ring-gray-600 z-50"
                      style="display: none;">
 
-                    <div class="p-4 border-b border-gray-200 dark:border-gray-600">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Tema Personalizado</h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Personalize as cores da sua interface</p>
+                    <!-- Header -->
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-600">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Tema Personalizado</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Personalize as cores do sistema</p>
+                            </div>
+                            <button @click="open = false" class="text-gray-400 hover:text-gray-600 dark:text-gray-300 dark:hover:text-white">
+                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="p-4 space-y-4">
-                        <!-- Status indicator -->
-                        <div x-show="isCustomActive" class="flex items-center p-2 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
-                            <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                            <span class="text-sm text-green-800 dark:text-green-300 font-medium">Tema personalizado ativo</span>
+                    <!-- Status do Tema -->
+                    <div class="p-4 border-b border-gray-200 dark:border-gray-600">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 rounded-full"
+                                     :class="window.hasCustomTheme ? 'bg-green-500' : 'bg-gray-400'"></div>
+                                <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    <span x-text="window.hasCustomTheme ? 'Tema Personalizado Ativo' : 'Tema Padrão'"></span>
+                                </span>
+                            </div>
+                            <button @click="resetTheme()"
+                                    x-show="window.hasCustomTheme"
+                                    :disabled="loading"
+                                    class="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-600 dark:text-gray-300 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+                                <span x-show="!loading">Resetar</span>
+                                <span x-show="loading" class="flex items-center">
+                                    <svg class="animate-spin -ml-1 mr-2 h-3 w-3 text-current" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    Resetando...
+                                </span>
+                            </button>
                         </div>
+                    </div>
 
+                    <!-- Seletores de Cor -->
+                    <div class="p-4 space-y-4 max-h-80 overflow-y-auto">
                         <!-- Navbar Color -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Cor da Barra Superior
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Cor da Barra de Navegação
                             </label>
                             <div class="flex items-center space-x-3">
-                                <div class="relative">
-                                    <input type="color"
-                                           x-model="colors.navbar"
-                                           @input="updateColor('navbar', $event.target.value)"
-                                           class="w-12 h-8 rounded border border-gray-300 cursor-pointer">
-                                    <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-md"
-                                         :style="{ backgroundColor: colors.navbar }"></div>
+                                <input type="color"
+                                       x-model="window.Hospital.themeManager.colors.navbar"
+                                       @input="window.Hospital.themeManager.updateColor('navbar', $event.target.value)"
+                                       class="w-10 h-10 border border-gray-300 dark:border-gray-600 rounded cursor-pointer">
+                                <div class="flex-1">
+                                    <input type="text"
+                                           x-model="window.Hospital.themeManager.colors.navbar"
+                                           @input="window.Hospital.themeManager.updateColor('navbar', $event.target.value)"
+                                           class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           placeholder="#ffffff">
                                 </div>
-                                <input type="text"
-                                       x-model="colors.navbar"
-                                       @input="updateColor('navbar', $event.target.value)"
-                                       @focus="$event.target.select()"
-                                       class="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                       placeholder="#ffffff"
-                                       maxlength="7">
-                                <div class="text-xs text-gray-500 dark:text-gray-400"
-                                     x-text="getContrastingTextColor(colors.navbar) === '#ffffff' ? 'Escuro' : 'Claro'"></div>
                             </div>
                         </div>
 
                         <!-- Sidebar Color -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Cor da Barra Lateral
                             </label>
                             <div class="flex items-center space-x-3">
-                                <div class="relative">
-                                    <input type="color"
-                                           x-model="colors.sidebar"
-                                           @input="updateColor('sidebar', $event.target.value)"
-                                           class="w-12 h-8 rounded border border-gray-300 cursor-pointer">
-                                    <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-md"
-                                         :style="{ backgroundColor: colors.sidebar }"></div>
+                                <input type="color"
+                                       x-model="window.Hospital.themeManager.colors.sidebar"
+                                       @input="window.Hospital.themeManager.updateColor('sidebar', $event.target.value)"
+                                       class="w-10 h-10 border border-gray-300 dark:border-gray-600 rounded cursor-pointer">
+                                <div class="flex-1">
+                                    <input type="text"
+                                           x-model="window.Hospital.themeManager.colors.sidebar"
+                                           @input="window.Hospital.themeManager.updateColor('sidebar', $event.target.value)"
+                                           class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           placeholder="#f8f9fa">
                                 </div>
-                                <input type="text"
-                                       x-model="colors.sidebar"
-                                       @input="updateColor('sidebar', $event.target.value)"
-                                       @focus="$event.target.select()"
-                                       class="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                       placeholder="#ffffff"
-                                       maxlength="7">
-                                <div class="text-xs text-gray-500 dark:text-gray-400"
-                                     x-text="getContrastingTextColor(colors.sidebar) === '#ffffff' ? 'Escuro' : 'Claro'"></div>
                             </div>
                         </div>
 
                         <!-- Background Color -->
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                Cor de Fundo
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Cor do Fundo
                             </label>
                             <div class="flex items-center space-x-3">
-                                <div class="relative">
-                                    <input type="color"
-                                           x-model="colors.background"
-                                           @input="updateColor('background', $event.target.value)"
-                                           class="w-12 h-8 rounded border border-gray-300 cursor-pointer">
-                                    <div class="absolute -top-1 -right-1 w-4 h-4 rounded-full border-2 border-white shadow-md"
-                                         :style="{ backgroundColor: colors.background }"></div>
+                                <input type="color"
+                                       x-model="window.Hospital.themeManager.colors.background"
+                                       @input="window.Hospital.themeManager.updateColor('background', $event.target.value)"
+                                       class="w-10 h-10 border border-gray-300 dark:border-gray-600 rounded cursor-pointer">
+                                <div class="flex-1">
+                                    <input type="text"
+                                           x-model="window.Hospital.themeManager.colors.background"
+                                           @input="window.Hospital.themeManager.updateColor('background', $event.target.value)"
+                                           class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           placeholder="#ffffff">
                                 </div>
-                                <input type="text"
-                                       x-model="colors.background"
-                                       @input="updateColor('background', $event.target.value)"
-                                       @focus="$event.target.select()"
-                                       class="flex-1 px-3 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                                       placeholder="#ffffff"
-                                       maxlength="7">
-                                <div class="text-xs text-gray-500 dark:text-gray-400"
-                                     x-text="getContrastingTextColor(colors.background) === '#ffffff' ? 'Escuro' : 'Claro'"></div>
+                            </div>
+                        </div>
+
+                        <!-- Accent Color -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Cor de Destaque
+                            </label>
+                            <div class="flex items-center space-x-3">
+                                <input type="color"
+                                       x-model="window.Hospital.themeManager.colors.accent"
+                                       @input="window.Hospital.themeManager.updateColor('accent', $event.target.value)"
+                                       class="w-10 h-10 border border-gray-300 dark:border-gray-600 rounded cursor-pointer">
+                                <div class="flex-1">
+                                    <input type="text"
+                                           x-model="window.Hospital.themeManager.colors.accent"
+                                           @input="window.Hospital.themeManager.updateColor('accent', $event.target.value)"
+                                           class="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                           placeholder="#3b82f6">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Presets de Cores -->
+                        <div class="space-y-2">
+                            <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                Temas Pré-definidos
+                            </label>
+                            <div class="grid grid-cols-4 gap-2">
+                                <!-- Tema Azul -->
+                                <button @click="window.Hospital.themeManager.applyPreset('blue')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
+                                        title="Tema Azul">
+                                </button>
+                                <!-- Tema Verde -->
+                                <button @click="window.Hospital.themeManager.applyPreset('green')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-200"
+                                        title="Tema Verde">
+                                </button>
+                                <!-- Tema Roxo -->
+                                <button @click="window.Hospital.themeManager.applyPreset('purple')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
+                                        title="Tema Roxo">
+                                </button>
+                                <!-- Tema Escuro -->
+                                <button @click="window.Hospital.themeManager.applyPreset('dark')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 transition-all duration-200"
+                                        title="Tema Escuro">
+                                </button>
                             </div>
                         </div>
                     </div>
 
-                    <div class="p-4 border-t border-gray-200 dark:border-gray-600 flex justify-between">
-                        <button @click="resetTheme()"
-                                class="px-3 py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200">
-                            Resetar para Padrão
-                        </button>
-                        <button @click="saveTheme()"
-                                :disabled="loading"
-                                class="px-4 py-1 text-sm bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded transition-colors">
-                            <span x-show="!loading">Salvar Tema</span>
-                            <span x-show="loading">Salvando...</span>
-                        </button>
+                    <!-- Footer com Ações -->
+                    <div class="p-4 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                        <div class="flex items-center justify-between space-x-3">
+                            <button @click="resetTheme()"
+                                    :disabled="loading"
+                                    class="px-4 py-2 text-sm bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-700 dark:text-gray-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center">
+                                <template x-if="!loading">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                    </svg>
+                                </template>
+                                <template x-if="loading">
+                                    <svg class="animate-spin w-4 h-4 mr-1" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                </template>
+                                <span x-text="loading ? 'Resetando...' : 'Resetar'"></span>
+                            </button>
+                            <button @click="window.Hospital.themeManager.saveTheme()"
+                                    class="px-4 py-2 text-sm bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors">
+                                <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                Salvar Tema
+                            </button>
+                        </div>
+                        <div class="mt-2 text-xs text-gray-500 dark:text-gray-400 text-center">
+                            Alterações são aplicadas em tempo real
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- Notifications Dropdown -->
-        <div class="relative" x-data="{ open: false, hasNew: notifications.length > 0 }">
+        <div class="relative" x-data="{ open: false, hasNew: notifications && notifications.length > 0 }">
             <button @click="open = !open"
                     class="relative p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                 </svg>
-                <span x-show="hasNew && notifications.length > 0"
-                      x-text="notifications.length"
+                <span x-show="hasNew && notifications && notifications.length > 0"
+                      x-text="notifications ? notifications.length : 0"
                       class="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium animate-pulse"
                       style="display: none;">
                 </span>
@@ -239,7 +321,7 @@
                 </div>
 
                 <div class="max-h-80 overflow-y-auto">
-                    <div x-show="notifications.length === 0" class="p-8 text-center text-gray-500 dark:text-gray-400">
+                    <div x-show="!notifications || notifications.length === 0" class="p-8 text-center text-gray-500 dark:text-gray-400">
                         <svg class="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
@@ -251,9 +333,10 @@
         </div>
 
         <!-- User Menu Dropdown - DARK MODE FIXED -->
-        <div class="relative" x-data="{ open: false }">
-            <button @click="open = !open"
-                    class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        <div class="relative" x-data="{ open: false }" x-init="console.log('UserMenu initialized:', $data)">
+            <button @click="open = !open; console.log('User menu clicked, open:', open)"
+                    class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                    x-bind:class="{ 'bg-gray-100 dark:bg-gray-700': open }">
                 <div class="w-8 h-8 rounded-full overflow-hidden border-2 border-white dark:border-gray-600 shadow-md">
                     <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=22c55e&color=fff&size=32"
                          alt="{{ Auth::user()->name }}"

@@ -47,6 +47,14 @@ class ThemeController extends Controller
     }
 
     /**
+     * Store/Create user theme settings (alias for update)
+     */
+    public function store(Request $request)
+    {
+        return $this->update($request);
+    }
+
+    /**
      * Reset theme to default
      */
     public function reset()

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Presets Complete Application</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        .hospital-navbar {
+            background-color: #ffffff;
+            color: #1f2937;
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .hospital-sidebar {
+            background-color: #ffffff;
+            color: #1f2937;
+            padding: 1rem;
+            min-height: 500px;
+            width: 250px;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .hospital-content {
+            background-color: #f9fafb;
+            color: #1f2937;
+            padding: 2rem;
+            min-height: 500px;
+            flex: 1;
+        }
+
+        .quick-stat-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            border-radius: 0.5rem;
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .test-card {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1rem;
+        }
+
+        .debug-info {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 0.875rem;
+            z-index: 1000;
+            max-width: 300px;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+    <!-- Debug Info -->
+    <div class="debug-info" x-data="{ colors: {}, open: true }">
+        <div class="flex justify-between items-center mb-2">
+            <h4 class="font-semibold">Debug Info</h4>
+            <button @click="open = !open" class="text-gray-500">
+                <span x-show="open">−</span>
+                <span x-show="!open">+</span>
+            </button>
+        </div>
+        <div x-show="open">
+            <div class="space-y-1 text-xs">
+                <div>Navbar: <span x-text="window.Hospital?.themeManager?.colors?.navbar || 'default'"></span></div>
+                <div>Sidebar: <span x-text="window.Hospital?.themeManager?.colors?.sidebar || 'default'"></span></div>
+                <div>Background: <span x-text="window.Hospital?.themeManager?.colors?.background || 'default'"></span></div>
+                <div>Accent: <span x-text="window.Hospital?.themeManager?.colors?.accent || 'default'"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="min-h-screen flex flex-col">
+        <!-- Test Navbar -->
+        <nav class="hospital-navbar">
+            <div class="flex items-center justify-between">
+                <h1 class="text-xl font-bold">Hospital System - Test Presets</h1>
+                <div class="flex items-center space-x-4">
+                    <!-- Quick Stats -->
+                    <div class="quick-stat-badge">
+                        <span class="stat-value font-bold">150</span>
+                        <span class="stat-label ml-1">Pacientes</span>
+                    </div>
+
+                    <div class="quick-stat-badge">
+                        <span class="stat-value font-bold">95%</span>
+                        <span class="stat-label ml-1">Qualidade</span>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <div class="flex flex-1">
+            <!-- Test Sidebar -->
+            <aside class="hospital-sidebar">
+                <h2 class="text-lg font-semibold mb-4">Menu Lateral</h2>
+                <ul class="space-y-2">
+                    <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-100">📊 Dashboard</a></li>
+                    <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-100">👥 Pacientes</a></li>
+                    <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-100">📋 Relatórios</a></li>
+                    <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-100">⚙️ Configurações</a></li>
+                </ul>
+            </aside>
+
+            <!-- Test Content -->
+            <main class="hospital-content">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Breadcrumbs -->
+                    <nav class="breadcrumb mb-6">
+                        <ol class="flex space-x-2 text-sm">
+                            <li><a href="#" class="text-blue-600 hover:text-blue-800">Home</a></li>
+                            <li><span class="text-gray-500">/</span></li>
+                            <li><a href="#" class="text-blue-600 hover:text-blue-800">Dashboard</a></li>
+                            <li><span class="text-gray-500">/</span></li>
+                            <li class="text-gray-700">Test Presets</li>
+                        </ol>
+                    </nav>
+
+                    <!-- Headers -->
+                    <h1 class="text-3xl font-bold mb-4">Teste de Presets Completos</h1>
+                    <h2 class="text-2xl font-semibold mb-6 text-gray-600">Verificação de Aplicação Completa</h2>
+
+                    <!-- Theme Manager -->
+                    <div x-data="themeManager()" class="test-card mb-6">
+                        <h3 class="text-lg font-semibold mb-4">🎨 Gerenciador de Temas</h3>
+
+                        <!-- Preset Buttons - TESTE PRINCIPAL -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                            <button @click="applyPreset('blue')"
+                                    class="px-4 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition font-medium">
+                                🔵 Azul
+                            </button>
+                            <button @click="applyPreset('green')"
+                                    class="px-4 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition font-medium">
+                                🟢 Verde
+                            </button>
+                            <button @click="applyPreset('purple')"
+                                    class="px-4 py-3 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition font-medium">
+                                🟣 Roxo
+                            </button>
+                            <button @click="applyPreset('dark')"
+                                    class="px-4 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-900 transition font-medium">
+                                ⚫ Escuro
+                            </button>
+                        </div>
+
+                        <!-- Manual Color Controls -->
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Navbar</label>
+                                <input type="color"
+                                       x-model="colors.navbar"
+                                       @input="updateColor('navbar', $event.target.value)"
+                                       class="w-full h-10 rounded border">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Sidebar</label>
+                                <input type="color"
+                                       x-model="colors.sidebar"
+                                       @input="updateColor('sidebar', $event.target.value)"
+                                       class="w-full h-10 rounded border">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Background</label>
+                                <input type="color"
+                                       x-model="colors.background"
+                                       @input="updateColor('background', $event.target.value)"
+                                       class="w-full h-10 rounded border">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Accent</label>
+                                <input type="color"
+                                       x-model="colors.accent"
+                                       @input="updateColor('accent', $event.target.value)"
+                                       class="w-full h-10 rounded border">
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex space-x-4">
+                            <button @click="resetTheme()"
+                                    :disabled="loading"
+                                    class="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:opacity-50 transition">
+                                <span x-show="!loading">🔄 Reset</span>
+                                <span x-show="loading">⏳ Resetando...</span>
+                            </button>
+                            <button @click="testAllPresets()"
+                                    class="px-6 py-2 bg-indigo-500 text-white rounded-lg hover:bg-indigo-600 transition">
+                                🧪 Test All
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Test Content Cards -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="test-card">
+                            <h4 class="font-semibold mb-2">📊 Card de Teste 1</h4>
+                            <p class="text-gray-600">Este conteúdo deve ter contraste adequado com o background escolhido.</p>
+                            <div class="mt-2">
+                                <span class="inline-block bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">Tag</span>
+                            </div>
+                        </div>
+
+                        <div class="test-card">
+                            <h4 class="font-semibold mb-2">📈 Card de Teste 2</h4>
+                            <p class="text-gray-600">Verificar se as cores se aplicam a todo o tema, não apenas à navbar.</p>
+                            <div class="mt-2">
+                                <span class="inline-block bg-green-100 text-green-800 px-2 py-1 rounded text-sm">Status</span>
+                            </div>
+                        </div>
+
+                        <div class="test-card">
+                            <h4 class="font-semibold mb-2">🎯 Card de Teste 3</h4>
+                            <p class="text-gray-600">Os presets devem afetar navbar, sidebar E background simultaneamente.</p>
+                        </div>
+
+                        <div class="test-card">
+                            <h4 class="font-semibold mb-2">✅ Card de Teste 4</h4>
+                            <p class="text-gray-600">Resultado esperado: mudança visual completa em todos os elementos.</p>
+                        </div>
+                    </div>
+
+                    <!-- Debug Console -->
+                    <div class="test-card mt-6">
+                        <h4 class="font-semibold mb-2">🔍 Console de Debug</h4>
+                        <div class="bg-gray-900 text-green-400 p-4 rounded font-mono text-sm">
+                            <div>Abra o Console do Navegador (F12) para ver os logs detalhados</div>
+                            <div>Teste: Clique nos presets e verifique se as 3 áreas mudam de cor</div>
+                            <div>Esperado: Navbar + Sidebar + Background devem mudar juntos</div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Mock global variables
+        window.hasCustomTheme = false;
+        window.userTheme = null;
+
+        // Theme config with exact same structure as the real app
+        const ThemeConfig = {
+            DEFAULT_COLORS: {
+                navbar: '#ffffff',
+                sidebar: '#ffffff',
+                background: '#f9fafb',
+                accent: '#22c55e'
+            },
+            PRESETS: {
+                blue: {
+                    name: 'Azul',
+                    navbar: '#2563eb',
+                    sidebar: '#1e40af',
+                    background: '#f8fafc',
+                    accent: '#3b82f6'
+                },
+                green: {
+                    name: 'Verde',
+                    navbar: '#16a34a',
+                    sidebar: '#15803d',
+                    background: '#f0fdf4',
+                    accent: '#22c55e'
+                },
+                purple: {
+                    name: 'Roxo',
+                    navbar: '#7c3aed',
+                    sidebar: '#6d28d9',
+                    background: '#faf5ff',
+                    accent: '#8b5cf6'
+                },
+                dark: {
+                    name: 'Escuro',
+                    navbar: '#1f2937',
+                    sidebar: '#111827',
+                    background: '#0f172a',
+                    accent: '#6b7280'
+                }
+            }
+        };
+
+        // Color utils - same as real app
+        const ColorUtils = {
+            isValidHexColor: (color) => /^#([0-9A-F]{3}){1,2}$/i.test(color),
+            getContrastingTextColor: (hex) => {
+                if (!hex || !hex.startsWith('#')) return '#000000';
+                const r = parseInt(hex.substr(1, 2), 16);
+                const g = parseInt(hex.substr(3, 2), 16);
+                const b = parseInt(hex.substr(5, 2), 16);
+                const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                return brightness > 128 ? '#000000' : '#ffffff';
+            }
+        };
+
+        // Mock Hospital System - same structure as real app
+        class HospitalSystem {
+            constructor() {
+                this.theme = {
+                    toggle: () => {
+                        document.documentElement.classList.toggle('dark');
+                        console.log('Theme toggled');
+                    }
+                };
+            }
+        }
+
+        window.Hospital = new HospitalSystem();
+
+        // Theme manager - EXACT same logic as the real app
+        window.Hospital.themeManager = {
+            open: false,
+            loading: false,
+            colors: {
+                navbar: ThemeConfig.DEFAULT_COLORS.navbar,
+                sidebar: ThemeConfig.DEFAULT_COLORS.sidebar,
+                background: ThemeConfig.DEFAULT_COLORS.background,
+                accent: ThemeConfig.DEFAULT_COLORS.accent
+            },
+
+            applyPreset(presetName) {
+                console.log(`🎨 Applying preset: ${presetName}`);
+                const preset = ThemeConfig.PRESETS[presetName];
+                if (!preset) {
+                    console.error('Preset não encontrado:', presetName);
+                    return;
+                }
+
+                console.log(`🎨 Preset found:`, preset);
+
+                // Update colors - EXACT same as real app
+                this.colors.navbar = preset.navbar;
+                this.colors.sidebar = preset.sidebar;
+                this.colors.background = preset.background;
+                this.colors.accent = preset.accent || preset.navbar;
+
+                console.log(`🎨 Colors updated:`, this.colors);
+
+                // Apply all colors - EXACT same logic
+                Object.entries(preset).forEach(([type, color]) => {
+                    if (color && type !== 'name') {
+                        console.log(`🎨 Applying ${type}: ${color}`);
+                        this.applyColorRealTime(type, color);
+                    }
+                });
+
+                console.log(`✅ Preset ${presetName} applied successfully!`);
+            },
+
+            applyColorRealTime(type, color) {
+                const textColor = ColorUtils.getContrastingTextColor(color);
+                console.log(`🎯 applyColorRealTime: ${type} = ${color} (text: ${textColor})`);
+                this.applyStyles(type, color, textColor);
+            },
+
+            applyStyles(type, color, textColor) {
+                console.log(`🎯 applyStyles: ${type} = ${color} (text: ${textColor})`);
+
+                switch (type) {
+                    case 'navbar':
+                        this.applyNavbarStyles(color, textColor);
+                        break;
+                    case 'sidebar':
+                        this.applySidebarStyles(color, textColor);
+                        break;
+                    case 'background':
+                        this.applyBackgroundStyles(color, textColor);
+                        break;
+                    case 'accent':
+                        this.applyAccentStyles(color, textColor);
+                        break;
+                }
+            },
+
+            applyNavbarStyles(color, textColor) {
+                console.log(`🏗️ Applying navbar styles: ${color} / ${textColor}`);
+                const navbars = document.querySelectorAll('.hospital-navbar');
+                navbars.forEach(nav => {
+                    nav.style.backgroundColor = color;
+                    nav.style.color = textColor;
+
+                    // Apply to all children
+                    const children = nav.querySelectorAll('*');
+                    children.forEach(child => {
+                        if (!child.style.backgroundColor && !child.classList.contains('bg-')) {
+                            child.style.color = textColor;
+                            child.style.setProperty('color', textColor, 'important');
+                        }
+                    });
+                });
+            },
+
+            applySidebarStyles(color, textColor) {
+                console.log(`🏗️ Applying sidebar styles: ${color} / ${textColor}`);
+                const sidebars = document.querySelectorAll('.hospital-sidebar');
+                sidebars.forEach(sidebar => {
+                    sidebar.style.backgroundColor = color;
+                    sidebar.style.color = textColor;
+
+                    // Apply to all children
+                    const children = sidebar.querySelectorAll('*');
+                    children.forEach(child => {
+                        if (!child.style.backgroundColor && !child.classList.contains('bg-')) {
+                            child.style.color = textColor;
+                            child.style.setProperty('color', textColor, 'important');
+                        }
+                    });
+                });
+            },
+
+            applyBackgroundStyles(color, textColor) {
+                console.log(`🏗️ Applying background styles: ${color} / ${textColor}`);
+                const contents = document.querySelectorAll('.hospital-content');
+                contents.forEach(content => {
+                    content.style.backgroundColor = color;
+                    content.style.color = textColor;
+
+                    // Apply to headings and text elements
+                    const textElements = content.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div');
+                    textElements.forEach(el => {
+                        if (!el.style.backgroundColor &&
+                            !el.classList.contains('bg-') &&
+                            !el.classList.contains('test-card')) {
+                            el.style.color = textColor;
+                            el.style.setProperty('color', textColor, 'important');
+                        }
+                    });
+                });
+            },
+
+            applyAccentStyles(color, textColor) {
+                console.log(`🏗️ Applying accent styles: ${color} / ${textColor}`);
+                // Apply to buttons and accent elements
+                const accentElements = document.querySelectorAll('.btn-primary, .text-blue-500, .bg-blue-500');
+                accentElements.forEach(element => {
+                    if (element.classList.contains('bg-blue-500') || element.classList.contains('btn-primary')) {
+                        element.style.backgroundColor = color;
+                        element.style.color = textColor;
+                    }
+                });
+            },
+
+            updateColor(type, value) {
+                if (!ColorUtils.isValidHexColor(value)) return;
+
+                this.colors[type] = value;
+                const textColor = ColorUtils.getContrastingTextColor(value);
+                this.applyStyles(type, value, textColor);
+            },
+
+            resetTheme() {
+                console.log('🔄 Resetting theme...');
+                this.loading = true;
+
+                // Reset colors
+                Object.assign(this.colors, ThemeConfig.DEFAULT_COLORS);
+
+                // Remove inline styles
+                const elements = document.querySelectorAll('.hospital-navbar, .hospital-sidebar, .hospital-content');
+                elements.forEach(el => {
+                    el.style.removeProperty('background-color');
+                    el.style.removeProperty('color');
+
+                    const children = el.querySelectorAll('*');
+                    children.forEach(child => {
+                        child.style.removeProperty('color');
+                        child.style.removeProperty('background-color');
+                    });
+                });
+
+                setTimeout(() => this.loading = false, 500);
+            }
+        };
+
+        // Alpine.js component
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('themeManager', () => ({
+                loading: false,
+
+                get colors() {
+                    return window.Hospital.themeManager.colors;
+                },
+
+                applyPreset(presetName) {
+                    console.log(`🎯 Alpine applyPreset called: ${presetName}`);
+                    return window.Hospital.themeManager.applyPreset(presetName);
+                },
+
+                updateColor(type, value) {
+                    console.log(`🎯 Alpine updateColor called: ${type} = ${value}`);
+                    return window.Hospital.themeManager.updateColor(type, value);
+                },
+
+                resetTheme() {
+                    console.log(`🎯 Alpine resetTheme called`);
+                    this.loading = true;
+                    window.Hospital.themeManager.resetTheme();
+                    setTimeout(() => this.loading = false, 500);
+                },
+
+                testAllPresets() {
+                    console.log('🧪 Testing all presets...');
+                    const presets = ['blue', 'green', 'purple', 'dark'];
+                    let index = 0;
+
+                    const testNext = () => {
+                        if (index < presets.length) {
+                            console.log(`🧪 Testing preset ${index + 1}/4: ${presets[index]}`);
+                            this.applyPreset(presets[index]);
+                            index++;
+                            setTimeout(testNext, 2000);
+                        } else {
+                            console.log('🧪 All presets tested! Resetting to default...');
+                            setTimeout(() => this.resetTheme(), 1000);
+                        }
+                    };
+
+                    testNext();
+                }
+            }));
+        });
+
+        // Log when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Test page loaded');
+            console.log('🔧 Hospital.themeManager:', window.Hospital.themeManager);
+            console.log('📊 Available presets:', Object.keys(ThemeConfig.PRESETS));
+        });
+    </script>
+</body>
+</html>

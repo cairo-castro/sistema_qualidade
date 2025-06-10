@@ -6,10 +6,7 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/css/app.css',
-                'resources/js/app.js',
-                'resources/js/dashboard-components.js',
-                'resources/js/dashboard-charts.js',
-                'resources/js/charts-examples.js'
+                'resources/js/app.js'
             ],
             refresh: true,
         }),
@@ -33,14 +30,28 @@ export default defineConfig({
         },
         rollupOptions: {
             output: {
-                manualChunks: {
-                    // 📊 ApexCharts substituindo Chart.js - mais performático
-                    'vendor-charts': ['apexcharts'],
-                    'vendor-datatables': ['datatables.net-dt'],
-                    'vendor-alpine': ['alpinejs'],
-                    'vendor-preline': ['@preline/datatable', '@preline/dropdown', '@preline/tooltip'],
+                manualChunks(id) {
+                    // ApexCharts chunk
+                    if (id.includes('apexcharts')) {
+                        return 'vendor-charts';
+                    }
+                    // DataTables chunk
+                    if (id.includes('datatables')) {
+                        return 'vendor-datatables';
+                    }
+                    // Alpine.js chunk
+                    if (id.includes('alpinejs')) {
+                        return 'vendor-alpine';
+                    }
+                    // Preline components chunk
+                    if (id.includes('@preline')) {
+                        return 'vendor-preline';
+                    }
+                    // Core vendor libraries
+                    if (id.includes('node_modules')) {
+                        return 'vendor';
+                    }
                 },
-                // Otimizar nomes de arquivos para cache
                 entryFileNames: 'assets/[name]-[hash].js',
                 chunkFileNames: 'assets/[name]-[hash].js',
                 assetFileNames: 'assets/[name]-[hash].[ext]',
@@ -54,17 +65,17 @@ export default defineConfig({
         },
         chunkSizeWarningLimit: 1000,
         cssCodeSplit: true,
-        sourcemap: false, // Desabilitar sourcemap em produção
+        sourcemap: false,
         target: ['es2020', 'chrome87', 'firefox78', 'safari14'],
-        reportCompressedSize: false, // Acelerar build
+        reportCompressedSize: false,
     },
-    optimizeDeps: {
+        optimizeDeps: {
         include: [
             'alpinejs',
-            'apexcharts', // 📊 ApexCharts otimizado
+            'apexcharts',
             'datatables.net-dt',
             '@preline/datatable',
-            '@preline/dropdown', 
+            '@preline/dropdown',
             '@preline/tooltip',
         ],
         exclude: ['@vite/client', '@vite/env'],
@@ -92,4 +103,4 @@ export default defineConfig({
         __VUE_OPTIONS_API__: false,
         __VUE_PROD_DEVTOOLS__: false,
     }
-}); 
+});

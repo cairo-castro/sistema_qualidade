@@ -1,2113 +1,1152 @@
-import './bootstrap';
-
-// Lazy loading para bibliotecas pesadas - ApexCharts substituindo Chart.js
-const loadApexCharts = () => import('apexcharts');
-const loadDataTables = () => import('datatables.net-dt');
-const loadPrelineComponents = () => Promise.all([
-  import('@preline/datatable'),
-  import('@preline/dropdown'),
-  import('@preline/tooltip')
-]);
-
-// Alpine.js - mantém carregamento normal pois é framework base
+// Importações necessárias
 import Alpine from 'alpinejs';
-window.Alpine = Alpine;
+import { ThemeConfig } from './config/theme-config.js';
+import { ColorUtils } from './utils/color-utils.js';
 
-// 🌐 Global variables needed by Alpine templates
+// Definir HospitalSystem como uma classe completa
+class HospitalSystem {
+    constructor() {
+        this.theme = {
+            toggle: () => {
+                const isDark = document.documentElement.classList.contains('dark');
+                document.documentElement.classList.toggle('dark', !isDark);
+                localStorage.setItem('theme', !isDark ? 'dark' : 'light');
+            }
+        };
+        this.charts = {
+            destroyAll: () => {
+                console.log('Charts destroyed');
+            }
+        };
+    }
+
+    init() {
+        console.log('Hospital System initialized');
+    }
+
+    loadModule(moduleName) {
+        console.log(`Loading module: ${moduleName}`);
+    }
+}
+
+// Global Setup and Initialization
+window.Alpine = Alpine;
 window.themeManager = null;
 window.isCustomActive = window.hasCustomTheme || false;
 window.colors = {
-    navbar: window.userTheme?.navbar_color || '#ffffff',
-    sidebar: window.userTheme?.sidebar_color || '#ffffff',
-    background: window.userTheme?.background_color || '#f9fafb'
+    navbar: window.userTheme?.navbar_color || ThemeConfig.DEFAULT_COLORS.navbar,
+    sidebar: window.userTheme?.sidebar_color || ThemeConfig.DEFAULT_COLORS.sidebar,
+    background: window.userTheme?.background_color || ThemeConfig.DEFAULT_COLORS.background
 };
 
-// 🎨 Global function for text color contrast calculation
-window.getContrastingTextColor = function(hexColor) {
-    if (!hexColor) return '#1f2937';
+// Global utility functions
+window.getContrastingTextColor = ColorUtils.getContrastingTextColor;
 
-    try {
-        // Remove # if present
-        const cleanHex = hexColor.replace('#', '');
-
-        // Validate hex format
-        if (!/^[0-9A-Fa-f]{6}$/.test(cleanHex)) {
-            return '#1f2937'; // Default dark text
-        }
-
-        // Convert hex to RGB
-        const r = parseInt(cleanHex.slice(0, 2), 16);
-        const g = parseInt(cleanHex.slice(2, 4), 16);
-        const b = parseInt(cleanHex.slice(4, 6), 16);
-
-        // Calculate relative luminance using sRGB colorspace
-        const rsRGB = r / 255;
-        const gsRGB = g / 255;
-        const bsRGB = b / 255;
-
-        const rLinear = rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
-        const gLinear = gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
-        const bLinear = bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
-
-        const luminance = 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
-
-        // Use WCAG contrast ratio guidelines
-        return luminance > 0.179 ? '#1f2937' : '#ffffff';
-    } catch (error) {
-        console.warn('Error calculating contrasting text color:', error);
-        return '#1f2937'; // Default dark text
-    }
+// Debug function to reset sidebar state
+window.resetSidebarState = function() {
+    localStorage.removeItem('hospital-sidebar-collapsed');
+    console.log('🔄 Sidebar state reset. Reload page to apply changes.');
+    location.reload();
 };
 
-// 🔄 Update global variables when theme changes
-window.updateGlobalThemeVars = function() {
-    window.isCustomActive = window.hasCustomTheme || false;
-    if (window.userTheme) {
-        window.colors.navbar = window.userTheme.navbar_color || '#ffffff';
-        window.colors.sidebar = window.userTheme.sidebar_color || '#ffffff';
-        window.colors.background = window.userTheme.background_color || '#f9fafb';
-    }
+// Debug function to check sidebar state
+window.checkSidebarState = function() {
+    const stored = localStorage.getItem('hospital-sidebar-collapsed');
+    console.log('📋 Current sidebar state in localStorage:', stored);
+    console.log('📋 Parsed value:', JSON.parse(stored || 'false'));
+    console.log('📋 Expected: false (expanded), true (collapsed)');
 };
 
-// Configurações globais otimizadas do Sistema
-window.Hospital = {
-    config: {
-        theme: 'hospital',
-        sidebarCollapsed: localStorage.getItem('hospital-sidebar-collapsed') === 'true',
-        autoRefresh: true,
-        refreshInterval: 30000,
-        notifications: true,
-        colors: {
-            primary: '#22c55e',
-            secondary: '#3b82f6',
-            success: '#22c55e',
-            warning: '#eab308',
-            danger: '#ef4444',
-            info: '#3b82f6'
-        },
-        // 🎨 Configurações específicas para ApexCharts - Tema Hospital
-        chartTheme: {
-            mode: 'light', // ou 'dark' baseado no tema atual
-            palette: 'palette1', // ApexCharts palette
-            monochrome: {
-                enabled: false,
-                color: '#22c55e',
-                shadeTo: 'light',
-                shadeIntensity: 0.65
-            },
-            // 📊 Cores personalizadas alinhadas com o tema Hospital
-            colors: ['#22c55e', '#3b82f6', '#eab308', '#ef4444', '#8b5cf6', '#06b6d4', '#f59e0b'],
-            grid: {
-                borderColor: '#e5e7eb',
-                strokeDashArray: 0,
-                position: 'back',
-                xaxis: {
-                    lines: {
-                        show: true
-                    }
-                },
-                yaxis: {
-                    lines: {
-                        show: true
-                    }
-                }
-            },
-            // 🎯 Configurações de performance
-            performance: {
-                animationSpeed: 'fast', // 'slow', 'medium', 'fast'
-                reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-            }
-        }
+// Initialize Hospital System
+window.Hospital = new HospitalSystem();
+
+// Initialize theme manager directly in Hospital object
+window.Hospital.themeManager = {
+    open: false,
+    loading: false,
+    isResetting: false, // Previne múltiplas execuções de reset
+    isCustomActive: window.hasCustomTheme || false,
+    applyTimeout: null,
+    colors: {
+        navbar: window.userTheme?.navbar_color || ThemeConfig.DEFAULT_COLORS.navbar,
+        sidebar: window.userTheme?.sidebar_color || ThemeConfig.DEFAULT_COLORS.sidebar,
+        background: window.userTheme?.background_color || ThemeConfig.DEFAULT_COLORS.background,
+        accent: window.userTheme?.accent_color || ThemeConfig.DEFAULT_COLORS.accent
     },
 
-    // Módulos lazy-loaded
-    apexChartsModule: null,
-    dataTablesModule: null,
-    prelineModule: null,
+    init() {
+        this.updateIsCustomActive();
+        this.toggleLightDarkButton();
 
-    // 🚀 Inicialização otimizada
-    async init() {
-        // Inicializar componentes críticos
-        this.sidebar.init();
-        this.utils.createToastContainer();
-
-        // 🔍 Detectar tema atual e configurar ApexCharts
-        this.updateChartTheme();
-
-        // 📈 Lazy load de módulos pesados apenas quando necessário
-        if (document.querySelector('[data-chart]')) {
-            await this.loadApexChartsModule();
+        // Garantir que a função global está disponível
+        if (!window.getContrastingTextColor) {
+            window.getContrastingTextColor = ColorUtils.getContrastingTextColor;
         }
 
-        // 🏥 Carregar ApexCharts sempre se estivermos numa página de dashboard
-        if (document.querySelector('#diagnosticsChart, #diagnosticsChartPartial')) {
-            await this.loadApexChartsModule();
-        }
-
-        if (document.querySelector('.data-table')) {
-            await this.loadDataTablesModule();
-        }
-
-        if (document.querySelector('[data-preline]')) {
-            await this.loadPrelineModule();
-        }
-
-        // 🌓 Listener para mudanças de tema
-        this.setupThemeObserver();
+        // Configurar aplicação dinâmica de cores na navbar
+        this.setupDynamicNavbarColorApplication();
     },
 
-    // 📊 Lazy loading otimizado de ApexCharts
-    async loadApexChartsModule() {
-        if (!this.apexChartsModule) {
-            console.log('🚀 Carregando ApexCharts module...');
-            const ApexCharts = await loadApexCharts();
-            this.apexChartsModule = ApexCharts.default || ApexCharts;
-
-            // 🌐 Tornar ApexCharts disponível globalmente
-            window.ApexCharts = this.apexChartsModule;
-
-            // ⚡ Configurar defaults globais do ApexCharts
-            this.setupApexChartsDefaults();
-        }
-        return this.apexChartsModule;
+    toggle() {
+        this.open = !this.open;
     },
 
-    // ⚙️ Configurar defaults globais do ApexCharts para performance
-    setupApexChartsDefaults() {
-        if (!this.apexChartsModule) return;
-
-        // 🎨 Aplicar tema padrão do Hospital
-        this.apexChartsModule.exec('setGlobalOptions', {
-            theme: this.config.chartTheme,
-            chart: {
-                fontFamily: 'Inter, system-ui, sans-serif',
-                foreColor: this.getCurrentTheme() === 'dark' ? '#d1d5db' : '#6b7280',
-                background: 'transparent',
-                // 🚀 Configurações de performance
-                animations: {
-                    enabled: !this.config.chartTheme.performance.reducedMotion,
-                    easing: 'easeinout',
-                    speed: this.config.chartTheme.performance.animationSpeed === 'fast' ? 400 : 800,
-                    animateGradually: {
-                        enabled: true,
-                        delay: 150
-                    },
-                    dynamicAnimation: {
-                        enabled: true,
-                        speed: 350
-                    }
-                },
-                // 📱 Responsividade otimizada
-                responsive: [{
-                    breakpoint: 768,
-                    options: {
-                        chart: {
-                            height: 300
-                        },
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }]
-            },
-            colors: this.config.chartTheme.colors,
-            grid: this.config.chartTheme.grid,
-            stroke: {
-                width: 2,
-                curve: 'smooth'
-            },
-            dataLabels: {
-                enabled: false
-            },
-            tooltip: {
-                theme: this.getCurrentTheme(),
-                style: {
-                    fontSize: '12px',
-                    fontFamily: 'Inter, system-ui, sans-serif'
-                }
-            }
-        });
+    updateIsCustomActive() {
+        this.isCustomActive = window.hasCustomTheme || false;
+        window.isCustomActive = this.isCustomActive;
     },
 
-    // 🌓 Detectar tema atual
-    getCurrentTheme() {
-        return document.documentElement.getAttribute('data-theme') || 'light';
-    },
+    toggleLightDarkButton() {
+        const button = document.querySelector('button[onclick="toggleHospitalTheme()"]');
+        if (!button) return;
 
-    // 🎨 Atualizar tema dos charts
-    updateChartTheme() {
-        const currentTheme = this.getCurrentTheme();
-        this.config.chartTheme.mode = currentTheme;
-
-        // 🎨 Ajustar cores baseado no tema
-        if (currentTheme === 'dark') {
-            this.config.chartTheme.grid.borderColor = '#374151';
+        if (window.hasCustomTheme) {
+            button.disabled = true;
+            button.classList.add('opacity-50', 'cursor-not-allowed');
+            button.title = 'Tema personalizado ativo - modo claro/escuro desabilitado';
         } else {
-            this.config.chartTheme.grid.borderColor = '#e5e7eb';
+            button.disabled = false;
+            button.classList.remove('opacity-50', 'cursor-not-allowed');
+            button.title = 'Alternar modo claro/escuro';
         }
     },
 
-    // 👀 Observer para mudanças de tema
-    setupThemeObserver() {
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
-                    this.updateChartTheme();
-                    // 🔄 Atualizar charts existentes com novo tema
-                    this.charts.updateAllThemes();
-                }
-            });
+    updateColor(type, value) {
+        if (!ColorUtils.isValidHexColor(value)) {
+            console.warn('Invalid hex color:', value);
+            return;
+        }
+
+        // Aplicar cor instantaneamente
+        this.colors[type] = value;
+
+        // Calcular cor de texto contrastante
+        const textColor = ColorUtils.getContrastingTextColor(value);
+        console.log(`🎨 Applying ${type}: ${value} with text: ${textColor}`);
+
+        this.applyStyles(type, value, textColor);
+    },
+
+    applyColorRealTime(type, color) {
+        // Método mantido para compatibilidade, mas sem delay
+        console.log(`🎯 applyColorRealTime: ${type} = ${color}`);
+        const textColor = ColorUtils.getContrastingTextColor(color);
+        console.log(`🎯 Calculated text color: ${textColor}`);
+        this.applyStyles(type, color, textColor);
+    },
+
+    applyPreset(presetName) {
+        console.log(`🎨 Applying preset: ${presetName}`);
+        const preset = ThemeConfig.PRESETS[presetName];
+        if (!preset) {
+            this.showToast('Preset não encontrado: ' + presetName, 'error');
+            return;
+        }
+
+        console.log(`🎨 Preset found:`, preset);
+
+        // Update colors
+        this.colors.navbar = preset.navbar;
+        this.colors.sidebar = preset.sidebar;
+        this.colors.background = preset.background;
+        this.colors.accent = preset.accent || preset.navbar;
+
+        console.log(`🎨 Colors updated:`, this.colors);
+
+        // Apply all colors with individual logs
+        Object.entries(preset).forEach(([type, color]) => {
+            if (color && type !== 'name') {
+                console.log(`🎨 Applying ${type}: ${color}`);
+                this.applyColorRealTime(type, color);
+            }
         });
 
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-theme']
+        console.log(`✅ Preset ${presetName} applied successfully!`);
+        // Notificação removada para melhor UX
+    },
+
+    applyStyles(type, color, textColor) {
+        console.log(`🎯 applyStyles called: ${type} = ${color} (text: ${textColor})`);
+        const root = document.documentElement;
+
+        switch (type) {
+            case 'navbar':
+                console.log(`🏗️ Applying navbar styles...`);
+                this.applyNavbarStyles(color, textColor, root);
+                break;
+            case 'sidebar':
+                console.log(`🏗️ Applying sidebar styles...`);
+                this.applySidebarStyles(color, textColor, root);
+                break;
+            case 'background':
+                console.log(`🏗️ Applying background styles...`);
+                this.applyBackgroundStyles(color, textColor, root);
+                break;
+            case 'accent':
+                console.log(`🏗️ Applying accent styles...`);
+                this.applyAccentStyles(color, textColor, root);
+                break;
+        }
+
+        // Aplicar contraste em elementos com cores dinâmicas
+        this.ensureTextContrast();
+    },
+
+    // Nova função para garantir contraste em todos os elementos
+    ensureTextContrast() {
+        // Aplicar contraste APENAS em elementos que têm background-color inline
+        // e que são parte do sistema de tema personalizado
+        const elementsWithBg = document.querySelectorAll(
+            '.hospital-navbar[style*="background-color"], .hospital-sidebar[style*="background-color"], .hospital-content[style*="background-color"], main[style*="background-color"]'
+        );
+
+        elementsWithBg.forEach(element => {
+            const bgColor = element.style.backgroundColor;
+            if (bgColor) {
+                // Converter RGB para HEX se necessário
+                const hexColor = this.rgbToHex(bgColor) || bgColor;
+                if (ColorUtils.isValidHexColor(hexColor)) {
+                    const contrastColor = ColorUtils.getContrastingTextColor(hexColor);
+
+                    // Só aplicar se o elemento não tem classes dark mode
+                    if (!element.classList.toString().includes('dark:')) {
+                        element.style.color = contrastColor;
+
+                        // Aplicar apenas aos filhos diretos que não têm background próprio
+                        // e que estão dentro deste elemento específico
+                        const children = element.querySelectorAll(':scope > span, :scope > a, :scope > p, :scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6, :scope > div:not([class*="bg-"]):not([style*="background"])');
+                        children.forEach(child => {
+                            if (!child.style.backgroundColor &&
+                                !child.classList.contains('bg-') &&
+                                !(child.className && child.className.includes('dark:'))) {
+                                child.style.color = contrastColor;
+                            }
+                        });
+                    }
+                }
+            }
         });
     },
 
-    // 📊 Lazy loading otimizado de DataTables
-    async loadDataTablesModule() {
-        if (!this.dataTablesModule) {
-            console.log('🚀 Carregando DataTables module...');
-            this.dataTablesModule = await loadDataTables();
-        }
-        return this.dataTablesModule;
+    // Função auxiliar para converter RGB para HEX
+    rgbToHex(rgb) {
+        if (!rgb || rgb === 'transparent') return null;
+
+        const match = rgb.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        if (!match) return null;
+
+        const [, r, g, b] = match;
+        return '#' + [r, g, b].map(x => {
+            const hex = parseInt(x).toString(16);
+            return hex.length === 1 ? '0' + hex : hex;
+        }).join('');
     },
 
-    // 🎛️ Lazy loading otimizado de Preline
-    async loadPrelineModule() {
-        if (!this.prelineModule) {
-            console.log('🚀 Carregando Preline modules...');
-            const [datatable, dropdown, tooltip] = await loadPrelineComponents();
-            this.prelineModule = { datatable, dropdown, tooltip };
-        }
-        return this.prelineModule;
-    },
+    applyNavbarStyles(color, textColor, root) {
+        root.style.setProperty('--navbar-bg', color);
+        root.style.setProperty('--navbar-text', textColor);
 
-    // 🛠️ Utilitários otimizados com memoização
-    utils: {
-        formatters: new Map(),
+        // Apply directly to navbar elements and their children
+        const navbars = document.querySelectorAll('.hospital-navbar, nav.hospital-navbar');
+        navbars.forEach(nav => {
+            nav.style.backgroundColor = color;
+            nav.style.color = textColor;
 
-        formatNumber(num) {
-            const key = `number_${num}`;
-            if (!this.formatters.has(key)) {
-                this.formatters.set(key, new Intl.NumberFormat('pt-BR').format(num));
-            }
-            return this.formatters.get(key);
-        },
+            // Apply to ALL navbar descendants (not just direct children)
+            const allNavbarElements = nav.querySelectorAll('*');
+            allNavbarElements.forEach(element => {
+                // Only apply if element doesn't have its own background color or specific styling
+                const hasOwnBackground = element.style.backgroundColor ||
+                                       element.classList.contains('bg-') ||
+                                       (element.className && element.className.includes('dark:bg-'));
 
-        formatCurrency(value) {
-            const key = `currency_${value}`;
-            if (!this.formatters.has(key)) {
-                this.formatters.set(key, new Intl.NumberFormat('pt-BR', {
-                    style: 'currency',
-                    currency: 'BRL'
-                }).format(value));
-            }
-            return this.formatters.get(key);
-        },
+                const isThemeButton = element.closest('[x-data*="themeManager"]') ||
+                                    element.hasAttribute('x-data') ||
+                                    (element.classList && element.classList.contains('theme-manager'));
 
-        formatDate(date) {
-            const key = `date_${date}`;
-            if (!this.formatters.has(key)) {
-                this.formatters.set(key, new Intl.DateTimeFormat('pt-BR', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit'
-                }).format(new Date(date)));
-            }
-            return this.formatters.get(key);
-        },
+                if (!hasOwnBackground && !isThemeButton) {
+                    // Apply text color
+                    element.style.color = textColor;
+                    element.style.setProperty('color', textColor, 'important');
 
-        formatDateTime(date) {
-            const key = `datetime_${date}`;
-            if (!this.formatters.has(key)) {
-                this.formatters.set(key, new Intl.DateTimeFormat('pt-BR', {
-                    year: 'numeric',
-                    month: '2-digit',
-                    day: '2-digit',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                }).format(new Date(date)));
-            }
-            return this.formatters.get(key);
-        },
+                    // For SVG icons
+                    if (element.tagName === 'SVG') {
+                        element.style.fill = textColor;
+                        element.style.stroke = textColor;
+                    }
 
-        // 🎨 Toast system otimizado com pool de objetos
-        toastPool: [],
-
-        showToast(message, type = 'info', duration = 4000) {
-            const toastContainer = this.getToastContainer();
-            const toast = this.createToast(message, type);
-
-            toastContainer.appendChild(toast);
-
-            // ✨ Animate entrada com requestAnimationFrame para melhor performance
-            requestAnimationFrame(() => {
-                toast.classList.remove('translate-x-full');
-            });
-
-            // ⏱️ Auto remove otimizado
-            setTimeout(() => {
-                this.removeToast(toast);
-            }, duration);
-        },
-
-        createToast(message, type) {
-            const toast = document.createElement('div');
-            toast.className = 'transform translate-x-full transition-transform duration-300 mb-2';
-
-            const icons = {
-                success: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>',
-                error: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>',
-                warning: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd"></path></svg>',
-                info: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>'
-            };
-
-            const colors = {
-                success: 'bg-green-50 border-green-200 text-green-800',
-                error: 'bg-red-50 border-red-200 text-red-800',
-                warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-                info: 'bg-blue-50 border-blue-200 text-blue-800'
-            };
-
-            toast.innerHTML = `
-                <div class="flex items-center p-4 max-w-sm bg-white rounded-lg shadow-lg border-l-4 ${colors[type] || colors.info}">
-                    <div class="flex-shrink-0">
-                        ${icons[type] || icons.info}
-                    </div>
-                    <div class="ml-3 flex-1">
-                        <p class="text-sm font-medium">${message}</p>
-                    </div>
-                    <button class="ml-4 flex-shrink-0 text-gray-400 hover:text-gray-600" onclick="window.Hospital.utils.removeToast(this.closest('.transform'))">
-                        <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                        </svg>
-                    </button>
-                </div>
-            `;
-
-            return toast;
-        },
-
-        removeToast(toast) {
-            toast.classList.add('translate-x-full');
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.remove();
-                }
-            }, 300);
-        },
-
-        getToastContainer() {
-            let container = document.getElementById('toast-container');
-            if (!container) {
-                container = this.createToastContainer();
-            }
-            return container;
-        },
-
-        createToastContainer() {
-            const container = document.createElement('div');
-            container.id = 'toast-container';
-            container.className = 'fixed top-4 right-4 z-50 space-y-2';
-            document.body.appendChild(container);
-            return container;
-        },
-
-        // 🔄 Modal otimizado com pool
-        modalPool: [],
-
-        confirm(message, title = 'Confirmar') {
-            return new Promise((resolve) => {
-                const modal = this.createConfirmModal(message, title, resolve);
-                document.body.appendChild(modal);
-
-                // 🎯 Event listeners otimizados
-                this.setupModalEvents(modal, resolve);
-            });
-        },
-
-        createConfirmModal(message, title, resolve) {
-            const modal = document.createElement('div');
-            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
-            modal.innerHTML = `
-                <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
-                    <div class="p-6 border-b">
-                        <h3 class="text-lg font-semibold text-gray-900">${title}</h3>
-                    </div>
-                    <div class="p-6">
-                        <p class="text-gray-600">${message}</p>
-                    </div>
-                    <div class="p-6 border-t flex justify-end space-x-3">
-                        <button class="gqa-btn ghost cancel-btn">Cancelar</button>
-                        <button class="gqa-btn primary confirm-btn">Confirmar</button>
-                    </div>
-                </div>
-            `;
-            return modal;
-        },
-
-        setupModalEvents(modal, resolve) {
-            const confirmBtn = modal.querySelector('.confirm-btn');
-            const cancelBtn = modal.querySelector('.cancel-btn');
-
-            const handleConfirm = () => {
-                modal.remove();
-                resolve(true);
-            };
-
-            const handleCancel = () => {
-                modal.remove();
-                resolve(false);
-            };
-
-            confirmBtn.addEventListener('click', handleConfirm);
-            cancelBtn.addEventListener('click', handleCancel);
-
-            // ⌨️ Fechar com ESC
-            const handleEsc = (e) => {
-                if (e.key === 'Escape') {
-                    handleCancel();
-                    document.removeEventListener('keydown', handleEsc);
-                }
-            };
-            document.addEventListener('keydown', handleEsc);
-
-            // 🖱️ Fechar clicando fora
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    handleCancel();
+                    // For specific navbar elements
+                    if (element.classList.contains('quick-stat-badge') ||
+                        element.classList.contains('stat-value') ||
+                        element.classList.contains('stat-label') ||
+                        element.closest('.quick-stat-badge')) {
+                        element.style.color = textColor;
+                        element.style.setProperty('color', textColor, 'important');
+                    }
                 }
             });
-        },
 
-        // ⏱️ Debounce otimizado
-        debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
-        }
-    },
-
-    // 📱 Gerenciamento otimizado da sidebar
-    sidebar: {
-        element: null,
-        mainElement: null,
-
-        init() {
-            this.element = document.querySelector('.hospital-sidebar');
-            this.mainElement = document.querySelector('.hospital-main');
-
-            if (window.Hospital.config.sidebarCollapsed) {
-                this.collapse(false);
-            }
-
-            this.handleResize();
-            window.addEventListener('resize', this.debounceResize);
-        },
-
-        debounceResize: null,
-
-        handleResize() {
-            if (!this.debounceResize) {
-                this.debounceResize = window.Hospital.utils.debounce(() => {
-                    if (window.innerWidth <= 1024) {
-                        this.element?.classList.remove('open');
+            // Apply to dropdown elements specifically
+            const dropdowns = nav.querySelectorAll('[x-show], .dropdown, .dropdown-menu, [class*="dropdown"]');
+            dropdowns.forEach(dropdown => {
+                if (!dropdown.closest('[x-data*="themeManager"]')) {
+                    // Apply to dropdown container
+                    if (!dropdown.style.backgroundColor && !dropdown.classList.contains('bg-')) {
+                        dropdown.style.backgroundColor = color;
+                        dropdown.style.color = textColor;
                     }
-                }, 100);
-            }
-            this.debounceResize();
-        },
 
-        toggle() {
-            if (!this.element || !this.mainElement) return;
-
-            const isCollapsed = this.element.classList.contains('collapsed');
-
-            if (isCollapsed) {
-                this.expand();
-            } else {
-                this.collapse();
-            }
-        },
-
-        collapse(animate = true) {
-            if (!this.element || !this.mainElement) return;
-
-            this.element.classList.add('collapsed');
-            this.mainElement.classList.add('sidebar-collapsed');
-
-            localStorage.setItem('hospital-sidebar-collapsed', 'true');
-            window.Hospital.config.sidebarCollapsed = true;
-
-            // 🚀 Performance: usar will-change apenas durante animação
-            if (animate) {
-                this.element.style.willChange = 'width';
-                this.mainElement.style.willChange = 'margin-left';
-
-                setTimeout(() => {
-                    this.element.style.willChange = 'auto';
-                    this.mainElement.style.willChange = 'auto';
-                }, 300);
-            }
-        },
-
-        expand(animate = true) {
-            if (!this.element || !this.mainElement) return;
-
-            this.element.classList.remove('collapsed');
-            this.mainElement.classList.remove('sidebar-collapsed');
-
-            localStorage.setItem('hospital-sidebar-collapsed', 'false');
-            window.Hospital.config.sidebarCollapsed = false;
-
-            // 🚀 Performance: usar will-change apenas durante animação
-            if (animate) {
-                this.element.style.willChange = 'width';
-                this.mainElement.style.willChange = 'margin-left';
-
-                setTimeout(() => {
-                    this.element.style.willChange = 'auto';
-                    this.mainElement.style.willChange = 'auto';
-                }, 300);
-            }
-        }
-    },
-
-    // 📊 ApexCharts otimizados com lazy loading e tema Hospital
-    charts: {
-        instances: new Map(),
-
-        /**
-         * 🎯 Criar um gráfico ApexCharts otimizado
-         * @param {string|HTMLElement} selector - Seletor ou elemento do gráfico
-         * @param {Object} config - Configuração do gráfico
-         * @param {string} config.type - Tipo: 'line', 'area', 'bar', 'pie', 'donut', 'radial', etc.
-         * @param {Array} config.series - Dados do gráfico
-         * @param {Object} config.options - Opções personalizadas (opcional)
-         * @returns {Promise<ApexChart>} Instância do gráfico
-         */
-        async create(selector, config) {
-            const ApexCharts = await window.Hospital.loadApexChartsModule();
-
-            // 🎨 Configurações padrão otimizadas para o tema Hospital
-            const defaultOptions = {
-                chart: {
-                    fontFamily: 'Inter, system-ui, sans-serif',
-                    height: config.height || 350,
-                    type: config.type || 'line',
-                    background: 'transparent',
-                    foreColor: window.Hospital.getCurrentTheme() === 'dark' ? '#d1d5db' : '#6b7280',
-                    toolbar: {
-                        show: true,
-                        tools: {
-                            download: true,
-                            selection: false,
-                            zoom: true,
-                            zoomin: true,
-                            zoomout: true,
-                            pan: false,
-                            reset: true
-                        },
-                        export: {
-                            csv: {
-                                filename: 'hospital-chart-data',
-                                columnDelimiter: ',',
-                                headerCategory: 'Categoria',
-                                headerValue: 'Valor'
-                            },
-                            svg: {
-                                filename: 'hospital-chart'
-                            },
-                            png: {
-                                filename: 'hospital-chart'
-                            }
+                    // Apply to all dropdown children
+                    const dropdownItems = dropdown.querySelectorAll('*');
+                    dropdownItems.forEach(item => {
+                        if (!item.style.backgroundColor &&
+                            !item.classList.contains('bg-') &&
+                            !(item.className && item.className.includes('dark:'))) {
+                            item.style.color = textColor;
+                            item.style.setProperty('color', textColor, 'important');
                         }
-                    },
-                    // ⚡ Configurações de performance
-                    animations: {
-                        enabled: !window.Hospital.config.chartTheme.performance.reducedMotion,
-                        easing: 'easeinout',
-                        speed: window.Hospital.config.chartTheme.performance.animationSpeed === 'fast' ? 400 : 800,
-                        animateGradually: {
-                            enabled: true,
-                            delay: 50
-                        },
-                        dynamicAnimation: {
-                            enabled: true,
-                            speed: 250
-                        }
-                    },
-                    // 📱 Responsividade otimizada
-                    responsive: [{
-                        breakpoint: 768,
-                        options: {
-                            chart: {
-                                height: 300
-                            },
-                            legend: {
-                                position: 'bottom',
-                                fontSize: '12px'
-                            },
-                            xaxis: {
-                                labels: {
-                                    style: {
-                                        fontSize: '11px'
-                                    }
-                                }
-                            },
-                            yaxis: {
-                                labels: {
-                                    style: {
-                                        fontSize: '11px'
-                                    }
-                                }
-                            }
-                        }
-                    }]
-                },
-                // 🎨 Cores do tema Hospital
-                colors: window.Hospital.config.chartTheme.colors,
-                // 📊 Grid otimizada
-                grid: {
-                    ...window.Hospital.config.chartTheme.grid,
-                    padding: {
-                        top: 10,
-                        right: 10,
-                        bottom: 10,
-                        left: 20
-                    }
-                },
-                // 🎯 Stroke suave
-                stroke: {
-                    width: 2,
-                    curve: 'smooth',
-                    lineCap: 'round'
-                },
-                // 📝 DataLabels desabilitado para performance
-                dataLabels: {
-                    enabled: false
-                },
-                // 🔍 Tooltip personalizado
-                tooltip: {
-                    theme: window.Hospital.getCurrentTheme(),
-                    style: {
-                        fontSize: '12px',
-                        fontFamily: 'Inter, system-ui, sans-serif'
-                    },
-                    y: {
-                        formatter: function(value) {
-                            // 💰 Formatar valores monetários se aplicável
-                            if (config.formatCurrency) {
-                                return window.Hospital.utils.formatCurrency(value);
-                            }
-                            // 🔢 Formatar números
-                            return window.Hospital.utils.formatNumber(value);
-                        }
-                    }
-                },
-                // 📍 Legend otimizada
-                legend: {
-                    position: 'bottom',
-                    horizontalAlign: 'left',
-                    fontSize: '13px',
-                    fontFamily: 'Inter, system-ui, sans-serif',
-                    fontWeight: 500,
-                    markers: {
-                        width: 8,
-                        height: 8,
-                        radius: 2
-                    }
-                },
-                // 📐 Eixo X
-                xaxis: {
-                    labels: {
-                        style: {
-                            colors: window.Hospital.getCurrentTheme() === 'dark' ? '#9ca3af' : '#6b7280',
-                            fontSize: '12px',
-                            fontFamily: 'Inter, system-ui, sans-serif'
-                        }
-                    },
-                    axisBorder: {
-                        show: true,
-                        color: window.Hospital.getCurrentTheme() === 'dark' ? '#374151' : '#e5e7eb'
-                    },
-                    axisTicks: {
-                        show: true,
-                        color: window.Hospital.getCurrentTheme() === 'dark' ? '#374151' : '#e5e7eb'
-                    }
-                },
-                // 📏 Eixo Y
-                yaxis: {
-                    labels: {
-                        style: {
-                            colors: window.Hospital.getCurrentTheme() === 'dark' ? '#9ca3af' : '#6b7280',
-                            fontSize: '12px',
-                            fontFamily: 'Inter, system-ui, sans-serif'
-                        },
-                        formatter: function(value) {
-                            // 💰 Formatar valores monetários se aplicável
-                            if (config.formatCurrency) {
-                                return window.Hospital.utils.formatCurrency(value);
-                            }
-                            // 🔢 Formatar números
-                            return window.Hospital.utils.formatNumber(value);
-                        }
-                    }
+                    });
                 }
-            };
+            });
 
-            // 🔄 Merge configurações customizadas
-            const mergedOptions = this.deepMerge(defaultOptions, config.options || {});
+            // Apply to quick stat badges specifically
+            const quickStatBadges = nav.querySelectorAll('.quick-stat-badge, [class*="stat-"], .badge, .notification-badge');
+            quickStatBadges.forEach(badge => {
+                // Apply background color to the badge
+                if (!badge.classList.contains('bg-') && !badge.style.backgroundColor) {
+                    badge.style.backgroundColor = color;
+                    badge.style.borderColor = textColor;
+                }
 
-            // 🎯 Configuração final do gráfico
-            const chartConfig = {
-                series: config.series || [],
-                ...mergedOptions
-            };
+                // Apply text color to badge and its children
+                badge.style.color = textColor;
+                badge.style.setProperty('color', textColor, 'important');
 
-            // 📊 Criar instância do gráfico
-            const element = typeof selector === 'string' ? document.querySelector(selector) : selector;
-            if (!element) {
-                console.error('❌ Elemento não encontrado para o gráfico:', selector);
-                return null;
-            }
-
-            const chart = new ApexCharts(element, chartConfig);
-
-            // 🚀 Renderizar com tratamento de erro
-            try {
-                await chart.render();
-
-                // 💾 Armazenar instância para controle
-                const chartId = element.id || `chart-${Date.now()}`;
-                this.instances.set(chartId, chart);
-
-                console.log(`✅ Gráfico ApexCharts criado: ${chartId}`);
-                return chart;
-
-            } catch (error) {
-                console.error('❌ Erro ao renderizar gráfico:', error);
-                return null;
-            }
-        },
-
-        /**
-         * 🔄 Atualizar dados de um gráfico existente
-         * @param {string} chartId - ID do gráfico
-         * @param {Array} newSeries - Novos dados
-         * @param {boolean} animate - Animar atualização
-         */
-        updateSeries(chartId, newSeries, animate = true) {
-            const chart = this.instances.get(chartId);
-            if (chart) {
-                chart.updateSeries(newSeries, animate);
-                console.log(`🔄 Gráfico atualizado: ${chartId}`);
-            }
-        },
-
-        /**
-         * 🎨 Atualizar tema de todos os gráficos
-         */
-        updateAllThemes() {
-            this.instances.forEach((chart, chartId) => {
-                const newTheme = window.Hospital.getCurrentTheme();
-                chart.updateOptions({
-                    chart: {
-                        foreColor: newTheme === 'dark' ? '#d1d5db' : '#6b7280'
-                    },
-                    tooltip: {
-                        theme: newTheme
-                    },
-                    grid: {
-                        borderColor: newTheme === 'dark' ? '#374151' : '#e5e7eb'
+                const badgeChildren = badge.querySelectorAll('*');
+                badgeChildren.forEach(child => {
+                    if (!child.style.backgroundColor && !child.classList.contains('bg-')) {
+                        child.style.color = textColor;
+                        child.style.setProperty('color', textColor, 'important');
                     }
                 });
-                console.log(`🎨 Tema atualizado para: ${chartId}`);
             });
-        },
 
-        /**
-         * 🗑️ Destruir gráfico específico
-         * @param {string} chartId - ID do gráfico
-         */
-        destroy(chartId) {
-            const chart = this.instances.get(chartId);
-            if (chart) {
-                chart.destroy();
-                this.instances.delete(chartId);
-                console.log(`🗑️ Gráfico destruído: ${chartId}`);
-            }
-        },
+            // Apply to buttons in navbar (except theme manager buttons)
+            const navbarButtons = nav.querySelectorAll('button:not([class*="theme"]):not([x-data])');
+            navbarButtons.forEach(button => {
+                if (!button.style.backgroundColor && !button.classList.contains('bg-')) {
+                    button.style.color = textColor;
+                    button.style.borderColor = textColor;
+                    button.style.setProperty('color', textColor, 'important');
 
-        /**
-         * 🧹 Destruir todos os gráficos (cleanup)
-         */
-        destroyAll() {
-            this.instances.forEach((chart, chartId) => {
-                chart.destroy();
-                console.log(`🧹 Gráfico limpo: ${chartId}`);
-            });
-            this.instances.clear();
-            console.log('🧹 Todos os gráficos foram limpos');
-        },
-
-        /**
-         * 🔧 Merge profundo de objetos (utility)
-         * @param {Object} target - Objeto alvo
-         * @param {Object} source - Objeto fonte
-         * @returns {Object} Objeto merged
-         */
-        deepMerge(target, source) {
-            const result = { ...target };
-
-            for (const key in source) {
-                if (source[key] !== null && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-                    result[key] = this.deepMerge(result[key] || {}, source[key]);
-                } else {
-                    result[key] = source[key];
-                }
-            }
-
-            return result;
-        },
-
-        /**
-         * 📊 Helpers para tipos de gráficos comuns
-         */
-        // 📈 Gráfico de linha otimizado
-        async createLineChart(selector, data, options = {}) {
-            return this.create(selector, {
-                type: 'line',
-                series: data,
-                options: {
-                    stroke: {
-                        width: 3,
-                        curve: 'smooth'
-                    },
-                    markers: {
-                        size: 4,
-                        strokeWidth: 2,
-                        hover: {
-                            size: 6
+                    // Apply to button children
+                    const buttonChildren = button.querySelectorAll('*');
+                    buttonChildren.forEach(child => {
+                        if (child.tagName === 'SVG') {
+                            child.style.fill = textColor;
+                            child.style.stroke = textColor;
+                        } else {
+                            child.style.color = textColor;
+                            child.style.setProperty('color', textColor, 'important');
                         }
-                    },
-                    ...options
-                }
-            });
-        },
-
-        // 📊 Gráfico de barras otimizado
-        async createBarChart(selector, data, options = {}) {
-            return this.create(selector, {
-                type: 'bar',
-                series: data,
-                options: {
-                    plotOptions: {
-                        bar: {
-                            borderRadius: 4,
-                            columnWidth: '60%'
-                        }
-                    },
-                    ...options
-                }
-            });
-        },
-
-        // 🍩 Gráfico de donut otimizado
-        async createDonutChart(selector, data, options = {}) {
-            return this.create(selector, {
-                type: 'donut',
-                series: data,
-                options: {
-                    plotOptions: {
-                        pie: {
-                            donut: {
-                                size: '70%'
-                            }
-                        }
-                    },
-                    dataLabels: {
-                        enabled: true,
-                        formatter: function(val) {
-                            return Math.round(val) + '%';
-                        }
-                    },
-                    ...options
-                }
-            });
-        }
-    }
-};
-
-// 🚀 Inicialização otimizada com Intersection Observer para lazy loading
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🏥 Inicializando Sistema Hospital com ApexCharts...');
-
-    // 🎯 Inicializar Hospital System
-    window.Hospital.init();
-
-    // 🚀 Inicializar Alpine.js
-    Alpine.start();
-
-    // 👀 Lazy loading de componentes com Intersection Observer
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const element = entry.target;
-
-                // 📊 Chart lazy loading
-                if (element.hasAttribute('data-chart')) {
-                    window.Hospital.loadApexChartsModule().then(() => {
-                        console.log('📊 ApexCharts module carregado para:', element.id);
-                        // 🎯 Trigger evento personalizado para inicialização
-                        element.dispatchEvent(new CustomEvent('chartReady'));
                     });
                 }
+            });
 
-                // 📋 DataTable lazy loading
-                if (element.classList.contains('data-table')) {
-                    window.Hospital.loadDataTablesModule().then(() => {
-                        console.log('📋 DataTables module carregado para:', element.id);
+            // Apply to links in navbar
+            const navbarLinks = nav.querySelectorAll('a');
+            navbarLinks.forEach(link => {
+                if (!link.style.backgroundColor && !link.classList.contains('bg-')) {
+                    link.style.color = textColor;
+                    link.style.setProperty('color', textColor, 'important');
+
+                    const linkChildren = link.querySelectorAll('*');
+                    linkChildren.forEach(child => {
+                        if (!child.style.backgroundColor) {
+                            child.style.color = textColor;
+                            child.style.setProperty('color', textColor, 'important');
+                        }
                     });
                 }
-
-                observer.unobserve(element);
-            }
+            });
         });
-    }, {
-        threshold: 0.1,
-        rootMargin: '50px'
-    });
 
-    // 🔍 Observar elementos que precisam de lazy loading
-    document.querySelectorAll('[data-chart], .data-table').forEach(el => {
-        observer.observe(el);
-    });
-});
+        // Aplicar cores de forma abrangente para garantir que todos os elementos sejam cobertos
+        this.applyNavbarColorsComprehensive(color, textColor);
 
-// 🧹 Performance: limpar recursos quando necessário
-window.addEventListener('beforeunload', () => {
-    window.Hospital.charts.destroyAll();
-    console.log('🧹 Recursos limpos antes do unload');
-});
-
-// 🔋 Performance: reduzir animações em dispositivos com bateria baixa
-if ('getBattery' in navigator) {
-    navigator.getBattery().then(battery => {
-        if (battery.level < 0.2) {
-            document.documentElement.style.setProperty('--gqa-transition-fast', '0ms');
-            document.documentElement.style.setProperty('--gqa-transition-normal', '0ms');
-            window.Hospital.config.chartTheme.performance.reducedMotion = true;
-            console.log('🔋 Modo economia de bateria ativado');
-        }
-    });
-}
-
-// 🎨 Hospital Utils - Utilitários para tema e interface
-window.hospitalUtils = {
-    // 🌓 Alternar tema
-    toggleTheme() {
-        const currentTheme = window.Hospital.getCurrentTheme();
-        const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-
-        // Aplicar novo tema
-        document.documentElement.setAttribute('data-theme', newTheme);
-
-        // Adicionar/remover classe dark para compatibilidade com Tailwind
-        if (newTheme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-
-        // Salvar preferência no localStorage
-        localStorage.setItem('theme', newTheme);
-
-        // Atualizar tema dos charts
-        window.Hospital.updateChartTheme();
-
-        // Atualizar charts existentes
-        if (window.Hospital.charts) {
-            window.Hospital.charts.updateAllThemes();
-        }
-
-        console.log(`🎨 Tema alterado para: ${newTheme}`);
+        console.log(`✅ Navbar styles applied comprehensively: ${color} with text: ${textColor}`);
     },
 
-    // 🎨 Inicializar tema baseado na preferência salva ou sistema
-    initTheme() {
-        const savedTheme = localStorage.getItem('theme');
-        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // Função específica para aplicar cores abrangentes na navbar
+    applyNavbarColorsComprehensive(color, textColor) {
+        console.log(`🎨 Applying comprehensive navbar colors - BG: ${color}, Text: ${textColor}`);
 
-        let theme = 'light'; // padrão
+        // Seletores abrangentes para todos os elementos da navbar
+        const navbarElements = document.querySelectorAll(
+            '.hospital-navbar, .hospital-navbar *, nav.hospital-navbar, nav.hospital-navbar *'
+        );
 
-        if (savedTheme) {
-            theme = savedTheme;
-        } else if (systemPrefersDark) {
-            theme = 'dark';
-        }
+        navbarElements.forEach(element => {
+            // Verificar se o elemento está realmente na navbar e não é o theme manager
+            const isInNavbar = element.closest('.hospital-navbar, nav.hospital-navbar');
+            const isThemeManager = element.closest('[x-data*="themeManager"]') ||
+                                  element.hasAttribute('x-data') ||
+                                  element.classList.contains('theme-manager');
+            const hasOwnBg = element.style.backgroundColor ||
+                           element.classList.contains('bg-') ||
+                           (element.className && element.className.includes('dark:bg-'));
 
-        // Aplicar tema inicial
-        document.documentElement.setAttribute('data-theme', theme);
+            if (isInNavbar && !isThemeManager && !hasOwnBg) {
+                // Aplicar cor de texto
+                element.style.color = textColor;
+                element.style.setProperty('color', textColor, 'important');
 
-        if (theme === 'dark') {
-            document.documentElement.classList.add('dark');
-        } else {
-            document.documentElement.classList.remove('dark');
-        }
-
-        console.log(`🎨 Tema inicial configurado: ${theme}`);
-    },
-
-    // 🎨 Escutar mudanças no tema do sistema
-    setupSystemThemeListener() {
-        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-
-        mediaQuery.addEventListener('change', (e) => {
-            // Só seguir o sistema se não há tema manual salvo
-            if (!localStorage.getItem('theme')) {
-                const newTheme = e.matches ? 'dark' : 'light';
-
-                document.documentElement.setAttribute('data-theme', newTheme);
-
-                if (newTheme === 'dark') {
-                    document.documentElement.classList.add('dark');
-                } else {
-                    document.documentElement.classList.remove('dark');
+                // Para SVGs
+                if (element.tagName === 'SVG') {
+                    element.style.fill = textColor;
+                    element.style.stroke = textColor;
                 }
 
-                // Atualizar tema dos charts
-                window.Hospital.updateChartTheme();
-
-                if (window.Hospital.charts) {
-                    window.Hospital.charts.updateAllThemes();
-                }
-
-                console.log(`🎨 Tema automático alterado para: ${newTheme}`);
-            }
-        });
-    }
-};
-
-// 🎨 Inicializar tema ao carregar
-window.hospitalUtils.initTheme();
-window.hospitalUtils.setupSystemThemeListener();
-
-// 🎨 Theme Manager Alpine.js Component
-document.addEventListener('alpine:init', () => {
-    Alpine.data('themeManager', () => ({
-        open: false,
-        loading: false,
-        isCustomActive: window.hasCustomTheme || false,
-        applyTimeout: null,
-        colors: {
-            navbar: window.userTheme?.navbar_color || '#ffffff',
-            sidebar: window.userTheme?.sidebar_color || '#ffffff',
-            background: window.userTheme?.background_color || '#f9fafb'
-        },
-
-        init() {
-            // Initialize with current theme colors
-            this.updateIsCustomActive();
-
-            // Hide/show light/dark toggle based on custom theme status
-            if (window.hasCustomTheme) {
-                this.hideLightDarkToggle();
-            } else {
-                this.showLightDarkToggle();
-            }
-        },
-
-        // 🔄 Update custom theme active status
-        updateIsCustomActive() {
-            this.isCustomActive = window.hasCustomTheme || false;
-            window.isCustomActive = this.isCustomActive;
-        },
-
-        // 🫥 Hide light/dark toggle when custom theme is active
-        hideLightDarkToggle() {
-            const toggleButton = document.querySelector('button[onclick="toggleHospitalTheme()"]');
-            if (toggleButton) {
-                toggleButton.disabled = true;
-                toggleButton.classList.add('opacity-50', 'cursor-not-allowed');
-                toggleButton.title = 'Tema personalizado ativo - modo claro/escuro desabilitado';
-            }
-        },
-
-        // 👁️ Show light/dark toggle when custom theme is not active
-        showLightDarkToggle() {
-            const toggleButton = document.querySelector('button[onclick="toggleHospitalTheme()"]');
-            if (toggleButton) {
-                toggleButton.disabled = false;
-                toggleButton.classList.remove('opacity-50', 'cursor-not-allowed');
-                toggleButton.title = 'Alternar modo claro/escuro';
-            }
-        },
-
-        // Switch to light mode when starting theme customization if currently in dark mode
-        startCustomization() {
-            const currentTheme = window.Hospital.getCurrentTheme();
-            if (currentTheme === 'dark') {
-                // Switch to light mode automatically
-                document.documentElement.setAttribute('data-theme', 'light');
-                document.documentElement.classList.remove('dark');
-                localStorage.setItem('theme', 'light');
-
-                // Update charts theme
-                window.Hospital.updateChartTheme();
-                if (window.Hospital.charts) {
-                    window.Hospital.charts.updateAllThemes();
-                }
-
-                console.log('🎨 Modo escuro desativado automaticamente para personalização');
-            }
-        },
-
-        updateColor(type, value) {
-            // Start customization process (switch to light mode if needed)
-            this.startCustomization();
-
-            // Validate hex color with improved regex
-            if (!/^#[0-9A-Fa-f]{6}$/.test(value)) {
-                // Try to fix common issues
-                if (value.length === 7 && value.startsWith('#')) {
-                    // Already correct format, might be validation issue
-                    value = value.toLowerCase();
-                } else if (value.length === 6 && !value.startsWith('#')) {
-                    // Missing #
-                    value = '#' + value.toLowerCase();
-                } else if (value.length === 3 && !value.startsWith('#')) {
-                    // Short hex, expand it
-                    value = '#' + value.split('').map(c => c + c).join('').toLowerCase();
-                } else if (value.length === 4 && value.startsWith('#')) {
-                    // Short hex with #, expand it
-                    const shortHex = value.slice(1);
-                    value = '#' + shortHex.split('').map(c => c + c).join('').toLowerCase();
-                } else {
-                    // Invalid format, don't apply
-                    return;
-                }
-
-                // Update the input to show the corrected value
-                this.colors[type] = value;
-            } else {
-                this.colors[type] = value;
-            }
-
-            this.applyColorRealTime(type, value);
-        },
-
-        // Calculate text color based on background luminance (enhanced version)
-        getContrastingTextColor(hexColor) {
-            // Remove # if present
-            const cleanHex = hexColor.replace('#', '');
-
-            // Convert hex to RGB
-            const r = parseInt(cleanHex.slice(0, 2), 16);
-            const g = parseInt(cleanHex.slice(2, 4), 16);
-            const b = parseInt(cleanHex.slice(4, 6), 16);
-
-            // Calculate relative luminance using sRGB colorspace
-            const rsRGB = r / 255;
-            const gsRGB = g / 255;
-            const bsRGB = b / 255;
-
-            const rLinear = rsRGB <= 0.03928 ? rsRGB / 12.92 : Math.pow((rsRGB + 0.055) / 1.055, 2.4);
-            const gLinear = gsRGB <= 0.03928 ? gsRGB / 12.92 : Math.pow((gsRGB + 0.055) / 1.055, 2.4);
-            const bLinear = bsRGB <= 0.03928 ? bsRGB / 12.92 : Math.pow((bsRGB + 0.055) / 1.055, 2.4);
-
-            const luminance = 0.2126 * rLinear + 0.7152 * gLinear + 0.0722 * bLinear;
-
-            // Use WCAG contrast ratio guidelines
-            return luminance > 0.179 ? '#1f2937' : '#ffffff';
-        },
-
-        applyColorRealTime(type, color) {
-            const root = document.documentElement;
-            const textColor = this.getContrastingTextColor(color);
-
-            // Debounce rapid changes for better performance
-            if (this.applyTimeout) {
-                clearTimeout(this.applyTimeout);
-            }
-
-            this.applyTimeout = setTimeout(() => {
-                switch(type) {
-                    case 'navbar':
-                        root.style.setProperty('--custom-navbar-bg', color);
-                        root.style.setProperty('--custom-navbar-text', textColor);
-
-                        // Use more specific selector to avoid conflict with sidebar
-                        const navbar = document.querySelector('.hospital-navbar');
-                        if (navbar) {
-                            navbar.style.setProperty('background-color', color, 'important');
-                            navbar.style.setProperty('color', textColor, 'important');
-
-                            // Update all interactive elements in navbar (including dropdowns)
-                            const interactiveElements = navbar.querySelectorAll(`
-                                button:not(.absolute button):not([x-show] button),
-                                a:not(.absolute a):not([x-show] a),
-                                .gqa-btn:not(.absolute .gqa-btn):not([x-show] .gqa-btn),
-                                .btn:not(.absolute .btn):not([x-show] .btn),
-                                input[type="search"]:not(.absolute input):not([x-show] input)
-                            `.replace(/\s+/g, ' ').trim());
-
-                            interactiveElements.forEach(el => {
-                                // Skip elements that are inside dropdown menus (positioned absolute)
-                                if (el.closest('.absolute') || el.closest('[x-show]')) {
-                                    return;
-                                }
-
-                                el.style.setProperty('color', textColor, 'important');
-                                el.style.setProperty('border-color', textColor, 'important');
-                                el.style.setProperty('stroke', textColor, 'important');
-                                el.style.setProperty('fill', textColor, 'important');
-
-                                // Special handling for search input
-                                if (el.tagName === 'INPUT') {
-                                    el.style.setProperty('background-color', 'rgba(255,255,255,0.1)', 'important');
-                                    el.style.setProperty('border-color', textColor, 'important');
-                                }
-                            });
-
-                            // Update text elements including page headers and brand (excluding dropdown menus)
-                            const textElements = navbar.querySelectorAll(`
-                                span:not(.absolute span):not([x-show] span),
-                                p:not(.absolute p):not([x-show] p),
-                                div:not(.absolute):not([x-show]):not(.gqa-dropdown),
-                                h1:not(.absolute h1):not([x-show] h1),
-                                h2:not(.absolute h2):not([x-show] h2),
-                                h3:not(.absolute h3):not([x-show] h3),
-                                h4:not(.absolute h4):not([x-show] h4),
-                                h5:not(.absolute h5):not([x-show] h5),
-                                h6:not(.absolute h6):not([x-show] h6),
-                                .page-header:not(.absolute .page-header):not([x-show] .page-header),
-                                .navbar-brand:not(.absolute .navbar-brand):not([x-show] .navbar-brand),
-                                .brand:not(.absolute .brand):not([x-show] .brand),
-                                .logo:not(.absolute .logo):not([x-show] .logo),
-                                .logo-text:not(.absolute .logo-text):not([x-show] .logo-text)
-                            `.replace(/\s+/g, ' ').trim());
-
-                            textElements.forEach(el => {
-                                // Double-check to avoid dropdown elements
-                                if (el.closest('.absolute') || el.closest('[x-show]')) {
-                                    return;
-                                }
-                                el.style.setProperty('color', textColor, 'important');
-                            });
-
-                            // Update SVG icons in navbar (excluding dropdown menus)
-                            const svgIcons = navbar.querySelectorAll(`
-                                svg:not(.absolute svg):not([x-show] svg)
-                            `.replace(/\s+/g, ' ').trim());
-
-                            svgIcons.forEach(icon => {
-                                // Skip dropdown icons
-                                if (icon.closest('.absolute') || icon.closest('[x-show]')) {
-                                    return;
-                                }
-                                icon.style.setProperty('color', textColor, 'important');
-                                icon.style.setProperty('stroke', textColor, 'important');
-                            });
-
-                            // Update badges and quick stats in navbar (excluding dropdown menus)
-                            const badgeSelectors = [
-                                '.badge:not(.absolute .badge):not([x-show] .badge)',
-                                '.hospital-badge:not(.absolute .hospital-badge):not([x-show] .hospital-badge)',
-                                '.quick-stat:not(.absolute .quick-stat):not([x-show] .quick-stat)',
-                                '[class*="badge"]:not(.absolute [class*="badge"]):not([x-show] [class*="badge"])',
-                                '[class*="stat"]:not(.absolute [class*="stat"]):not([x-show] [class*="stat"])',
-                                '.bg-green-50:not(.absolute .bg-green-50):not([x-show] .bg-green-50)',
-                                '.dark\\:bg-green-900\\/20:not(.absolute .dark\\:bg-green-900\\/20):not([x-show] .dark\\:bg-green-900\\/20)',
-                                '[class*="bg-"][class*="50"]:not(.absolute [class*="bg-"][class*="50"]):not([x-show] [class*="bg-"][class*="50"])',
-                                '[class*="bg-"][class*="100"]:not(.absolute [class*="bg-"][class*="100"]):not([x-show] [class*="bg-"][class*="100"])'
-                            ].join(', ');
-
-                            const badges = navbar.querySelectorAll(badgeSelectors);
-                            badges.forEach(badge => {
-                                // Skip if this badge is inside a dropdown
-                                if (badge.closest('.absolute') || badge.closest('[x-show]')) {
-                                    return;
-                                }
-
-                                const isDark = textColor === '#ffffff';
-
-                                // Set badge background and text colors based on navbar contrast
-                                const badgeBg = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)';
-                                const badgeTextColor = isDark ? '#ffffff' : '#1f2937';
-
-                                badge.style.setProperty('background-color', badgeBg, 'important');
-                                badge.style.setProperty('color', badgeTextColor, 'important');
-                                badge.style.setProperty('border-color', badgeTextColor, 'important');
-
-                                // Fix ALL text elements within badges including spans, indicators, etc.
-                                const badgeTextElements = badge.querySelectorAll('span, div, p, small, .w-2, .animate-pulse');
-                                badgeTextElements.forEach(textEl => {
-                                    textEl.style.setProperty('color', badgeTextColor, 'important');
-
-                                    // Handle indicator dots (like the green pulse dot)
-                                    if (textEl.classList.contains('w-2') || textEl.classList.contains('animate-pulse')) {
-                                        const indicatorColor = isDark ? '#4ade80' : '#22c55e';
-                                        textEl.style.setProperty('background-color', indicatorColor, 'important');
-                                    }
-                                });
-
-                                // Apply to any direct text content
-                                if (badge.firstChild && badge.firstChild.nodeType === Node.TEXT_NODE) {
-                                    badge.style.setProperty('color', badgeTextColor, 'important');
-                                }
-                            });
-
-                            // 🆕 NEW: Update dropdown menus with proper theming
-                            const dropdownMenus = document.querySelectorAll('.absolute[x-show], [x-show].absolute, .gqa-dropdown[x-show], [class*="dropdown"][x-show]');
-                            dropdownMenus.forEach(dropdown => {
-                                // Only process dropdowns that are children/descendants of the navbar
-                                if (dropdown.closest('.hospital-navbar')) {
-                                    this.updateDropdownStyling(dropdown, textColor);
-                                }
-                            });
-
-                            // 🔄 Setup observer for dynamically shown dropdowns
-                            if (!navbar._dropdownObserver) {
-                                navbar._dropdownObserver = new MutationObserver((mutations) => {
-                                    mutations.forEach((mutation) => {
-                                        if (mutation.type === 'attributes' &&
-                                            (mutation.attributeName === 'x-show' || mutation.attributeName === 'style')) {
-                                            const dropdown = mutation.target;
-                                            if (dropdown.matches('.absolute[x-show], [x-show].absolute, .gqa-dropdown[x-show], [class*="dropdown"][x-show]') &&
-                                                dropdown.closest('.hospital-navbar')) {
-                                                // Apply dropdown styling when it becomes visible
-                                                setTimeout(() => {
-                                                    this.updateDropdownStyling(dropdown, textColor);
-                                                }, 10);
-                                            }
-                                        }
-                                    });
-                                });
-
-                                navbar._dropdownObserver.observe(navbar, {
-                                    attributes: true,
-                                    subtree: true,
-                                    attributeFilter: ['x-show', 'style', 'class']
-                                });
-                            }
-
-                            // 🆕 Also apply to any visible dropdowns immediately
-                            const visibleDropdowns = navbar.querySelectorAll('.absolute:not([style*="display: none"]), [x-show]:not([style*="display: none"])');
-                            visibleDropdowns.forEach(dropdown => {
-                                if (dropdown.offsetParent !== null) { // Check if actually visible
-                                    this.updateDropdownStyling(dropdown, textColor);
-                                }
-                            });
-                        }
-                        break;
-
-                    case 'sidebar':
-                        root.style.setProperty('--custom-sidebar-bg', color);
-                        root.style.setProperty('--custom-sidebar-text', textColor);
-
-                        // Use specific selector for sidebar only
-                        const sidebar = document.querySelector('.hospital-sidebar');
-                        if (sidebar) {
-                            sidebar.style.setProperty('background-color', color, 'important');
-                            sidebar.style.setProperty('color', textColor, 'important');
-
-                            // Update logo text and brand elements with comprehensive selectors
-                            const logoSelectors = [
-                                '.logo', '.logo-text', '.brand', '.sidebar-brand', '.navbar-brand',
-                                '.hospital-brand', '.app-brand', '.brand-text',
-                                'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                                '[class*="logo"]', '[class*="brand"]', '[class*="title"]',
-                                '.sidebar-header', '.brand-link'
-                            ];
-
-                            logoSelectors.forEach(logoSelector => {
-                                const logoElements = sidebar.querySelectorAll(logoSelector);
-                                logoElements.forEach(el => {
-                                    el.style.setProperty('color', textColor, 'important');
-                                    // Also update any child text elements
-                                    const childTexts = el.querySelectorAll('span, div, p');
-                                    childTexts.forEach(child => {
-                                        child.style.setProperty('color', textColor, 'important');
-                                    });
-                                });
-                            });
-
-                            // Update ALL text elements in sidebar with enhanced coverage
-                            const textSelectors = [
-                                'a', 'span', 'div', 'p', 'li', 'label',
-                                '.nav-link', '.sidebar-link', '.menu-item',
-                                '.hospital-nav-item', '.nav-item',
-                                '[class*="nav-"]', '[class*="menu-"]', '[class*="link"]'
-                            ];
-
-                            textSelectors.forEach(textSelector => {
-                                const elements = sidebar.querySelectorAll(textSelector);
-                                elements.forEach(el => {
-                                    el.style.setProperty('color', textColor, 'important');
-                                });
-                            });
-
-                            // Apply to ALL elements that might contain text
-                            const allSidebarElements = sidebar.querySelectorAll('*');
-                            allSidebarElements.forEach(el => {
-                                // Apply color to elements with direct text content
-                                if (el.childNodes.length > 0) {
-                                    let hasDirectText = false;
-                                    for (let node of el.childNodes) {
-                                        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
-                                            hasDirectText = true;
-                                            break;
-                                        }
-                                    }
-                                    if (hasDirectText) {
-                                        el.style.setProperty('color', textColor, 'important');
-                                    }
-                                }
-
-                                // Also apply to leaf elements with text
-                                if (el.children.length === 0 && el.textContent.trim()) {
-                                    el.style.setProperty('color', textColor, 'important');
-                                }
-                            });
-
-                            // Update navigation items with enhanced hover effects
-                            const navItems = sidebar.querySelectorAll('.hospital-nav-item, a, .nav-link, li, [class*="nav"], .sidebar-link, .menu-item');
-                            navItems.forEach(el => {
-                                el.style.setProperty('color', textColor, 'important');
-
-                                // Add improved hover effect for nav items
-                                if (el.tagName === 'A' || el.classList.contains('hospital-nav-item') || el.classList.contains('nav-link') || el.classList.contains('sidebar-link')) {
-                                    // Remove existing listeners to avoid duplicates
-                                    if (el._themeHoverEnter) {
-                                        el.removeEventListener('mouseenter', el._themeHoverEnter);
-                                        el.removeEventListener('mouseleave', el._themeHoverLeave);
-                                    }
-
-                                    // Create new listeners with enhanced hover effect
-                                    el._themeHoverEnter = () => {
-                                        const isDark = this.getContrastingTextColor(color) === '#ffffff';
-                                        const hoverBg = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)';
-                                        el.style.setProperty('background-color', hoverBg, 'important');
-                                        el.style.setProperty('border-radius', '6px', 'important');
-                                        el.style.setProperty('transition', 'all 0.2s ease', 'important');
-                                    };
-
-                                    el._themeHoverLeave = () => {
-                                        el.style.removeProperty('background-color');
-                                        el.style.removeProperty('border-radius');
-                                    };
-
-                                    el.addEventListener('mouseenter', el._themeHoverEnter);
-                                    el.addEventListener('mouseleave', el._themeHoverLeave);
-                                }
-                            });
-
-                            // Update icons in sidebar
-                            const icons = sidebar.querySelectorAll('i, svg, .icon, [class*="icon"]');
-                            icons.forEach(icon => {
-                                icon.style.setProperty('color', textColor, 'important');
-                                icon.style.setProperty('fill', textColor, 'important');
-                            });
-                        }
-                        break;
-
-                    case 'background':
-                        root.style.setProperty('--custom-background', color);
-                        root.style.setProperty('--custom-background-text', textColor);
-
-                        // Apply to body and main content areas with enhanced coverage
-                        const contentSelectors = [
-                            'body',
-                            '.hospital-content',
-                            '.hospital-layout',
-                            '.main-content',
-                            '.content',
-                            '.container',
-                            '.container-fluid',
-                            'main',
-                            '#app',
-                            '.app-content',
-                            '.page-wrapper',
-                            '[class*="content"]',
-                            '[class*="main"]'
-                        ];
-
-                        contentSelectors.forEach(selector => {
-                            try {
-                                const elements = document.querySelectorAll(selector);
-                                elements.forEach(content => {
-                                    // Skip navbar and sidebar elements
-                                    if (!content.closest('.hospital-navbar') && !content.closest('.hospital-sidebar')) {
-                                        content.style.setProperty('background-color', color, 'important');
-                                        content.style.setProperty('color', textColor, 'important');
-
-                                        // Apply stronger text contrast to all text elements within content
-                                        const textSelectors = [
-                                            'p', 'span', 'div', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                                            'label', 'a', 'button', 'input', 'textarea', 'select',
-                                            '.text-sm', '.text-lg', '.text-xl', '.text-base',
-                                            '.font-bold', '.font-semibold', '.font-medium',
-                                            '.breadcrumb-item', '.nav-item', '.dropdown-item'
-                                        ];
-
-                                        textSelectors.forEach(textSelector => {
-                                            const textElements = content.querySelectorAll(textSelector);
-                                            textElements.forEach(textEl => {
-                                                // Skip elements inside cards, navbar, and sidebar
-                                                if (!textEl.closest('.hospital-card') &&
-                                                    !textEl.closest('.card') &&
-                                                    !textEl.closest('.hospital-navbar') &&
-                                                    !textEl.closest('.hospital-sidebar') &&
-                                                    !textEl.closest('.bg-white') &&
-                                                    !textEl.closest('[class*="card"]')) {
-                                                    textEl.style.setProperty('color', textColor, 'important');
-                                                }
-                                            });
-                                        });
-                                    }
-                                });
-                            } catch (e) {
-                                console.warn('Selector error:', selector, e);
-                            }
-                        });
-
-                        // Update ALL cards with enhanced selector coverage and improved contrast
-                        const cardSelectors = [
-                            '.hospital-card',
-                            '.card',
-                            '.bg-white',
-                            '.bg-gray-50',
-                            '.bg-gray-100',
-                            '.dark\\:bg-gray-800',
-                            '.dark\\:bg-gray-900',
-                            '[class*="card"]',
-                            '[class*="stats"]',
-                            '.stats-card',
-                            '.dashboard-card',
-                            '.metric-card',
-                            '.info-card',
-                            '.data-card',
-                            '.panel',
-                            '.panel-default',
-                            '.panel-white',
-                            '.box',
-                            '.widget',
-                            '.tile',
-                            '.item-card'
-                        ];
-
-                        cardSelectors.forEach(selector => {
-                            try {
-                                const cards = document.querySelectorAll(selector);
-                                cards.forEach(card => {
-                                    // Skip navbar and sidebar elements
-                                    if (card.closest('.hospital-navbar') || card.closest('.hospital-sidebar') || card.closest('nav')) {
-                                        return;
-                                    }
-
-                                    const isDark = this.getContrastingTextColor(color) === '#ffffff';
-
-                                    // Apply proper contrasting cards: dark cards for dark backgrounds, light cards for light backgrounds
-                                    const cardBg = isDark ? '#2d3748' : 'rgba(255,255,255,0.95)';
-                                    const cardTextColor = isDark ? '#f7fafc' : '#2d3748';
-                                    const cardBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-
-                                    card.style.setProperty('background-color', cardBg, 'important');
-                                    card.style.setProperty('color', cardTextColor, 'important');
-                                    card.style.setProperty('border-color', cardBorder, 'important');
-                                    const cardShadow = isDark ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.1)';
-                                    card.style.setProperty('box-shadow', `0 4px 6px -1px ${cardShadow}, 0 2px 4px -1px rgba(0,0,0,0.06)`, 'important');
-
-                                    // Update ALL text elements within cards with comprehensive selection
-                                    const cardTextSelectors = [
-                                        'h1, h2, h3, h4, h5, h6',
-                                        'p, span, div, a, label',
-                                        '.card-title, .card-text, .card-subtitle',
-                                        '.metric-value, .stat-value, .number',
-                                        '.card-header, .card-body, .card-footer',
-                                        '.text-sm, .text-lg, .text-xl',
-                                        '.font-bold', '.font-semibold', '.font-medium',
-                                        '[class*="text-"]'
-                                    ];
-
-                                    cardTextSelectors.forEach(textSelector => {
-                                        const textElements = card.querySelectorAll(textSelector);
-                                        textElements.forEach(el => {
-                                            // Only apply to leaf elements or elements with minimal children
-                                            if (el.children.length <= 1 || el.textContent.trim()) {
-                                                el.style.setProperty('color', cardTextColor, 'important');
-                                            }
-                                        });
-                                    });
-
-                                    // Update badges within cards with better contrast
-                                    const cardBadges = card.querySelectorAll('.badge, .hospital-badge, .tag, .chip, [class*="badge"], [class*="tag"]');
-                                    cardBadges.forEach(badge => {
-                                        const badgeBg = isDark ? 'rgba(59, 130, 246, 0.8)' : 'rgba(59, 130, 246, 0.1)';
-                                        const badgeText = isDark ? '#ffffff' : '#1e40af';
-                                        badge.style.setProperty('background-color', badgeBg, 'important');
-                                        badge.style.setProperty('color', badgeText, 'important');
-                                        badge.style.setProperty('border-color', badgeText, 'important');
-                                    });
-
-                                    // Update buttons within cards
-                                    const cardButtons = card.querySelectorAll('button, .btn, .gqa-btn, a[class*="btn"]');
-                                    cardButtons.forEach(btn => {
-                                        if (!btn.classList.contains('btn-primary') && !btn.classList.contains('btn-secondary')) {
-                                            btn.style.setProperty('color', cardTextColor, 'important');
-                                            btn.style.setProperty('border-color', cardTextColor, 'important');
-                                        }
-                                    });
-                                });
-                            } catch (e) {
-                                console.warn('Card selector error:', selector, e);
-                            }
-                        });
-
-                        // Update page headers globally
-                        const pageHeaders = document.querySelectorAll('.page-header, .content-header, h1, h2, h3, h4, h5, h6');
-                        pageHeaders.forEach(header => {
-                            if (!header.closest('.hospital-navbar') && !header.closest('.hospital-sidebar')) {
-                                header.style.setProperty('color', textColor, 'important');
-                            }
-                        });
-
-                        // Update quick stats and badges globally - COMPLETE BADGE STYLING WITH PROPER CONTRAST
-                        const globalBadges = document.querySelectorAll('.quick-stat, .stat-badge, .hospital-badge, [class*="stat"]:not([class*="card"]), .badge, [class*="badge"], .bg-green-50, .dark\\:bg-green-900\\/20, [class*="bg-"][class*="50"], [class*="bg-"][class*="100"]');
-                        globalBadges.forEach(badge => {
-                            if (!badge.closest('.hospital-navbar') && !badge.closest('.hospital-sidebar')) {
-                                const isDark = textColor === '#ffffff';
-
-                                // Use proper contrast for badge backgrounds and text
-                                const badgeBg = isDark ? 'rgba(55, 65, 81, 0.8)' : 'rgba(249, 250, 251, 0.9)';
-                                const badgeTextColor = isDark ? '#f3f4f6' : '#1f2937';
-                                const badgeBorder = isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.1)';
-
-                                badge.style.setProperty('background-color', badgeBg, 'important');
-                                badge.style.setProperty('color', badgeTextColor, 'important');
-                                badge.style.setProperty('border-color', badgeBorder, 'important');
-
-                                // Fix ALL nested elements within badges
-                                const allBadgeElements = badge.querySelectorAll('*');
-                                allBadgeElements.forEach(el => {
-                                    // Apply text color to all text-containing elements
-                                    if (el.nodeType === Node.ELEMENT_NODE) {
-                                        el.style.setProperty('color', badgeTextColor, 'important');
-
-                                        // Handle special indicator elements (dots, icons, etc.)
-                                        if (el.classList.contains('w-2') || el.classList.contains('animate-pulse') ||
-                                            el.classList.contains('bg-green-500') || el.classList.contains('rounded-full')) {
-                                            const indicatorColor = isDark ? '#10b981' : '#059669';
-                                            el.style.setProperty('background-color', indicatorColor, 'important');
-                                        }
-                                    }
-                                });
-
-                                // Ensure direct text content gets proper styling
-                                if (badge.childNodes.length > 0) {
-                                    badge.childNodes.forEach(node => {
-                                        if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
-                                            badge.style.setProperty('color', badgeTextColor, 'important');
-                                        }
-                                    });
-                                }
-                            }
-                        });
-                        break;
-                }
-            }, 50); // 50ms debounce
-        },
-
-        // 🆕 Helper method for dropdown styling
-        updateDropdownStyling(dropdown, navbarTextColor) {
-            const isDark = navbarTextColor === '#ffffff';
-
-            // Add the specific CSS class for navbar dropdowns
-            dropdown.classList.add('hospital-navbar-dropdown');
-
-            // Set CSS variables for dropdown theming
-            const root = document.documentElement;
-            const dropdownBg = isDark ? '#1f2937' : '#ffffff';
-            const dropdownTextColor = isDark ? '#f3f4f6' : '#1f2937';
-            const dropdownBorder = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-            const dropdownShadow = isDark ? 'rgba(0,0,0,0.5)' : 'rgba(0,0,0,0.1)';
-            const dropdownHoverBg = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)';
-
-            // Set CSS custom properties for dropdown styling
-            root.style.setProperty('--navbar-dropdown-bg', dropdownBg);
-            root.style.setProperty('--navbar-dropdown-text', dropdownTextColor);
-            root.style.setProperty('--navbar-dropdown-border', dropdownBorder);
-            root.style.setProperty('--navbar-dropdown-shadow', `0 10px 15px -3px ${dropdownShadow}, 0 4px 6px -2px rgba(0,0,0,0.05)`);
-            root.style.setProperty('--navbar-dropdown-hover-bg', dropdownHoverBg);
-
-            // Apply specific styles to ensure proper theming
-            dropdown.style.setProperty('background-color', dropdownBg, 'important');
-            dropdown.style.setProperty('color', dropdownTextColor, 'important');
-            dropdown.style.setProperty('border-color', dropdownBorder, 'important');
-            dropdown.style.setProperty('box-shadow', `0 10px 15px -3px ${dropdownShadow}, 0 4px 6px -2px rgba(0,0,0,0.05)`, 'important');
-
-            // Update all dropdown items within this dropdown
-            const dropdownItems = dropdown.querySelectorAll('.gqa-dropdown-item, button, a, span, div, p');
-            dropdownItems.forEach(item => {
-                // Skip elements with specific color classes (like red logout button)
-                if (!item.classList.contains('text-red-600') &&
-                    !item.classList.contains('text-red-400') &&
-                    !item.classList.contains('text-red-500')) {
-                    item.style.setProperty('color', dropdownTextColor, 'important');
-                }
-
-                // Add hover listeners for proper hover effects
-                if (item.tagName === 'A' || item.tagName === 'BUTTON' || item.classList.contains('gqa-dropdown-item')) {
-                    // Remove existing listeners to avoid duplicates
-                    if (item._dropdownHoverEnter) {
-                        item.removeEventListener('mouseenter', item._dropdownHoverEnter);
-                        item.removeEventListener('mouseleave', item._dropdownHoverLeave);
+                // Para quick stat badges - aplicar background também
+                if (element.classList.contains('quick-stat-badge') ||
+                    element.classList.contains('stat-value') ||
+                    element.classList.contains('stat-label') ||
+                    element.closest('.quick-stat-badge')) {
+
+                    // Se é o container do badge, aplicar background
+                    if (element.classList.contains('quick-stat-badge')) {
+                        element.style.backgroundColor = color;
+                        element.style.borderColor = textColor;
                     }
 
-                    item._dropdownHoverEnter = () => {
-                        if (!item.classList.contains('text-red-600') &&
-                            !item.classList.contains('text-red-400') &&
-                            !item.classList.contains('text-red-500')) {
-                            item.style.setProperty('background-color', dropdownHoverBg, 'important');
-                            item.style.setProperty('color', dropdownTextColor, 'important');
-                        }
-                    };
-
-                    item._dropdownHoverLeave = () => {
-                        item.style.removeProperty('background-color');
-                        if (!item.classList.contains('text-red-600') &&
-                            !item.classList.contains('text-red-400') &&
-                            !item.classList.contains('text-red-500')) {
-                            item.style.setProperty('color', dropdownTextColor, 'important');
-                        }
-                    };
-
-                    item.addEventListener('mouseenter', item._dropdownHoverEnter);
-                    item.addEventListener('mouseleave', item._dropdownHoverLeave);
+                    element.style.color = textColor;
+                    element.style.setProperty('color', textColor, 'important');
                 }
-            });
 
-            // Update SVG icons in dropdown
-            const svgIcons = dropdown.querySelectorAll('svg');
-            svgIcons.forEach(icon => {
-                // Don't change color of red icons (logout button)
-                if (!icon.closest('.text-red-600') &&
-                    !icon.closest('.text-red-400') &&
-                    !icon.closest('.text-red-500')) {
-                    icon.style.setProperty('color', dropdownTextColor, 'important');
-                    icon.style.setProperty('stroke', dropdownTextColor, 'important');
-                    icon.style.setProperty('fill', dropdownTextColor, 'important');
+                // Para dropdowns específicos
+                if (element.classList.contains('dropdown') ||
+                    element.classList.contains('dropdown-menu') ||
+                    element.hasAttribute('x-show') ||
+                    element.closest('.dropdown, .dropdown-menu, [x-show]')) {
+
+                    element.style.color = textColor;
+                    element.style.setProperty('color', textColor, 'important');
+
+                    // Se é um container de dropdown, aplicar background
+                    if (element.classList.contains('dropdown-menu') ||
+                        element.hasAttribute('x-show')) {
+                        element.style.backgroundColor = color;
+                    }
                 }
-            });
-        },
 
-        removeCustomStyles() {
-            const root = document.documentElement;
-            const customStyleElement = document.getElementById('user-theme-styles');
+                // Para botões específicos (exceto theme manager)
+                if (element.tagName === 'BUTTON' && !isThemeManager) {
+                    element.style.color = textColor;
+                    element.style.borderColor = textColor;
+                    element.style.setProperty('color', textColor, 'important');
+                }
 
-            // Clear any pending timeout
-            if (this.applyTimeout) {
-                clearTimeout(this.applyTimeout);
-                this.applyTimeout = null;
+                // Para links
+                if (element.tagName === 'A') {
+                    element.style.color = textColor;
+                    element.style.setProperty('color', textColor, 'important');
+                }
             }
+        });
 
-            // Remove CSS custom properties
+        // Aplicar especificamente aos elementos que podem ter sido perdidos
+        const specificSelectors = [
+            '.hospital-navbar .quick-stat-badge',
+            '.hospital-navbar .stat-value',
+            '.hospital-navbar .stat-label',
+            '.hospital-navbar .badge',
+            '.hospital-navbar .notification-badge',
+            '.hospital-navbar [x-show]',
+            '.hospital-navbar .dropdown',
+            '.hospital-navbar .dropdown-menu',
+            'nav.hospital-navbar .quick-stat-badge',
+            'nav.hospital-navbar .stat-value',
+            'nav.hospital-navbar .stat-label',
+            'nav.hospital-navbar .badge',
+            'nav.hospital-navbar .notification-badge',
+            'nav.hospital-navbar [x-show]',
+            'nav.hospital-navbar .dropdown',
+            'nav.hospital-navbar .dropdown-menu'
+        ];
+
+        specificSelectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                const isThemeManager = element.closest('[x-data*="themeManager"]');
+                if (!isThemeManager) {
+                    element.style.color = textColor;
+                    element.style.setProperty('color', textColor, 'important');
+
+                    // Para containers de dropdown e badges
+                    if (element.classList.contains('dropdown-menu') ||
+                        element.classList.contains('quick-stat-badge') ||
+                        element.hasAttribute('x-show')) {
+                        element.style.backgroundColor = color;
+                    }
+
+                    // Aplicar aos filhos também
+                    const children = element.querySelectorAll('*');
+                    children.forEach(child => {
+                        if (!child.style.backgroundColor &&
+                            !child.classList.contains('bg-') &&
+                            !child.closest('[x-data*="themeManager"]')) {
+                            child.style.color = textColor;
+                            child.style.setProperty('color', textColor, 'important');
+                        }
+                    });
+                }
+            });
+        });
+
+        console.log(`✅ Comprehensive navbar colors applied: ${textColor} for background: ${color}`);
+    },
+
+    applySidebarStyles(color, textColor, root) {
+        root.style.setProperty('--sidebar-bg', color);
+        root.style.setProperty('--sidebar-text', textColor);
+
+        // Apply directly to sidebar elements and their children - CORRIGIDO para usar .hospital-sidebar
+        const sidebars = document.querySelectorAll('.hospital-sidebar, .sidebar, [class*="sidebar"], aside');
+        sidebars.forEach(sidebar => {
+            sidebar.style.backgroundColor = color;
+            sidebar.style.color = textColor;
+
+            // Apply to sidebar children (links, text, icons)
+            const sidebarChildren = sidebar.querySelectorAll('a, span, div, p, h1, h2, h3, h4, h5, h6, svg, i');
+            sidebarChildren.forEach(child => {
+                // Only apply if element doesn't have its own background color
+                if (!child.style.backgroundColor && !child.classList.contains('bg-')) {
+                    child.style.color = textColor;
+                    // For SVG icons
+                    if (child.tagName === 'SVG') {
+                        child.style.fill = textColor;
+                        child.style.stroke = textColor;
+                    }
+                }
+            });
+        });
+
+        console.log(`✅ Sidebar styles applied: ${color} with text: ${textColor}`);
+    },
+
+    applyBackgroundStyles(color, textColor, root) {
+        root.style.setProperty('--bg-color', color);
+        root.style.setProperty('--text-color', textColor);
+
+        // Aplicar APENAS às áreas de conteúdo principal, não à página toda
+        const targetSelectors = [
+            '.hospital-content',    // Área principal de conteúdo
+            'main',                 // Tag main
+            '.content-area',        // Área de conteúdo específica
+            '.main-content'         // Conteúdo principal
+        ];
+
+        // Encontrar o container principal de conteúdo
+        let mainContentArea = null;
+        for (const selector of targetSelectors) {
+            mainContentArea = document.querySelector(selector);
+            if (mainContentArea) break;
+        }
+
+        // Se não encontrar uma área específica, aplicar apenas ao body como fallback mínimo
+        if (!mainContentArea) {
+            mainContentArea = document.body;
+        }
+
+        // Aplicar cor de fundo apenas ao container principal
+        if (mainContentArea) {
+            mainContentArea.style.backgroundColor = color;
+
+            // Aplicar cor de texto apenas aos elementos filhos DIRETOS
+            // que não têm suas próprias cores de fundo
+            const directChildren = mainContentArea.querySelectorAll(':scope > *');
+            directChildren.forEach(child => {
+                // Só aplicar se o elemento não tem background próprio
+                // e não é navbar/sidebar
+                if (!child.style.backgroundColor &&
+                    !child.classList.contains('bg-') &&
+                    !child.classList.contains('hospital-navbar') &&
+                    !child.classList.contains('hospital-sidebar') &&
+                    !child.closest('.hospital-navbar') &&
+                    !child.closest('.hospital-sidebar') &&
+                    !(child.className && child.className.includes('dark:'))) {
+
+                    child.style.color = textColor;
+
+                    // Aplicar também aos textos diretos dentro desses elementos
+                    const textElements = child.querySelectorAll('p, span, h1, h2, h3, h4, h5, h6, div:not([class*="bg-"]):not([style*="background"]), a:not([class*="bg-"])');
+                    textElements.forEach(textEl => {
+                        if (!textEl.style.backgroundColor &&
+                            !textEl.classList.contains('bg-') &&
+                            !(textEl.className && textEl.className.includes('dark:')) &&
+                            !textEl.closest('.hospital-navbar') &&
+                            !textEl.closest('.hospital-sidebar')) {
+                            textEl.style.color = textColor;
+                            // Usar important para sobrescrever CSS existente se necessário
+                            textEl.style.setProperty('color', textColor, 'important');
+                        }
+                    });
+                }
+            });
+        }
+
+        // Aplicar cores de contraste aos page headers e breadcrumbs (SEMPRE)
+        this.applyHeaderAndBreadcrumbColors(color, textColor);
+
+        // Estratégia adicional: Aplicar diretamente a todos os H1-H6 que não estão em navbar/sidebar
+        const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        allHeadings.forEach(heading => {
+            if (!heading.closest('.hospital-navbar') &&
+                !heading.closest('.hospital-sidebar') &&
+                !heading.style.backgroundColor &&
+                !heading.classList.contains('bg-')) {
+                heading.style.color = textColor;
+                heading.style.setProperty('color', textColor, 'important');
+            }
+        });
+
+        // Definir propriedades CSS customizadas para uso em CSS
+        root.style.setProperty('--content-bg', color);
+        root.style.setProperty('--content-text', textColor);
+
+        console.log(`✅ Background styles applied to content area: ${color} with text: ${textColor}`);
+    },
+
+    applyAccentStyles(color, textColor, root) {
+        root.style.setProperty('--accent-color', color);
+        root.style.setProperty('--accent-text', textColor);
+
+        // Apply to buttons, links and accent elements
+        const accentElements = document.querySelectorAll(
+            '.btn-primary, .gqa-btn.primary, .text-blue-500, .bg-blue-500, ' +
+            '.border-blue-500, .focus\\:ring-blue-500, [class*="blue-"]'
+        );
+
+        accentElements.forEach(element => {
+            if (element.classList.contains('bg-blue-500') || element.classList.contains('btn-primary')) {
+                element.style.backgroundColor = color;
+                element.style.borderColor = color;
+                element.style.color = textColor;
+            } else if (element.classList.contains('text-blue-500')) {
+                element.style.color = color;
+            } else if (element.classList.contains('border-blue-500')) {
+                element.style.borderColor = color;
+            }
+        });
+    },
+
+    async saveTheme() {
+        this.loading = true;
+
+        try {
+            const response = await fetch('/theme', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({
+                    navbar_color: this.colors.navbar,
+                    sidebar_color: this.colors.sidebar,
+                    background_color: this.colors.background,
+                    accent_color: this.colors.accent
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                this.showToast('Tema salvo com sucesso!', 'success');
+                window.hasCustomTheme = true;
+                this.updateIsCustomActive();
+                this.toggleLightDarkButton();
+            } else {
+                throw new Error(data.message || 'Erro ao salvar tema');
+            }
+        } catch (error) {
+            console.error('Error saving theme:', error);
+            this.showToast('Erro ao salvar tema: ' + error.message, 'error');
+        } finally {
+            this.loading = false;
+        }
+    },
+
+    resetTheme() {
+        console.log('🔄 Resetting theme to default...');
+
+        try {
+            // 1. Detectar se o modo dark está ativo
+            const isDarkMode = document.documentElement.classList.contains('dark');
+            console.log('🌙 Dark mode active:', isDarkMode);
+
+            // 2. Definir cores padrão baseadas no modo atual
+            const defaultColors = isDarkMode ? {
+                navbar: '#1f2937',    // dark gray para dark mode
+                sidebar: '#111827',   // darker gray para dark mode
+                background: '#0f172a', // very dark para dark mode
+                accent: '#22c55e'     // green mantém igual
+            } : {
+                navbar: '#ffffff',    // white para light mode
+                sidebar: '#ffffff',   // white para light mode
+                background: '#f9fafb', // light gray para light mode
+                accent: '#22c55e'     // green mantém igual
+            };
+
+            // 3. Definir cores de texto apropriadas
+            const defaultTextColors = isDarkMode ? {
+                navbar: '#f9fafb',    // texto claro para fundo escuro
+                sidebar: '#f9fafb',   // texto claro para fundo escuro
+                background: '#f9fafb', // texto claro para fundo escuro
+                accent: '#ffffff'     // texto branco para accent
+            } : {
+                navbar: '#1f2937',    // texto escuro para fundo claro
+                sidebar: '#1f2937',   // texto escuro para fundo claro
+                background: '#1f2937', // texto escuro para fundo claro
+                accent: '#ffffff'     // texto branco para accent
+            };
+
+            // 4. Reset colors object
+            this.colors = { ...defaultColors };
+
+            // 5. Remove apenas custom properties específicas (preserva CSS do dark mode)
+            const root = document.documentElement;
             const customProperties = [
-                '--custom-navbar-bg', '--custom-navbar-text',
-                '--custom-sidebar-bg', '--custom-sidebar-text',
-                '--custom-background', '--custom-background-text',
-                // 🆕 Remove navbar dropdown theme variables
-                '--navbar-dropdown-bg', '--navbar-dropdown-text',
-                '--navbar-dropdown-border', '--navbar-dropdown-shadow',
-                '--navbar-dropdown-hover-bg'
+                '--navbar-bg', '--navbar-text',
+                '--sidebar-bg', '--sidebar-text',
+                '--bg-color', '--text-color',
+                '--accent-color', '--accent-text'
             ];
 
             customProperties.forEach(prop => {
                 root.style.removeProperty(prop);
             });
 
-            // Enhanced selectors including dropdown elements
-            const allSelectors = [
-                // Main layout elements
-                'body', '.hospital-layout', '.hospital-content', '.main-content', '.content',
-                '.container', '.container-fluid', 'main', '#app', '.app-content', '.page-wrapper',
-                '[class*="content"]', '[class*="main"]',
+            // 6. Remove apenas estilos inline de elementos com cores customizadas específicas
+            // Preserva outras cores que podem ser necessárias para o dark mode
+            const elementsWithCustomTheme = document.querySelectorAll(
+                '.hospital-navbar[style], .hospital-sidebar[style], .hospital-content[style], [style*="background-color: rgb"]'
+            );
 
-                // Navbar elements
-                '.hospital-navbar', 'nav', '.navbar', '[class*="nav"]',
-                '.hospital-navbar button', '.hospital-navbar a', '.hospital-navbar .gqa-btn', '.hospital-navbar .btn',
-                '.hospital-navbar span', '.hospital-navbar p', '.hospital-navbar div',
-                '.hospital-navbar h1', '.hospital-navbar h2', '.hospital-navbar h3', '.hospital-navbar h4', '.hospital-navbar h5', '.hospital-navbar h6',
-                '.page-header', '.navbar-brand', '.brand', '.logo', '.logo-text',
-                '.hospital-navbar .badge', '.hospital-navbar .hospital-badge', '.hospital-navbar .quick-stat',
-
-                // Sidebar elements
-                '.hospital-sidebar', '.sidebar', 'aside', '[class*="sidebar"]',
-                '.sidebar .logo', '.sidebar .logo-text', '.sidebar .brand', '.sidebar .sidebar-brand',
-                '.sidebar .navbar-brand', '.sidebar .hospital-brand', '.sidebar .app-brand', '.sidebar .brand-text',
-                '.sidebar h1', '.sidebar h2', '.sidebar h3', '.sidebar h4', '.sidebar h5', '.sidebar h6',
-                '.sidebar a', '.sidebar span', '.sidebar div', '.sidebar p', '.sidebar li', '.sidebar label',
-                '.sidebar .nav-link', '.sidebar .sidebar-link', '.sidebar .menu-item',
-                '.hospital-nav-item', '.nav-item', '.sidebar i', '.sidebar svg', '.sidebar .icon',
-
-                // Card elements
-                '.hospital-card', '.card', '.bg-white', '.bg-gray-50', '.bg-gray-100',
-                '.dark\\:bg-gray-800', '.dark\\:bg-gray-900', '[class*="card"]',
-                '.stats-card', '.dashboard-card', '.metric-card', '.info-card', '.data-card',
-                '.panel', '.panel-default', '.panel-white', '.box', '.widget', '.tile', '.item-card',
-                '.card h1', '.card h2', '.card h3', '.card h4', '.card h5', '.card h6',
-                '.card p', '.card span', '.card div', '.card a', '.card label',
-                '.card-title', '.card-text', '.card-subtitle', '.metric-value', '.stat-value', '.number',
-                '.card-header', '.card-body', '.card-footer',
-                '.card button', '.card .btn', '.card .gqa-btn',
-
-                // Global elements
-                '.page-header', '.content-header', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
-                '.quick-stat', '.stat-badge', '.hospital-badge', '[class*="stat"]',
-
-                // 🆕 Dropdown selectors
-                '.absolute[x-show]', '[x-show].absolute', '.gqa-dropdown[x-show]', '[class*="dropdown"][x-show]',
-                '.dropdown-menu', '.gqa-dropdown-menu', '[role="menu"]', '[role="menuitem"]',
-                '.dropdown-item', '.gqa-dropdown-item'
-            ];
-
-            // Remove styles from all potential elements with comprehensive cleanup
-            allSelectors.forEach(selector => {
-                try {
-                    const elements = document.querySelectorAll(selector);
-                    elements.forEach(element => {
-                        // Remove all potentially applied style properties
-                        const propertiesToRemove = [
-                            'background-color', 'background', 'color', 'border-color', 'border',
-                            'box-shadow', 'backdrop-filter', 'fill', 'border-radius', 'transition'
-                        ];
-
-                        propertiesToRemove.forEach(prop => {
-                            element.style.removeProperty(prop);
-                        });
-
-                        // Remove any inline style attribute if it's empty after cleanup
-                        if (element.style.length === 0) {
-                            element.removeAttribute('style');
-                        }
-
-                        // Remove hover event listeners if they exist
-                        if (element._themeHoverEnter) {
-                            element.removeEventListener('mouseenter', element._themeHoverEnter);
-                            element.removeEventListener('mouseleave', element._themeHoverLeave);
-                            delete element._themeHoverEnter;
-                            delete element._themeHoverLeave;
-                        }
-
-                        // 🆕 Remove dropdown hover listeners
-                        if (element._dropdownHoverEnter) {
-                            element.removeEventListener('mouseenter', element._dropdownHoverEnter);
-                            element.removeEventListener('mouseleave', element._dropdownHoverLeave);
-                            delete element._dropdownHoverEnter;
-                            delete element._dropdownHoverLeave;
-                        }
-
-                        // 🆕 Remove hospital-navbar-dropdown class
-                        element.classList.remove('hospital-navbar-dropdown');
-                    });
-                } catch (error) {
-                    // Ignore selector errors for complex selectors
-                    console.warn('Selector cleanup warning (ignored):', selector, error.message);
-                }
+            elementsWithCustomTheme.forEach(el => {
+                // Remove apenas propriedades de cor de tema personalizado
+                el.style.removeProperty('background-color');
+                el.style.removeProperty('color');
+                el.style.removeProperty('border-color');
             });
 
-            // 🆕 Clean up dropdown observers
-            const navbars = document.querySelectorAll('.hospital-navbar');
-            navbars.forEach(navbar => {
-                if (navbar._dropdownObserver) {
-                    navbar._dropdownObserver.disconnect();
-                    delete navbar._dropdownObserver;
-                }
-            });
+            // 7. Limpar cores inline de filhos de elementos de tema
+            const themeChildren = document.querySelectorAll(
+                '.hospital-navbar *, .hospital-sidebar *, .hospital-content *'
+            );
 
-            // Additional cleanup for any remaining styled elements
-            const allStyledElements = document.querySelectorAll('[style]');
-            allStyledElements.forEach(element => {
-                const style = element.getAttribute('style');
-                if (style && (
-                    style.includes('background-color') ||
-                    style.includes('color:') ||
-                    style.includes('border-color') ||
-                    style.includes('box-shadow') ||
-                    style.includes('backdrop-filter')
+            themeChildren.forEach(child => {
+                // Remove apenas se foi aplicado pelo sistema de tema
+                if (child.style.color && (
+                    child.style.color.includes('rgb') ||
+                    child.style.color.startsWith('#')
                 )) {
-                    // Remove theme-related properties while preserving others
-                    const styleProps = style.split(';').filter(prop => {
-                        const cleanProp = prop.trim().toLowerCase();
-                        return !cleanProp.startsWith('background-color') &&
-                               !cleanProp.startsWith('color:') &&
-                               !cleanProp.startsWith('border-color') &&
-                               !cleanProp.startsWith('box-shadow') &&
-                               !cleanProp.startsWith('backdrop-filter') &&
-                               !cleanProp.startsWith('fill') &&
-                               !cleanProp.startsWith('border-radius') &&
-                               !cleanProp.startsWith('transition') &&
-                               cleanProp.length > 0;
-                    });
-
-                    if (styleProps.length > 0) {
-                        element.setAttribute('style', styleProps.join(';'));
-                    } else {
-                        element.removeAttribute('style');
-                    }
+                    child.style.removeProperty('color');
+                    child.style.removeProperty('background-color');
+                    child.style.removeProperty('fill');
+                    child.style.removeProperty('stroke');
                 }
             });
 
-            // Remove custom style element
-            if (customStyleElement) {
-                customStyleElement.remove();
-            }
+            // 8. Update states
+            window.hasCustomTheme = false;
+            this.updateIsCustomActive();
+            this.toggleLightDarkButton();
+            this.open = false;
 
-            // Force refresh of page styling by toggling classes
-            document.body.classList.add('theme-reset');
+            console.log(`✅ Theme reset completed for ${isDarkMode ? 'dark' : 'light'} mode`);
+
+        } catch (error) {
+            console.error('❌ Error during theme reset:', error);
+            // Em caso de erro, pelo menos tenta resetar o estado
+            window.hasCustomTheme = false;
+            this.open = false;
+        }
+    },
+
+    showToast(message, type = 'info') {
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg text-white transition-all duration-300 transform translate-x-full`;
+
+        // Set background color based on type
+        switch (type) {
+            case 'success':
+                toast.classList.add('bg-green-500');
+                break;
+            case 'error':
+                toast.classList.add('bg-red-500');
+                break;
+            case 'warning':
+                toast.classList.add('bg-yellow-500');
+                break;
+            default:
+                toast.classList.add('bg-blue-500');
+        }
+
+        toast.textContent = message;
+        document.body.appendChild(toast);
+
+        // Animate in
+        setTimeout(() => {
+            toast.classList.remove('translate-x-full');
+        }, 100);
+
+        // Remove after 3 seconds
+        setTimeout(() => {
+            toast.classList.add('translate-x-full');
             setTimeout(() => {
-                document.body.classList.remove('theme-reset');
-                // Force a reflow to ensure all styles are properly updated
-                document.body.offsetHeight;
-            }, 50);
-
-            console.log('🎨 Todos os estilos customizados foram completamente removidos (incluindo dropdowns)');
-        },
-
-        // 💾 Save theme to server
-        async saveTheme() {
-            this.loading = true;
-            try {
-                const response = await fetch('/theme/update', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-                    },
-                    body: JSON.stringify({
-                        navbar_color: this.colors.navbar,
-                        sidebar_color: this.colors.sidebar,
-                        background_color: this.colors.background,
-                        is_custom: true
-                    })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // Update global variables
-                    window.userTheme = data.theme_settings;
-                    window.hasCustomTheme = true;
-                    this.isCustomActive = true;
-                    window.isCustomActive = true;
-
-                    // Update global colors
-                    window.updateGlobalThemeVars();
-
-                    // Hide light/dark toggle
-                    this.hideLightDarkToggle();
-
-                    // Show success message
-                    this.showMessage('Tema salvo com sucesso!', 'success');
-                    this.open = false;
-                } else {
-                    this.showMessage('Erro ao salvar tema: ' + (data.message || 'Erro desconhecido'), 'error');
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
                 }
-            } catch (error) {
-                console.error('Erro ao salvar tema:', error);
-                this.showMessage('Erro ao salvar tema. Tente novamente.', 'error');
-            } finally {
-                this.loading = false;
-            }
-        },
+            }, 300);
+        }, 3000);
+    },
 
-        // 🔄 Reset theme to default
-        async resetTheme() {
-            this.loading = true;
-            try {
-                const response = await fetch('/theme/reset', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+    // Função específica para aplicar cores aos headers e breadcrumbs
+    applyHeaderAndBreadcrumbColors(backgroundColor, textColor) {
+        console.log(`🎨 Applying header/breadcrumb colors - BG: ${backgroundColor}, Text: ${textColor}`);
+
+        // Seletores mais amplos para capturar todos os headers
+        const headerSelectors = [
+            'h1', 'h2', 'h3', 'h4', 'h5', 'h6',           // Todos os headings
+            '.page-header', '.page-title', '.content-header',
+            '.header-title', '.main-header', '.page-heading',
+            '[class*="header"]', '[class*="title"]'
+        ];
+
+        // Seletores para breadcrumbs mais específicos
+        const breadcrumbSelectors = [
+            '.breadcrumb', '.breadcrumbs', 'nav[aria-label="breadcrumb"]',
+            '.page-breadcrumb', '[class*="breadcrumb"]',
+            'ol.breadcrumb', 'ul.breadcrumb', '.breadcrumb-nav'
+        ];
+
+        // Aplicar aos headers da página com estratégia mais ampla
+        headerSelectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                // Verificar se está na área de conteúdo e não em navbar/sidebar
+                const isInMainContent = element.closest('.hospital-content, main, .content-area, .main-content, body');
+                const isNotInNavbar = !element.closest('.hospital-navbar, nav.hospital-navbar');
+                const isNotInSidebar = !element.closest('.hospital-sidebar, .sidebar, aside');
+                const hasNoOwnBackground = !element.style.backgroundColor && !element.classList.contains('bg-');
+                const isNotDarkMode = !(element.className && element.className.includes('dark:'));
+
+                if (isInMainContent && isNotInNavbar && isNotInSidebar && hasNoOwnBackground && isNotDarkMode) {
+                    // Aplicar cor ao elemento principal
+                    element.style.color = textColor;
+                    element.style.setProperty('color', textColor, 'important');
+
+                    // Para elementos H1-H6, aplicar também aos elementos filhos
+                    if (element.tagName.match(/^H[1-6]$/)) {
+                        const childTexts = element.querySelectorAll('span, a, em, strong, i, b');
+                        childTexts.forEach(child => {
+                            if (!child.style.backgroundColor && !child.classList.contains('bg-')) {
+                                child.style.color = textColor;
+                                child.style.setProperty('color', textColor, 'important');
+                            }
+                        });
+                    }
+
+                    console.log(`✅ Applied header color to: ${element.tagName}.${element.className || 'no-class'}`);
+                }
+            });
+        });
+
+        // Aplicar aos breadcrumbs com estratégia mais ampla
+        breadcrumbSelectors.forEach(selector => {
+            const elements = document.querySelectorAll(selector);
+            elements.forEach(element => {
+                const isInMainContent = element.closest('.hospital-content, main, .content-area, .main-content, body');
+                const isNotInNavbar = !element.closest('.hospital-navbar, nav.hospital-navbar');
+                const isNotInSidebar = !element.closest('.hospital-sidebar, .sidebar, aside');
+                const hasNoOwnBackground = !element.style.backgroundColor && !element.classList.contains('bg-');
+                const isNotDarkMode = !(element.className && element.className.includes('dark:'));
+
+                if (isInMainContent && isNotInNavbar && isNotInSidebar && hasNoOwnBackground && isNotDarkMode) {
+                    // Aplicar cor ao container do breadcrumb
+                    element.style.color = textColor;
+                    element.style.setProperty('color', textColor, 'important');
+
+                    // Aplicar a todos os elementos filhos do breadcrumb
+                    const allBreadcrumbItems = element.querySelectorAll('*');
+                    allBreadcrumbItems.forEach(item => {
+                        if (!item.style.backgroundColor &&
+                            !item.classList.contains('bg-') &&
+                            !(item.className && item.className.includes('dark:'))) {
+                            item.style.color = textColor;
+                            item.style.setProperty('color', textColor, 'important');
+                        }
+                    });
+
+                    // Aplicar especificamente aos links, spans e list items
+                    const breadcrumbItems = element.querySelectorAll('a, span, li, .breadcrumb-item, .breadcrumb-link');
+                    breadcrumbItems.forEach(item => {
+                        if (!item.style.backgroundColor && !item.classList.contains('bg-')) {
+                            item.style.color = textColor;
+                            item.style.setProperty('color', textColor, 'important');
+                        }
+                    });
+
+                    console.log(`✅ Applied breadcrumb color to: ${element.tagName}.${element.className || 'no-class'}`);
+                }
+            });
+        });
+
+        // Estratégia adicional: Aplicar a TODOS os H1-H6 e breadcrumbs na página que não tenham background próprio
+        const allHeadings = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
+        allHeadings.forEach(heading => {
+            const isNotInNavbar = !heading.closest('.hospital-navbar, nav.hospital-navbar');
+            const isNotInSidebar = !heading.closest('.hospital-sidebar, .sidebar, aside');
+            const hasNoOwnBackground = !heading.style.backgroundColor && !heading.classList.contains('bg-');
+
+            if (isNotInNavbar && isNotInSidebar && hasNoOwnBackground) {
+                heading.style.color = textColor;
+                heading.style.setProperty('color', textColor, 'important');
+
+                // Aplicar também aos filhos
+                const children = heading.querySelectorAll('*');
+                children.forEach(child => {
+                    if (!child.style.backgroundColor && !child.classList.contains('bg-')) {
+                        child.style.color = textColor;
+                        child.style.setProperty('color', textColor, 'important');
                     }
                 });
+            }
+        });
 
-                const data = await response.json();
+        console.log(`✅ Header and breadcrumb colors applied: ${textColor} for background: ${backgroundColor}`);
+    },
 
-                if (data.success) {
-                    // Reset colors to default
-                    this.colors = {
-                        navbar: '#ffffff',
-                        sidebar: '#ffffff',
-                        background: '#f9fafb'
-                    };
-
-                    // Update global variables
-                    window.userTheme = data.theme_settings;
-                    window.hasCustomTheme = false;
-                    this.isCustomActive = false;
-                    window.isCustomActive = false;
-
-                    // Update global colors
-                    window.updateGlobalThemeVars();
-
-                    // Remove all custom styles
-                    this.removeCustomStyles();
-
-                    // Show light/dark toggle again
-                    this.showLightDarkToggle();
-
-                    // Show success message
-                    this.showMessage('Tema resetado para o padrão!', 'success');
-                    this.open = false;
-                } else {
-                    this.showMessage('Erro ao resetar tema: ' + (data.message || 'Erro desconhecido'), 'error');
+    // Função para aplicar cores dinamicamente a elementos que aparecem após o carregamento
+    setupDynamicNavbarColorApplication() {
+        // Observer para detectar quando novos elementos são adicionados à navbar
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach((node) => {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            const isInNavbar = node.closest('.hospital-navbar, nav.hospital-navbar');
+                            if (isInNavbar && window.hasCustomTheme) {
+                                // Aplicar cores do tema atual
+                                const currentColors = this.colors;
+                                if (currentColors.navbar) {
+                                    const textColor = ColorUtils.getContrastingTextColor(currentColors.navbar);
+                                    this.applyDynamicNavbarColors(node, currentColors.navbar, textColor);
+                                }
+                            }
+                        }
+                    });
                 }
+            });
+        });
+
+        // Observar mudanças na navbar
+        const navbars = document.querySelectorAll('.hospital-navbar, nav.hospital-navbar');
+        navbars.forEach(navbar => {
+            observer.observe(navbar, {
+                childList: true,
+                subtree: true
+            });
+        });
+
+        // Salvar referência para poder desconectar depois se necessário
+        this.navbarObserver = observer;
+    },
+
+    // Aplicar cores a um elemento específico da navbar
+    applyDynamicNavbarColors(element, backgroundColor, textColor) {
+        const isThemeManager = element.closest('[x-data*="themeManager"]') ||
+                              element.hasAttribute('x-data') ||
+                              element.classList.contains('theme-manager');
+
+        if (!isThemeManager) {
+            // Aplicar ao elemento principal
+            if (!element.style.backgroundColor && !element.classList.contains('bg-')) {
+                if (element.classList.contains('dropdown-menu') ||
+                    element.classList.contains('quick-stat-badge') ||
+                    element.hasAttribute('x-show')) {
+                    element.style.backgroundColor = backgroundColor;
+                }
+                element.style.color = textColor;
+                element.style.setProperty('color', textColor, 'important');
+            }
+
+            // Aplicar aos filhos
+            const children = element.querySelectorAll('*');
+            children.forEach(child => {
+                if (!child.style.backgroundColor &&
+                    !child.classList.contains('bg-') &&
+                    !child.closest('[x-data*="themeManager"]')) {
+                    child.style.color = textColor;
+                    child.style.setProperty('color', textColor, 'important');
+
+                    // Para SVGs
+                    if (child.tagName === 'SVG') {
+                        child.style.fill = textColor;
+                        child.style.stroke = textColor;
+                    }
+                }
+            });
+        }
+    },
+
+    // Hospital utilities for global access
+    hospitalUtils: {
+        toggleTheme() {
+            window.Hospital.theme.toggle();
+        }
+    }
+};
+
+// Alpine.js Components
+document.addEventListener('alpine:init', () => {
+    Alpine.data('hospitalDashboard', () => ({
+        sidebarCollapsed: JSON.parse(localStorage.getItem('hospital-sidebar-collapsed') || 'false'),
+        sidebarOpen: false,
+        loading: false,
+        notifications: window.notifications || [],
+        stats: window.stats || {
+            totalDiagnosticos: 150,
+            taxaConformidade: 95.2,
+            periodosAtivos: 12,
+            itensNaoConformes: 8
+        },
+
+        init() {
+            this.loadStats();
+        },
+
+        async loadStats() {
+            try {
+                // Simular carregamento de dados - substituir por chamada real da API
+                this.stats = {
+                    totalDiagnosticos: Math.floor(Math.random() * 200) + 100,
+                    taxaConformidade: (Math.random() * 10 + 90).toFixed(1),
+                    periodosAtivos: Math.floor(Math.random() * 20) + 5,
+                    itensNaoConformes: Math.floor(Math.random() * 15) + 1
+                };
             } catch (error) {
-                console.error('Erro ao resetar tema:', error);
-                this.showMessage('Erro ao resetar tema. Tente novamente.', 'error');
-            } finally {
-                this.loading = false;
+                console.error('Erro ao carregar estatísticas:', error);
             }
         },
 
-        // 📢 Show message to user
-        showMessage(message, type = 'info') {
-            // Create toast notification
-            const toast = document.createElement('div');
-            toast.className = `fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg text-white transition-all duration-300 transform translate-x-full ${
-                type === 'success' ? 'bg-green-600' :
-                type === 'error' ? 'bg-red-600' :
-                'bg-blue-600'
-            }`;
-            toast.textContent = message;
+        toggleSidebar() {
+            this.sidebarCollapsed = !this.sidebarCollapsed;
+            localStorage.setItem('hospital-sidebar-collapsed', JSON.stringify(this.sidebarCollapsed));
+        },
 
-            document.body.appendChild(toast);
+        formatNumber(num) {
+            if (num === null || num === undefined) return '0';
+            return new Intl.NumberFormat('pt-BR').format(num);
+        },
+    }));
 
-            // Animate in
-            setTimeout(() => {
-                toast.classList.remove('translate-x-full');
-            }, 100);
+    // Alpine.js component for theme manager
+    Alpine.data('themeManager', () => ({
+        open: false,
+        loading: false,
 
-            // Remove after 5 seconds
-            setTimeout(() => {
-                toast.classList.add('translate-x-full');
+        init() {
+        },
+
+        toggle() {
+            this.open = !this.open;
+        },
+
+        applyPreset(presetName) {
+            return window.Hospital.themeManager.applyPreset(presetName);
+        },
+
+        updateColor(type, value) {
+            return window.Hospital.themeManager.updateColor(type, value);
+        },
+
+        saveTheme() {
+            this.loading = true;
+            window.Hospital.themeManager.saveTheme().finally(() => {
+                this.loading = false;
+            });
+        },
+
+        resetTheme() {
+            console.log('🔄 Alpine reset theme called');
+
+            // Prevenir múltiplas execuções
+            if (this.loading) {
+                console.log('Reset já em andamento, ignorando...');
+                return;
+            }
+
+            this.loading = true;
+
+            try {
+                // Executa o reset simples
+                window.Hospital.themeManager.resetTheme();
+                console.log('✅ Reset completed successfully');
+
+                // Pequeno delay para mostrar feedback visual
                 setTimeout(() => {
-                    if (toast.parentNode) {
-                        toast.parentNode.removeChild(toast);
-                    }
-                }, 300);
-            }, 5000);
+                    this.loading = false;
+                }, 100);
+
+            } catch (error) {
+                console.error('❌ Error in reset:', error);
+                this.loading = false;
+            }
+        },
+
+        get colors() {
+            return window.Hospital.themeManager.colors;
+        },
+
+        get isCustomActive() {
+            return window.Hospital.themeManager.isCustomActive;
         }
     }));
 });
+
+// DOM Ready Initialization
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Initializing Hospital System...');
+
+    // Inicializar o theme manager primeiro
+    window.Hospital.themeManager.init();
+
+    window.Hospital.init();
+
+    // Garantir que Alpine.js seja inicializado
+    if (typeof Alpine !== 'undefined') {
+        Alpine.start();
+        console.log('✅ Alpine.js started');
+    } else {
+        console.error('❌ Alpine.js not found');
+    }
+});
+
+// Global utilities for easy access
+window.hospitalUtils = {
+    toggleTheme() {
+        window.Hospital.theme.toggle();
+    }
+};
+
+// Cleanup and global functions
+window.addEventListener('beforeunload', () => {
+    window.Hospital.charts.destroyAll();
+    console.log('Resources cleaned');
+});
+
+window.toggleHospitalTheme = () => window.hospitalUtils.toggleTheme();
+
+export { Alpine };

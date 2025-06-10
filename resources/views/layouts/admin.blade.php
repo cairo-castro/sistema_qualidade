@@ -4,30 +4,30 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    
+
     <title>{{ $title ?? 'Dashboard' }} - {{ config('app.name', 'Sistema GQA') }}</title>
-    
+
     <!-- Preload important fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
+
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    
+
     <!-- Vite Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    
+
     <!-- Additional styles for specific pages -->
     @stack('styles')
 </head>
 
 <body class="hospital-layout" x-data="hospitalDashboard">
     <!-- Loading overlay global -->
-    <div x-show="loading" 
+    <div x-show="loading"
          x-transition:enter="transition ease-out duration-300"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition ease-in duration-200" 
+         x-transition:leave="transition ease-in duration-200"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
          class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
@@ -41,17 +41,17 @@
     </div>
 
     <!-- Main Container -->
-    <div class="hospital-layout">
+    <div class="hospital-layout" x-data="hospitalDashboard">
         <!-- Sidebar -->
         @include('layouts.partials.sidebar')
-        
+
         <!-- Main Content -->
         <main class="hospital-main" :class="{ 'sidebar-collapsed': sidebarCollapsed }">
             <!-- Navbar -->
             <nav class="hospital-navbar">
                 @include('layouts.partials.navbar')
             </nav>
-            
+
             <!-- Page Content -->
             <div class="hospital-content">
                 <!-- Breadcrumb -->
@@ -96,7 +96,7 @@
                     </ol>
                 </nav>
                 @endif
-                
+
                 <!-- Page Header -->
                 @if(isset($title))
                 <div class="mb-6">
@@ -107,7 +107,7 @@
                                 <p class="text-gray-600 mt-2">{{ $description }}</p>
                             @endif
                         </div>
-                        
+
                         @if(isset($headerActions))
                             <div class="flex items-center space-x-4">
                                 {{ $headerActions }}
@@ -116,7 +116,7 @@
                     </div>
                 </div>
                 @endif
-                
+
                 <!-- Flash Messages -->
                 @if(session('success'))
                     <div class="gqa-alert success mb-6 hospital-fade-in-up" data-auto-hide>
@@ -140,7 +140,7 @@
                         </div>
                     </div>
                 @endif
-                
+
                 @if(session('error'))
                     <div class="gqa-alert danger mb-6 hospital-fade-in-up" data-auto-hide>
                         <div class="flex items-center">
@@ -163,7 +163,7 @@
                         </div>
                     </div>
                 @endif
-                
+
                 @if(session('warning'))
                     <div class="gqa-alert warning mb-6 hospital-fade-in-up" data-auto-hide>
                         <div class="flex items-center">
@@ -186,7 +186,7 @@
                         </div>
                     </div>
                 @endif
-                
+
                 @if(session('info'))
                     <div class="gqa-alert info mb-6 hospital-fade-in-up" data-auto-hide>
                         <div class="flex items-center">
@@ -209,7 +209,7 @@
                         </div>
                     </div>
                 @endif
-                
+
                 <!-- Main Content -->
                 <div class="hospital-fade-in-up">
                     @yield('content')
@@ -217,31 +217,31 @@
             </div>
         </main>
     </div>
-    
+
     <!-- Toast container -->
     <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
-    
+
     <!-- Scripts específicos da página -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     @stack('scripts')
-    
+
     <!-- Script de inicialização -->
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             // Inicializar sistema
             console.log('🏥 Sistema GQA inicializado');
-            
+
             // Configurar tooltips para elementos colapsados da sidebar
             const sidebar = document.querySelector('.hospital-sidebar');
             const navItems = sidebar?.querySelectorAll('.hospital-nav-item');
-            
+
             if (navItems) {
                 navItems.forEach(item => {
                     const textElement = item.querySelector('.hospital-nav-text');
                     if (textElement) {
                         const text = textElement.textContent.trim();
                         item.setAttribute('title', text);
-                        
+
                         // Adicionar tooltip personalizado quando sidebar está colapsada
                         item.addEventListener('mouseenter', function(e) {
                             if (sidebar.classList.contains('collapsed')) {
@@ -254,7 +254,7 @@
                                 document.body.appendChild(tooltip);
                             }
                         });
-                        
+
                         item.addEventListener('mouseleave', function() {
                             const tooltip = document.getElementById('sidebar-tooltip');
                             if (tooltip) {
@@ -264,7 +264,7 @@
                     }
                 });
             }
-            
+
             // Auto-hide alerts após 5 segundos
             setTimeout(() => {
                 const alerts = document.querySelectorAll('[data-auto-hide]');
@@ -276,14 +276,14 @@
                 });
             }, 5000);
         });
-        
+
         // Função global para alternar tema
         window.toggleHospitalTheme = function() {
             if (window.hospitalUtils) {
                 window.hospitalUtils.toggleTheme();
             }
         };
-        
+
         // Atalhos de teclado
         document.addEventListener('keydown', function(e) {
             // Ctrl/Cmd + B para toggle da sidebar
@@ -293,7 +293,7 @@
                     window.Hospital.sidebar.toggle();
                 }
             }
-            
+
             // Ctrl/Cmd + K para busca (se existir)
             if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
                 e.preventDefault();

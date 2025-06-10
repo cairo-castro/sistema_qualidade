@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Theme Fixes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        .hospital-navbar { background-color: #1f2937; color: white; padding: 1rem; }
+        .hospital-sidebar { background-color: #374151; color: white; padding: 1rem; min-height: 200px; }
+        .hospital-content { background-color: #f9fafb; color: #1f2937; padding: 2rem; min-height: 300px; }
+        .quick-stat-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            margin: 0.25rem;
+            border-radius: 0.5rem;
+            background-color: rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="min-h-screen flex flex-col">
+        <!-- Test Navbar -->
+        <nav class="hospital-navbar">
+            <div class="flex items-center justify-between">
+                <h1>Hospital System</h1>
+                <div class="flex items-center space-x-4">
+                    <!-- Quick Stats -->
+                    <div class="quick-stat-badge">
+                        <span class="stat-value">150</span>
+                        <span class="stat-label">Pacientes</span>
+                    </div>
+
+                    <!-- Dropdown -->
+                    <div class="relative" x-data="{ open: false }">
+                        <button @click="open = !open" class="flex items-center space-x-2">
+                            <span>Menu</span>
+                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+                            </svg>
+                        </button>
+                        <div x-show="open" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 dropdown-menu">
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Item 1</a>
+                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Item 2</a>
+                        </div>
+                    </div>
+
+                    <!-- Theme Toggle Button -->
+                    <button onclick="window.hospitalUtils?.toggleTheme?.()" class="px-4 py-2 rounded">
+                        Toggle Theme
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <div class="flex flex-1">
+            <!-- Test Sidebar -->
+            <aside class="hospital-sidebar w-64">
+                <h2>Sidebar</h2>
+                <ul class="space-y-2 mt-4">
+                    <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-600">Dashboard</a></li>
+                    <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-600">Pacientes</a></li>
+                    <li><a href="#" class="block py-2 px-4 rounded hover:bg-gray-600">Relatórios</a></li>
+                </ul>
+            </aside>
+
+            <!-- Test Content -->
+            <main class="hospital-content flex-1">
+                <div class="max-w-4xl mx-auto">
+                    <!-- Test Breadcrumbs -->
+                    <nav class="breadcrumb mb-6">
+                        <ol class="flex space-x-2 text-sm">
+                            <li><a href="#" class="text-blue-600 hover:text-blue-800">Home</a></li>
+                            <li><span class="text-gray-500">/</span></li>
+                            <li><a href="#" class="text-blue-600 hover:text-blue-800">Dashboard</a></li>
+                            <li><span class="text-gray-500">/</span></li>
+                            <li class="text-gray-700">Theme Test</li>
+                        </ol>
+                    </nav>
+
+                    <!-- Test Headers -->
+                    <h1 class="text-3xl font-bold mb-4">Theme Testing Page</h1>
+                    <h2 class="text-2xl font-semibold mb-3">Color Contrast Verification</h2>
+
+                    <!-- Theme Manager -->
+                    <div x-data="themeManager()" class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                        <h3 class="text-lg font-semibold mb-4">Theme Manager</h3>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                            <!-- Navbar Color -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Navbar Color</label>
+                                <input type="color"
+                                       x-model="colors.navbar"
+                                       @input="updateColor('navbar', $event.target.value)"
+                                       class="w-full h-10 rounded border border-gray-300">
+                            </div>
+
+                            <!-- Sidebar Color -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Sidebar Color</label>
+                                <input type="color"
+                                       x-model="colors.sidebar"
+                                       @input="updateColor('sidebar', $event.target.value)"
+                                       class="w-full h-10 rounded border border-gray-300">
+                            </div>
+
+                            <!-- Background Color -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Background Color</label>
+                                <input type="color"
+                                       x-model="colors.background"
+                                       @input="updateColor('background', $event.target.value)"
+                                       class="w-full h-10 rounded border border-gray-300">
+                            </div>
+
+                            <!-- Accent Color -->
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Accent Color</label>
+                                <input type="color"
+                                       x-model="colors.accent"
+                                       @input="updateColor('accent', $event.target.value)"
+                                       class="w-full h-10 rounded border border-gray-300">
+                            </div>
+                        </div>
+
+                        <!-- Preset Buttons -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
+                            <button @click="applyPreset('blue')"
+                                    class="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+                                Blue Theme
+                            </button>
+                            <button @click="applyPreset('green')"
+                                    class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                                Green Theme
+                            </button>
+                            <button @click="applyPreset('purple')"
+                                    class="px-4 py-2 bg-purple-500 text-white rounded hover:bg-purple-600">
+                                Purple Theme
+                            </button>
+                            <button @click="applyPreset('dark')"
+                                    class="px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-900">
+                                Dark Theme
+                            </button>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="flex space-x-4">
+                            <button @click="resetTheme()"
+                                    :disabled="loading"
+                                    class="px-6 py-2 bg-red-500 text-white rounded hover:bg-red-600 disabled:opacity-50">
+                                <span x-show="!loading">Reset Theme</span>
+                                <span x-show="loading">Resetting...</span>
+                            </button>
+                            <button @click="saveTheme()"
+                                    :disabled="loading"
+                                    class="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:opacity-50">
+                                <span x-show="!loading">Save Theme</span>
+                                <span x-show="loading">Saving...</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Test Content -->
+                    <div class="bg-white rounded-lg shadow p-6">
+                        <h3 class="text-xl font-semibold mb-4">Test Content</h3>
+                        <p class="text-gray-600 mb-4">This is test content to verify that colors are applied correctly and text contrast is maintained.</p>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="p-4 border rounded">
+                                <h4 class="font-semibold mb-2">Card 1</h4>
+                                <p class="text-sm text-gray-600">Content with normal styling</p>
+                            </div>
+                            <div class="p-4 border rounded">
+                                <h4 class="font-semibold mb-2">Card 2</h4>
+                                <p class="text-sm text-gray-600">More content to test</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script>
+        // Mock global variables
+        window.hasCustomTheme = false;
+        window.userTheme = null;
+
+        // Mock theme config
+        const ThemeConfig = {
+            DEFAULT_COLORS: {
+                navbar: '#1f2937',
+                sidebar: '#374151',
+                background: '#f9fafb',
+                accent: '#3b82f6'
+            },
+            PRESETS: {
+                blue: { navbar: '#1e40af', sidebar: '#1e3a8a', background: '#f1f5f9', accent: '#3b82f6' },
+                green: { navbar: '#059669', sidebar: '#047857', background: '#f0fdf4', accent: '#10b981' },
+                purple: { navbar: '#7c3aed', sidebar: '#6d28d9', background: '#faf5ff', accent: '#8b5cf6' },
+                dark: { navbar: '#111827', sidebar: '#0f172a', background: '#1f2937', accent: '#6366f1' }
+            }
+        };
+
+        // Mock color utils
+        const ColorUtils = {
+            isValidHexColor: (color) => /^#([0-9A-F]{3}){1,2}$/i.test(color),
+            getContrastingTextColor: (hex) => {
+                const r = parseInt(hex.substr(1, 2), 16);
+                const g = parseInt(hex.substr(3, 2), 16);
+                const b = parseInt(hex.substr(5, 2), 16);
+                const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+                return brightness > 128 ? '#000000' : '#ffffff';
+            }
+        };
+
+        // Mock hospital utils
+        window.hospitalUtils = {
+            toggleTheme() {
+                document.documentElement.classList.toggle('dark');
+                console.log('Theme toggled');
+            }
+        };
+
+        // Theme manager component
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('themeManager', () => ({
+                loading: false,
+                colors: {
+                    navbar: ThemeConfig.DEFAULT_COLORS.navbar,
+                    sidebar: ThemeConfig.DEFAULT_COLORS.sidebar,
+                    background: ThemeConfig.DEFAULT_COLORS.background,
+                    accent: ThemeConfig.DEFAULT_COLORS.accent
+                },
+
+                updateColor(type, value) {
+                    if (!ColorUtils.isValidHexColor(value)) return;
+
+                    this.colors[type] = value;
+                    const textColor = ColorUtils.getContrastingTextColor(value);
+
+                    this.applyStyles(type, value, textColor);
+                },
+
+                applyPreset(presetName) {
+                    const preset = ThemeConfig.PRESETS[presetName];
+                    if (!preset) return;
+
+                    Object.assign(this.colors, preset);
+                    Object.entries(preset).forEach(([type, color]) => {
+                        const textColor = ColorUtils.getContrastingTextColor(color);
+                        this.applyStyles(type, color, textColor);
+                    });
+                },
+
+                applyStyles(type, color, textColor) {
+                    const selectors = {
+                        navbar: '.hospital-navbar',
+                        sidebar: '.hospital-sidebar',
+                        background: '.hospital-content'
+                    };
+
+                    const selector = selectors[type];
+                    if (!selector) return;
+
+                    const elements = document.querySelectorAll(selector);
+                    elements.forEach(el => {
+                        el.style.backgroundColor = color;
+                        el.style.color = textColor;
+
+                        // Apply to children with safety checks
+                        const children = el.querySelectorAll('*');
+                        children.forEach(child => {
+                            if (!child.style.backgroundColor &&
+                                !child.classList.contains('bg-') &&
+                                !(child.className && child.className.includes('dark:'))) {
+                                child.style.color = textColor;
+                            }
+                        });
+                    });
+                },
+
+                resetTheme() {
+                    this.loading = true;
+
+                    // Reset colors
+                    Object.assign(this.colors, ThemeConfig.DEFAULT_COLORS);
+
+                    // Remove inline styles
+                    const elements = document.querySelectorAll('.hospital-navbar, .hospital-sidebar, .hospital-content');
+                    elements.forEach(el => {
+                        el.style.removeProperty('background-color');
+                        el.style.removeProperty('color');
+
+                        const children = el.querySelectorAll('*');
+                        children.forEach(child => {
+                            child.style.removeProperty('color');
+                            child.style.removeProperty('background-color');
+                        });
+                    });
+
+                    setTimeout(() => this.loading = false, 500);
+                },
+
+                saveTheme() {
+                    this.loading = true;
+                    setTimeout(() => {
+                        alert('Theme saved successfully!');
+                        this.loading = false;
+                    }, 1000);
+                }
+            }));
+        });
+    </script>
+</body>
+</html>

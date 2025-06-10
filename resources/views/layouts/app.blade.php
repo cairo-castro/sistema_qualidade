@@ -15,7 +15,7 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
 
     <!-- Vite Assets -->
-    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/dashboard-components.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <!-- User Theme Settings Injection -->
     @php
@@ -352,12 +352,12 @@
     </div>
 
     <!-- Main Container -->
-    <div class="hospital-layout">
+    <div class="hospital-layout" x-data="hospitalDashboard">
         <!-- Sidebar -->
         @include('layouts.partials.sidebar')
 
         <!-- Mobile Sidebar Overlay -->
-        <div class="mobile-sidebar-overlay" 
+        <div class="mobile-sidebar-overlay"
              @click="sidebarOpen = false; $el.classList.remove('active'); document.querySelector('.hospital-sidebar').classList.remove('mobile-open'); document.body.style.overflow = ''"
              x-show="sidebarOpen && window.innerWidth < 1024"></div>
 

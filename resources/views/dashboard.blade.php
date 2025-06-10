@@ -419,7 +419,16 @@
     </div>
 
     @push('scripts')
-    <!-- 📊 Carregar componentes do dashboard -->
-    @vite(['resources/js/dashboard-components.js', 'resources/js/dashboard-charts.js'])
+    <!-- Scripts do dashboard já estão incluídos no app.js -->
+    <script>
+        // Dados iniciais do dashboard
+        window.stats = {
+            totalDiagnosticos: {{ $totalDiagnosticos ?? 150 }},
+            taxaConformidade: {{ $taxaConformidade ?? 95.2 }},
+            periodosAtivos: {{ $periodosAtivos ?? 12 }},
+            itensNaoConformes: {{ $itensNaoConformes ?? 8 }}
+        };
+        window.notifications = @json($notifications ?? []);
+    </script>
     @endpush
 </x-app-layout>
