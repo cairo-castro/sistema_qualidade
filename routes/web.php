@@ -18,6 +18,11 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Test route for accent colors (for development)
+Route::get('/test-accent', function () {
+    return view('test-accent');
+})->name('test.accent');
+
 // Authenticated routes group
 Route::middleware(['auth'])->group(function () {
     // Dashboard routes
@@ -40,21 +45,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-
-    // Rota temporária para teste da sidebar
-    Route::get('/test-sidebar', function () {
-        return view('test-sidebar');
-    })->name('test.sidebar');
-
-    // Rota para teste do gerenciador de temas
-    Route::get('/theme-test', function () {
-        return view('theme-test');
-    })->name('theme.test');
-
-    // Rota para teste aprimorado do gerenciador de temas
-    Route::get('/theme-test-enhanced', function () {
-        return view('theme-test-enhanced');
-    })->name('theme.test.enhanced');
 });
 
 // Include authentication routes
