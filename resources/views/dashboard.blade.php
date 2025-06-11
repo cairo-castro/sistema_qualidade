@@ -81,8 +81,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"></path>
                     </svg>
                 </div>
-            </div>
-        </div>
+            </div>        </div>
     </div>
 
     <!-- Linha Principal: Gráficos e Actions -->
@@ -414,6 +413,68 @@
                     </div>
                 </div>
                 @endforelse
+            </div>
+        </div>
+    </div>
+
+    <!-- Demonstração dos Novos Temas -->
+    <div class="mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm border border-gray-200 dark:border-gray-600">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Demonstração dos Novos Temas</h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                Teste os novos temas personalizados clicando no ícone de paleta no navbar. Os elementos abaixo respondem automaticamente às mudanças de cor:
+            </p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Botões com Accent Color -->
+                <div class="space-y-3">
+                    <h4 class="font-medium text-gray-700 dark:text-gray-300">Botões Interativos</h4>
+                    <div class="space-y-2">
+                        <button class="btn-primary w-full">Botão Primário</button>
+                        <button class="btn-accent w-full">Botão Accent</button>
+                        <button class="primary-button w-full">Botão Customizado</button>
+                    </div>
+                </div>
+
+                <!-- Links com Accent Color -->
+                <div class="space-y-3">
+                    <h4 class="font-medium text-gray-700 dark:text-gray-300">Links e Textos</h4>
+                    <div class="space-y-2">
+                        <a href="#" class="text-blue-500 hover:text-blue-600 block">Link com accent color</a>
+                        <p class="text-blue-500">Texto com accent color</p>
+                        <span class="accent-color font-medium">Texto accent personalizado</span>
+                    </div>
+                </div>
+
+                <!-- Elementos com Background -->
+                <div class="space-y-3">
+                    <h4 class="font-medium text-gray-700 dark:text-gray-300">Elementos Destacados</h4>
+                    <div class="space-y-2">
+                        <div class="bg-blue-500 text-white p-3 rounded">Background accent</div>
+                        <div class="border-2 border-blue-500 p-3 rounded">Border accent</div>
+                        <div class="bg-blue-100 border-l-4 border-blue-500 p-3 rounded">Accent highlight</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Indicadores de Status -->
+            <div class="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Status Ativo</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Sucesso</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Atenção</span>
+                </div>
+                <div class="flex items-center space-x-2">
+                    <div class="w-3 h-3 bg-red-500 rounded-full"></div>
+                    <span class="text-sm text-gray-600 dark:text-gray-400">Erro</span>
+                </div>
             </div>
         </div>
     </div>

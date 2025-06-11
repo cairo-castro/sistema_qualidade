@@ -18,11 +18,6 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Test route for accent colors (for development)
-Route::get('/test-accent', function () {
-    return view('test-accent');
-})->name('test.accent');
-
 // Authenticated routes group
 Route::middleware(['auth'])->group(function () {
     // Dashboard routes

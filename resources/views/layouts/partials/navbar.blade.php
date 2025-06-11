@@ -13,15 +13,13 @@
 
         <!-- Search bar (desktop) -->
         <div class="hidden md:block">
-            <div class="relative">
-                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <svg class="h-4 w-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </div>
+            <div class="gqa-search-container w-80">
+                <svg class="gqa-search-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
                 <input type="search"
                        placeholder="Buscar diagnósticos, pacientes..."
-                       class="gqa-input pl-12 w-80 !py-2 text-sm"
+                       class="gqa-search-input"
                        @keydown.enter="performSearch()"
                        @input.debounce.500ms="performSearch()"
                 />
@@ -224,25 +222,58 @@
                                 Temas Pré-definidos
                             </label>
                             <div class="grid grid-cols-4 gap-2">
-                                <!-- Tema Azul -->
-                                <button @click="window.Hospital.themeManager.applyPreset('blue')"
+                                <!-- Linha 1 -->
+                                <button @click="window.Hospital.themeManager.applyPreset('azure')"
                                         class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
-                                        title="Tema Azul">
+                                        title="Tema Azure">
                                 </button>
-                                <!-- Tema Verde -->
-                                <button @click="window.Hospital.themeManager.applyPreset('green')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 transition-all duration-200"
-                                        title="Tema Verde">
+                                <button @click="window.Hospital.themeManager.applyPreset('emerald')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 transition-all duration-200"
+                                        title="Tema Esmeralda">
                                 </button>
-                                <!-- Tema Roxo -->
-                                <button @click="window.Hospital.themeManager.applyPreset('purple')"
+                                <button @click="window.Hospital.themeManager.applyPreset('coral')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-red-400 to-pink-500 hover:from-red-500 hover:to-pink-600 transition-all duration-200"
+                                        title="Tema Coral">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('amethyst')"
                                         class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
-                                        title="Tema Roxo">
+                                        title="Tema Ametista">
                                 </button>
-                                <!-- Tema Escuro -->
-                                <button @click="window.Hospital.themeManager.applyPreset('dark')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-800 hover:to-gray-900 transition-all duration-200"
-                                        title="Tema Escuro">
+
+                                <!-- Linha 2 -->
+                                <button @click="window.Hospital.themeManager.applyPreset('golden')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 transition-all duration-200"
+                                        title="Tema Dourado">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('sage')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-lime-500 to-green-500 hover:from-lime-600 hover:to-green-600 transition-all duration-200"
+                                        title="Tema Sálvia">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('indigo')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 transition-all duration-200"
+                                        title="Tema Índigo">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('teal')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 transition-all duration-200"
+                                        title="Tema Cerceta">
+                                </button>
+
+                                <!-- Linha 3 -->
+                                <button @click="window.Hospital.themeManager.applyPreset('crimson')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 transition-all duration-200"
+                                        title="Tema Carmesim">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('slate')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-slate-500 to-gray-600 hover:from-slate-600 hover:to-gray-700 transition-all duration-200"
+                                        title="Tema Ardósia">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('amber')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 transition-all duration-200"
+                                        title="Tema Âmbar">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('navy')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 transition-all duration-200"
+                                        title="Tema Marinho">
                                 </button>
                             </div>
                         </div>

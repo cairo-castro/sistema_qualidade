@@ -117,6 +117,8 @@ window.Hospital.themeManager = {
             return;
         }
 
+        console.log(`🎨 updateColor called: ${type} = ${value}`);
+
         // Aplicar cor instantaneamente
         this.colors[type] = value;
 
@@ -124,6 +126,7 @@ window.Hospital.themeManager = {
         const textColor = ColorUtils.getContrastingTextColor(value);
         console.log(`🎨 Applying ${type}: ${value} with text: ${textColor}`);
 
+        // Aplicar imediatamente
         this.applyStyles(type, value, textColor);
     },
 
@@ -1133,9 +1136,12 @@ window.Hospital.themeManager = {
 
     // SRP: Método principal responsável por aplicar estilos de accent
     _applyAccentStyles(color, textColor, root) {
+        console.log(`🎨 _applyAccentStyles called: ${color} / ${textColor}`);
+
         this._setCSSVariables(root, 'accent-color', color, textColor);
         this._setCSSVariables(root, 'accent-text', color, textColor);
         this._applyAccentToElements(color, textColor);
+
         console.log(`✅ Accent styles applied: ${color} with text: ${textColor}`);
     },
 

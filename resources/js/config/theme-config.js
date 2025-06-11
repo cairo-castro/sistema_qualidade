@@ -13,44 +13,100 @@ export const ThemeConfig = {
     },
 
     PRESETS: {
-        blue: {
-            name: 'Azul',
-            navbar: '#2563eb',
-            sidebar: '#1e40af',
+        azure: {
+            name: 'Azure',
+            navbar: '#0078d4',
+            sidebar: '#005a9e',
+            background: '#f8fcff',
+            accent: '#2196f3'
+        },
+        emerald: {
+            name: 'Esmeralda',
+            navbar: '#00a96e',
+            sidebar: '#008659',
+            background: '#f0fff4',
+            accent: '#4caf50'
+        },
+        coral: {
+            name: 'Coral',
+            navbar: '#ff6b6b',
+            sidebar: '#ee5a52',
+            background: '#fff8f6',
+            accent: '#ff7043'
+        },
+        amethyst: {
+            name: 'Ametista',
+            navbar: '#9c27b0',
+            sidebar: '#7b1fa2',
+            background: '#faf4ff',
+            accent: '#ba68c8'
+        },
+        golden: {
+            name: 'Dourado',
+            navbar: '#ff9800',
+            sidebar: '#f57c00',
+            background: '#fffdf7',
+            accent: '#ffb74d'
+        },
+        sage: {
+            name: 'Sálvia',
+            navbar: '#8bc34a',
+            sidebar: '#689f38',
+            background: '#f7fff0',
+            accent: '#9ccc65'
+        },
+        indigo: {
+            name: 'Índigo',
+            navbar: '#3f51b5',
+            sidebar: '#303f9f',
+            background: '#f3f4ff',
+            accent: '#5c6bc0'
+        },
+        teal: {
+            name: 'Cerceta',
+            navbar: '#009688',
+            sidebar: '#00796b',
+            background: '#f0fffc',
+            accent: '#26a69a'
+        },
+        crimson: {
+            name: 'Carmesim',
+            navbar: '#e91e63',
+            sidebar: '#c2185b',
+            background: '#fff0f5',
+            accent: '#f06292'
+        },
+        slate: {
+            name: 'Ardósia',
+            navbar: '#607d8b',
+            sidebar: '#455a64',
             background: '#f8fafc',
-            accent: '#3b82f6'
+            accent: '#78909c'
         },
-        green: {
-            name: 'Verde',
-            navbar: '#16a34a',
-            sidebar: '#15803d',
-            background: '#f0fdf4',
-            accent: '#22c55e'
+        amber: {
+            name: 'Âmbar',
+            navbar: '#ffc107',
+            sidebar: '#ffa000',
+            background: '#fffef7',
+            accent: '#ffca28'
         },
-        purple: {
-            name: 'Roxo',
-            navbar: '#7c3aed',
-            sidebar: '#6d28d9',
-            background: '#faf5ff',
-            accent: '#8b5cf6'
-        },
-        dark: {
-            name: 'Escuro',
-            navbar: '#1f2937',
-            sidebar: '#111827',
-            background: '#0f172a',
-            accent: '#6b7280'
+        navy: {
+            name: 'Marinho',
+            navbar: '#1565c0',
+            sidebar: '#0d47a1',
+            background: '#f5f8ff',
+            accent: '#42a5f5'
         }
     },
 
     SYSTEM_COLORS: {
-        primary: '#22c55e',
-        secondary: '#3b82f6',
-        success: '#22c55e',
-        warning: '#eab308',
-        danger: '#ef4444',
-        info: '#3b82f6'
+        primary: '#2196f3',
+        secondary: '#607d8b',
+        success: '#4caf50',
+        warning: '#ff9800',
+        danger: '#f44336',
+        info: '#00bcd4'
     },
 
-    CHART_COLORS: ['#22c55e', '#3b82f6', '#eab308', '#ef4444', '#8b5cf6', '#06b6d4', '#f59e0b']
+    CHART_COLORS: ['#2196f3', '#4caf50', '#ff9800', '#f44336', '#9c27b0', '#00bcd4', '#ff5722', '#795548', '#607d8b', '#e91e63', '#8bc34a', '#ffc107']
 };
