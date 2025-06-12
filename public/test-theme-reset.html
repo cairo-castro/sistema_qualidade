@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Reset de Tema</title>
+    <script src="./build/assets/vendor-alpine-Bq6v2RRG.js"></script>
+    <link rel="stylesheet" href="./build/assets/app-B-qg5eef.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        .test-container {
+            padding: 20px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+        .test-button {
+            margin: 5px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .btn-test { background: #3b82f6; color: white; }
+        .btn-green { background: #22c55e; color: white; }
+        .btn-reset { background: #ef4444; color: white; }
+
+        /* Simular estrutura do hospital */
+        .mock-layout {
+            display: flex;
+            height: 300px;
+            border: 1px solid #ccc;
+            margin: 20px 0;
+        }
+        .mock-sidebar {
+            width: 200px;
+            background: var(--gqa-surface, #ffffff);
+            border-right: 1px solid var(--gqa-border, #e5e7eb);
+            padding: 10px;
+            color: var(--gqa-text-primary, #111827);
+        }
+        .mock-navbar {
+            background: var(--gqa-surface, #ffffff);
+            border-bottom: 1px solid var(--gqa-border, #e5e7eb);
+            padding: 10px 20px;
+            color: var(--gqa-text-primary, #111827);
+        }
+        .mock-content {
+            flex: 1;
+            padding: 20px;
+            background: var(--gqa-background, #f9fafb);
+            color: var(--gqa-text-primary, #111827);
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>Teste de Reset de Tema</h1>
+
+        <div class="test-section">
+            <h3>Estado do Sistema</h3>
+            <p id="themeStatus">Carregando...</p>
+            <p><strong>Cores Atuais:</strong></p>
+            <ul id="currentColors"></ul>
+        </div>
+
+        <div class="test-section">
+            <h3>Ações de Teste</h3>
+            <button class="test-button btn-green" onclick="applyGreenTheme()">
+                Aplicar Tema Verde (Simular Customização)
+            </button>
+            <button class="test-button btn-test" onclick="applyBlueTheme()">
+                Aplicar Tema Azul (Simular Customização)
+            </button>
+            <button class="test-button btn-reset" onclick="resetTheme()">
+                🔄 RESETAR TEMA (Deve voltar ao padrão)
+            </button>
+        </div>
+
+        <div class="test-section">
+            <h3>Preview Visual</h3>
+            <div class="mock-navbar hospital-navbar">
+                <strong>Navbar</strong> - Esta é a barra de navegação
+            </div>
+            <div class="mock-layout">
+                <div class="mock-sidebar hospital-sidebar">
+                    <strong>Sidebar</strong><br>
+                    • Menu 1<br>
+                    • Menu 2<br>
+                    • Menu 3
+                </div>
+                <div class="mock-content hospital-content">
+                    <strong>Conteúdo Principal</strong><br>
+                    Este é o conteúdo da página. No estado padrão:
+                    <ul>
+                        <li>Navbar deve ser branca</li>
+                        <li>Sidebar deve ser branca (não verde!)</li>
+                        <li>Background deve ser cinza claro</li>
+                        <li>Texto deve ser cinza escuro</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Log de Ações</h3>
+            <div id="actionLog" style="background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto;"></div>
+        </div>
+    </div>
+
+    <script src="./build/assets/app-BN95TwCV.js"></script>
+    <script>
+        // Aguardar carregamento do sistema
+        document.addEventListener('DOMContentLoaded', function() {
+            // Aguardar Alpine.js inicializar
+            setTimeout(function() {
+                updateStatus();
+
+                // Configurar window globals para teste
+                window.hasCustomTheme = false;
+                window.userTheme = {};
+
+                log('Sistema carregado - Pronto para testes');
+            }, 500);
+        });
+
+        function updateStatus() {
+            const statusEl = document.getElementById('themeStatus');
+            const colorsEl = document.getElementById('currentColors');
+
+            if (window.Hospital && window.Hospital.themeManager) {
+                const tm = window.Hospital.themeManager;
+                statusEl.innerHTML = `
+                    <strong>Tema Ativo:</strong> ${window.hasCustomTheme ? 'Customizado' : 'Padrão'}<br>
+                    <strong>ThemeManager:</strong> Disponível ✅
+                `;
+
+                colorsEl.innerHTML = `
+                    <li><strong>Navbar:</strong> ${tm.colors.navbar}</li>
+                    <li><strong>Sidebar:</strong> ${tm.colors.sidebar}</li>
+                    <li><strong>Background:</strong> ${tm.colors.background}</li>
+                    <li><strong>Accent:</strong> ${tm.colors.accent}</li>
+                `;
+            } else {
+                statusEl.innerHTML = '<span style="color: red;">ThemeManager não encontrado ❌</span>';
+                colorsEl.innerHTML = '<li>Indisponível</li>';
+            }
+        }
+
+        function log(message) {
+            const logEl = document.getElementById('actionLog');
+            const timestamp = new Date().toLocaleTimeString();
+            logEl.innerHTML += `[${timestamp}] ${message}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function applyGreenTheme() {
+            if (window.Hospital && window.Hospital.themeManager) {
+                log('Aplicando tema verde customizado...');
+                const tm = window.Hospital.themeManager;
+
+                tm.colors.navbar = '#22c55e';
+                tm.colors.sidebar = '#16a34a';
+                tm.colors.background = '#f0fdf4';
+                tm.colors.accent = '#22c55e';
+
+                tm._applyNavbarColor('#22c55e', '#ffffff');
+                tm._applySidebarColor('#16a34a', '#ffffff');
+                tm._applyBackgroundColor('#f0fdf4', '#166534');
+
+                window.hasCustomTheme = true;
+                updateStatus();
+                log('✅ Tema verde aplicado');
+            } else {
+                log('❌ ThemeManager não disponível');
+            }
+        }
+
+        function applyBlueTheme() {
+            if (window.Hospital && window.Hospital.themeManager) {
+                log('Aplicando tema azul customizado...');
+                const tm = window.Hospital.themeManager;
+
+                tm.colors.navbar = '#3b82f6';
+                tm.colors.sidebar = '#1d4ed8';
+                tm.colors.background = '#eff6ff';
+                tm.colors.accent = '#3b82f6';
+
+                tm._applyNavbarColor('#3b82f6', '#ffffff');
+                tm._applySidebarColor('#1d4ed8', '#ffffff');
+                tm._applyBackgroundColor('#eff6ff', '#1e3a8a');
+
+                window.hasCustomTheme = true;
+                updateStatus();
+                log('✅ Tema azul aplicado');
+            } else {
+                log('❌ ThemeManager não disponível');
+            }
+        }
+
+        function resetTheme() {
+            if (window.Hospital && window.Hospital.themeManager) {
+                log('🔄 INICIANDO RESET DO TEMA...');
+                const tm = window.Hospital.themeManager;
+
+                try {
+                    tm.resetTheme();
+                    setTimeout(() => {
+                        updateStatus();
+                        log('✅ RESET CONCLUÍDO - Verificar se sidebar voltou a ser BRANCA (não verde!)');
+                    }, 500);
+                } catch (error) {
+                    log('❌ ERRO no reset: ' + error.message);
+                }
+            } else {
+                log('❌ ThemeManager não disponível');
+            }
+        }
+    </script>
+</body>
+</html>

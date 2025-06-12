@@ -223,57 +223,75 @@
                             </label>
                             <div class="grid grid-cols-4 gap-2">
                                 <!-- Linha 1 -->
-                                <button @click="window.Hospital.themeManager.applyPreset('azure')"
+                                <button @click="window.Hospital.themeManager.applyPreset('hugo')"
                                         class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
-                                        title="Tema Azure">
+                                        title="Hugo">
                                 </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('emerald')"
+                                <button @click="window.Hospital.themeManager.applyPreset('andre')"
                                         class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 transition-all duration-200"
-                                        title="Tema Esmeralda">
+                                        title="André">
                                 </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('coral')"
+                                <button @click="window.Hospital.themeManager.applyPreset('milena')"
                                         class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-red-400 to-pink-500 hover:from-red-500 hover:to-pink-600 transition-all duration-200"
-                                        title="Tema Coral">
+                                        title="Milena">
                                 </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('amethyst')"
+                                <button @click="window.Hospital.themeManager.applyPreset('jo')"
                                         class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
-                                        title="Tema Ametista">
+                                        title="Jô">
                                 </button>
 
                                 <!-- Linha 2 -->
-                                <button @click="window.Hospital.themeManager.applyPreset('golden')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 transition-all duration-200"
-                                        title="Tema Dourado">
-                                </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('sage')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-lime-500 to-green-500 hover:from-lime-600 hover:to-green-600 transition-all duration-200"
-                                        title="Tema Sálvia">
-                                </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('indigo')"
+                                <button @click="window.Hospital.themeManager.applyPreset('claudio')"
                                         class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 transition-all duration-200"
-                                        title="Tema Índigo">
+                                        title="Cláudio">
                                 </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('teal')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 transition-all duration-200"
-                                        title="Tema Cerceta">
+                                <button @click="window.Hospital.themeManager.applyPreset('danyara')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-orange-400 to-red-500 hover:from-orange-500 hover:to-red-600 transition-all duration-200"
+                                        title="Danyara">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('carol')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-pink-300 to-pink-400 hover:from-pink-400 hover:to-pink-500 transition-all duration-200"
+                                        title="Carol">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('izabela')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-blue-300 to-blue-400 hover:from-blue-400 hover:to-blue-500 transition-all duration-200"
+                                        title="Izabela">
                                 </button>
 
                                 <!-- Linha 3 -->
-                                <button @click="window.Hospital.themeManager.applyPreset('crimson')"
+                                <button @click="window.Hospital.themeManager.applyPreset('makerlya')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-red-300 to-red-400 hover:from-red-400 hover:to-red-500 transition-all duration-200"
+                                        title="Makerlya">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('thamirys')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-green-300 to-green-400 hover:from-green-400 hover:to-green-500 transition-all duration-200"
+                                        title="Thamirys">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('carol_mendes')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-amber-200 to-yellow-300 hover:from-amber-300 hover:to-yellow-400 transition-all duration-200"
+                                        title="Carol Mendes">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('thayanne')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-purple-400 to-violet-500 hover:from-purple-500 hover:to-violet-600 transition-all duration-200"
+                                        title="Thayanne">
+                                </button>
+
+                                <!-- Linha 4 -->
+                                <button @click="window.Hospital.themeManager.applyPreset('mercia')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 transition-all duration-200"
+                                        title="Mércia">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('daniela')"
                                         class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 transition-all duration-200"
-                                        title="Tema Carmesim">
+                                        title="Daniela">
                                 </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('slate')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-slate-500 to-gray-600 hover:from-slate-600 hover:to-gray-700 transition-all duration-200"
-                                        title="Tema Ardósia">
+                                <button @click="window.Hospital.themeManager.applyPreset('golden')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 transition-all duration-200"
+                                        title="Dourado">
                                 </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('amber')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 transition-all duration-200"
-                                        title="Tema Âmbar">
-                                </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('navy')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 transition-all duration-200"
-                                        title="Tema Marinho">
+                                <button @click="window.Hospital.themeManager.applyPreset('teal')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 transition-all duration-200"
+                                        title="Cerceta">
                                 </button>
                             </div>
                         </div>

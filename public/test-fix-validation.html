@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Simples - Correção _isColorDark</title>
+    <link rel="stylesheet" href="/build/assets/app-B-qg5eef.css">
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <style>
+        body { margin: 0; font-family: system-ui, sans-serif; background: #f5f5f5; }
+        .test-container { padding: 20px; max-width: 800px; margin: 0 auto; }
+        .test-sidebar { width: 250px; height: 400px; background: #22c55e; color: white; padding: 20px; margin: 20px 0; border-radius: 8px; }
+        .test-button { margin: 10px; padding: 10px 15px; border: none; border-radius: 4px; cursor: pointer; color: white; font-weight: bold; }
+        .status { margin: 20px 0; padding: 15px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .log { background: #f8f9fa; padding: 10px; border-radius: 4px; font-family: monospace; font-size: 12px; margin-top: 10px; white-space: pre-wrap; max-height: 200px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔧 Teste de Correção: _isColorDark</h1>
+
+        <div class="status">
+            <h3>Status do Sistema</h3>
+            <p><strong>Objetivo:</strong> Verificar se o método _isColorDark foi corrigido</p>
+            <p><strong>Erro anterior:</strong> "this._isColorDark is not a function"</p>
+            <p><strong>Assets atuais:</strong></p>
+            <ul>
+                <li>CSS: app-B-qg5eef.css</li>
+                <li>JS: app-BaOoTV6I.js</li>
+            </ul>
+        </div>
+
+        <!-- Sidebar de teste -->
+        <div class="hospital-sidebar test-sidebar">
+            <h3>🏥 Sidebar de Teste</h3>
+            <div class="nav-item" style="padding: 8px; margin: 8px 0; border-radius: 4px; background: rgba(255,255,255,0.1);">
+                Dashboard
+            </div>
+            <div class="nav-item" style="padding: 8px; margin: 8px 0; border-radius: 4px; background: rgba(255,255,255,0.1);">
+                Pacientes
+            </div>
+            <div class="nav-item active" style="padding: 8px; margin: 8px 0; border-radius: 4px; background: rgba(255,255,255,0.2);">
+                Qualidade (Ativo)
+            </div>
+        </div>
+
+        <!-- Botões de teste -->
+        <div style="margin: 20px 0;">
+            <h3>🧪 Testar Presets</h3>
+            <button class="test-button" style="background: #0078d4;" onclick="testPreset('hugo')">Hugo (Azul)</button>
+            <button class="test-button" style="background: #00a96e;" onclick="testPreset('andre')">André (Verde)</button>
+            <button class="test-button" style="background: #ff6b6b;" onclick="testPreset('milena')">Milena (Rosa)</button>
+            <button class="test-button" style="background: #9c27b0;" onclick="testPreset('jo')">Jô (Roxo)</button>
+            <button class="test-button" style="background: #1f2937;" onclick="testPreset('dark')">Dark</button>
+        </div>
+
+        <!-- Log de teste -->
+        <div class="status">
+            <h3>📝 Log de Teste</h3>
+            <div id="test-log" class="log">Aguardando testes...</div>
+            <button onclick="clearLog()" style="margin-top: 10px; padding: 5px 10px; border: 1px solid #ddd; background: #f8f9fa; border-radius: 4px; cursor: pointer;">Limpar Log</button>
+        </div>
+    </div>
+
+    <script src="/build/assets/app-BaOoTV6I.js"></script>
+    <script>
+        let logElement;
+
+        function logMessage(message) {
+            if (!logElement) {
+                logElement = document.getElementById('test-log');
+            }
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent += `[${timestamp}] ${message}\n`;
+            logElement.scrollTop = logElement.scrollHeight;
+        }
+
+        function clearLog() {
+            if (!logElement) {
+                logElement = document.getElementById('test-log');
+            }
+            logElement.textContent = 'Log limpo.\n';
+        }
+
+        function testPreset(presetName) {
+            logMessage(`🧪 Testando preset: ${presetName}`);
+
+            try {
+                if (window.Hospital && window.Hospital.themeManager) {
+                    logMessage(`✅ Theme manager encontrado`);
+
+                    // Testar se _isColorDark existe
+                    if (typeof window.Hospital.themeManager._isColorDark === 'function') {
+                        logMessage(`✅ Método _isColorDark encontrado`);
+
+                        // Testar o método diretamente
+                        const testColors = ['#000000', '#ffffff', '#22c55e', '#9c27b0'];
+                        testColors.forEach(color => {
+                            const isDark = window.Hospital.themeManager._isColorDark(color);
+                            logMessage(`   🎨 ${color} é escura: ${isDark}`);
+                        });
+                    } else {
+                        logMessage(`❌ Método _isColorDark NÃO encontrado`);
+                    }
+
+                    // Aplicar preset
+                    window.Hospital.themeManager.applyPreset(presetName);
+                    logMessage(`✅ Preset ${presetName} aplicado com sucesso`);
+
+                } else {
+                    logMessage(`❌ Theme manager não disponível`);
+                }
+            } catch (error) {
+                logMessage(`❌ ERRO: ${error.message}`);
+                console.error('Erro detalhado:', error);
+            }
+        }
+
+        // Auto-test quando a página carrega
+        document.addEventListener('DOMContentLoaded', () => {
+            logMessage('🚀 Página carregada');
+            logMessage('🔍 Verificando sistema...');
+
+            setTimeout(() => {
+                if (window.Hospital) {
+                    logMessage('✅ Sistema Hospital carregado');
+                    if (window.Hospital.themeManager) {
+                        logMessage('✅ Theme Manager carregado');
+
+                        // Testar se o método existe
+                        if (typeof window.Hospital.themeManager._isColorDark === 'function') {
+                            logMessage('✅ Método _isColorDark corrigido e funcionando!');
+                            logMessage('🎉 Sistema pronto para testes');
+                        } else {
+                            logMessage('❌ Método _isColorDark ainda não existe');
+                        }
+                    } else {
+                        logMessage('❌ Theme Manager não carregado');
+                    }
+                } else {
+                    logMessage('❌ Sistema Hospital não carregado');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

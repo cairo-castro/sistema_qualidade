@@ -186,6 +186,9 @@ window.Hospital.themeManager = {
             const accentTextColor = ColorUtils.getContrastingTextColor(preset.accent);
             this._applyAccentColor(preset.accent, accentTextColor);
         }
+
+        // Aplicar cores da scrollbar baseadas no preset
+        this._updateScrollbarColors(preset);
     },
 
     // Método específico para aplicar cor da navbar (Clean Code: métodos pequenos)
@@ -226,6 +229,15 @@ window.Hospital.themeManager = {
         // Aplicar às variáveis CSS
         document.documentElement.style.setProperty('--sidebar-bg', color);
         document.documentElement.style.setProperty('--sidebar-text', textColor);
+
+        // Calcular cores de hover harmoniosas
+        const isDark = this._isColorDark(color);
+        const hoverBg = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.08)';
+        const activeBg = isDark ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.12)';
+
+        // Aplicar variáveis CSS para hover states
+        document.documentElement.style.setProperty('--sidebar-hover-bg', hoverBg);
+        document.documentElement.style.setProperty('--sidebar-active-bg', activeBg);
 
         // Buscar elementos sidebar de forma robusta
         const sidebarSelectors = [
@@ -401,7 +413,7 @@ window.Hospital.themeManager = {
         if (!element.classList.toString().includes('dark:')) {
             element.style.color = contrastColor;
 
-            const children = element.querySelectorAll(':scope > span, :scope > a, :scope > p, :scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6, :scope > div:not([class*="bg-"]):not([style*="background"])');
+            const children = element.querySelectorAll(':scope > span, :scope > a, :scope > p, :scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6, :scope > div:not([class*="bg-"]):not([style*="background"]), a:not([class*="bg-"])');
             children.forEach(child => {
                 if (!child.style.backgroundColor &&
                     !child.classList.contains('bg-') &&
@@ -1134,71 +1146,67 @@ window.Hospital.themeManager = {
         root.style.setProperty('--content-text', textColor);
     },
 
-    // SRP: Método principal responsável por aplicar estilos de accent
-    _applyAccentStyles(color, textColor, root) {
-        console.log(`🎨 _applyAccentStyles called: ${color} / ${textColor}`);
+    // SRP: Método responsável por atualizar cores da scrollbar baseadas no preset
+    _updateScrollbarColors(preset) {
+        console.log(`🖱️ Updating scrollbar colors for preset:`, preset);
 
-        this._setCSSVariables(root, 'accent-color', color, textColor);
-        this._setCSSVariables(root, 'accent-text', color, textColor);
-        this._applyAccentToElements(color, textColor);
+        const root = document.documentElement;
 
-        console.log(`✅ Accent styles applied: ${color} with text: ${textColor}`);
-    },
+        // Usar a cor da sidebar como base principal para maior harmonia
+        const baseColor = preset.sidebar || preset.accent || preset.navbar;
 
-    // SRP: Método responsável por aplicar accent a elementos específicos
-    _applyAccentToElements(color, textColor) {
-        const accentElements = this._getAccentElements();
+        // Cores mais harmoniosas baseadas na paleta do preset
+        const scrollbarThumb = this._adjustColorOpacity(baseColor, 0.7);
+        const scrollbarThumbHover = this._adjustColorOpacity(preset.accent || baseColor, 0.9);
 
-        accentElements.forEach(element => {
-            this._applyAccentStyleToElement(element, color, textColor);
+        // Aplicar variáveis CSS
+        root.style.setProperty('--scrollbar-thumb', scrollbarThumb);
+        root.style.setProperty('--scrollbar-thumb-hover', scrollbarThumbHover);
+
+        console.log(`🖱️ Scrollbar updated:`, {
+            base: baseColor,
+            thumb: scrollbarThumb,
+            thumbHover: scrollbarThumbHover
         });
     },
 
-    // DRY: Método para obter elementos que devem receber accent
-    _getAccentElements() {
-        const accentSelectors = [
-            '.btn-primary', '.gqa-btn.primary',
-            '.text-blue-500', '.bg-blue-500',
-            '.border-blue-500', '.focus\\:ring-blue-500',
-            '[class*="blue-"]', '.btn-accent',
-            '.accent-color', '.primary-button',
-            'button.primary', '.link-primary'
-        ];
+    // Helper: Ajustar opacidade de uma cor (método simplificado)
+    _adjustColorOpacity(hexColor, opacity) {
+        // Converter hex para RGB
+        const r = parseInt(hexColor.slice(1, 3), 16);
+        const g = parseInt(hexColor.slice(3, 5), 16);
+        const b = parseInt(hexColor.slice(5, 7), 16);
 
-        return document.querySelectorAll(accentSelectors.join(', '));
+        // Retornar cor RGBA com opacidade
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     },
 
-    // SRP: Método responsável por aplicar estilo de accent a um elemento específico
-    _applyAccentStyleToElement(element, color, textColor) {
-        if (this._isBackgroundAccentElement(element)) {
-            element.style.backgroundColor = color;
-            element.style.borderColor = color;
-            element.style.color = textColor;
-        } else if (this._isTextAccentElement(element)) {
-            element.style.color = color;
-        } else if (this._isBorderAccentElement(element)) {
-            element.style.borderColor = color;
+    // Helper: Verificar se uma cor é escura (baseado na luminância)
+    _isColorDark(hexColor) {
+        if (!hexColor) return false;
+
+        try {
+            // Remover # se presente
+            const cleanHex = hexColor.replace('#', '');
+
+            if (!/^[0-9A-Fa-f]{6}$/.test(cleanHex)) {
+                return false;
+            }
+
+            // Converter para RGB
+            const r = parseInt(cleanHex.slice(0, 2), 16);
+            const g = parseInt(cleanHex.slice(2, 4), 16);
+            const b = parseInt(cleanHex.slice(4, 6), 16);
+
+            // Calcular luminância
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+            // Retornar true se a cor é escura (luminância <= 0.5)
+            return luminance <= 0.5;
+        } catch (error) {
+            console.warn('Error checking if color is dark:', error);
+            return false;
         }
-    },
-
-    // SRP: Método responsável por verificar se elemento deve ter background accent
-    _isBackgroundAccentElement(element) {
-        return element.classList.contains('bg-blue-500') ||
-               element.classList.contains('btn-primary') ||
-               element.classList.contains('btn-accent') ||
-               element.classList.contains('primary-button');
-    },
-
-    // SRP: Método responsável por verificar se elemento deve ter texto accent
-    _isTextAccentElement(element) {
-        return element.classList.contains('text-blue-500') ||
-               element.classList.contains('link-primary') ||
-               element.classList.contains('accent-color');
-    },
-
-    // SRP: Método responsável por verificar se elemento deve ter borda accent
-    _isBorderAccentElement(element) {
-        return element.classList.contains('border-blue-500');
     },
 
     async saveTheme() {
@@ -1250,14 +1258,20 @@ window.Hospital.themeManager = {
         }
     },
 
-    // SRP: Método responsável por executar o reset do tema
+    // SRP: Método responsável por executar o reset do tema (CLEAN CODE)
     _performThemeReset() {
+        console.log('🔄 Starting theme reset process...');
+
         const isDarkMode = this._detectDarkMode();
         const defaultColors = this._getDefaultColors(isDarkMode);
 
+        // CLEAN CODE: Reset em etapas claras e organizadas
         this._resetColorsObject(defaultColors);
-        this._removeCustomCSSProperties();
-        this._removeCustomInlineStyles();
+        this._clearAllCustomCSSOverrides();
+        this._removeAllInlineThemeStyles();
+        this._restoreSystemDefaultTheme(isDarkMode);
+
+        console.log('✅ Theme reset completed successfully');
     },
 
     // SRP: Método responsável por detectar modo dark
@@ -1267,18 +1281,19 @@ window.Hospital.themeManager = {
         return isDarkMode;
     },
 
-    // SRP: Método responsável por obter cores padrão baseadas no modo
+    // SRP: Método responsável por obter cores padrão baseadas no modo (CLEAN CODE)
     _getDefaultColors(isDarkMode) {
+        // CLEAN CODE: Cores padrão que harmonizam com o CSS system
         return isDarkMode ? {
-            navbar: '#1f2937',    // dark gray para dark mode
-            sidebar: '#111827',   // darker gray para dark mode
-            background: '#0f172a', // very dark para dark mode
-            accent: '#22c55e'     // green mantém igual
+            navbar: '#1f2937',    // Gray-800 para dark mode
+            sidebar: '#1f2937',   // Gray-800 para dark mode
+            background: '#111827', // Gray-900 para dark mode
+            accent: '#22c55e'     // Green-500 para accent
         } : {
-            navbar: '#ffffff',    // white para light mode
-            sidebar: '#ffffff',   // white para light mode
-            background: '#f9fafb', // light gray para light mode
-            accent: '#22c55e'     // green mantém igual
+            navbar: '#ffffff',    // Branco para light mode
+            sidebar: '#f8f9fa',   // Gray-50 para light mode (mais suave que branco puro)
+            background: '#f9fafb', // Gray-50 para light mode
+            accent: '#22c55e'     // Green-500 para accent
         };
     },
 
@@ -1287,73 +1302,206 @@ window.Hospital.themeManager = {
         this.colors = { ...defaultColors };
     },
 
-    // SRP: Método responsável por remover propriedades CSS customizadas
-    _removeCustomCSSProperties() {
+    // SRP: Método responsável por limpar todas as sobrescritas CSS customizadas (CLEAN CODE)
+    _clearAllCustomCSSOverrides() {
         const root = document.documentElement;
-        const customProperties = [
+
+        // CLEAN CODE: Lista organizada de todas as variáveis que podem sobrescrever o padrão
+        const customCSSVariables = [
+            // Sidebar variables
+            '--sidebar-bg', '--sidebar-text', '--sidebar-hover-bg', '--sidebar-active-bg',
+            '--sidebar-border', '--sidebar-divider', '--sidebar-muted-text', '--sidebar-icon-color',
+            // Navbar variables
             '--navbar-bg', '--navbar-text',
-            '--sidebar-bg', '--sidebar-text',
-            '--bg-color', '--text-color',
+            // Content variables
+            '--bg-color', '--text-color', '--content-bg', '--content-text',
+            // Theme variables
             '--accent-color', '--accent-text',
-            '--content-bg', '--content-text'
+            // Scrollbar variables
+            '--scrollbar-thumb', '--scrollbar-thumb-hover',
+            // Custom theme variables
+            '--custom-navbar-bg', '--custom-navbar-text',
+            '--custom-sidebar-bg', '--custom-sidebar-text',
+            '--custom-background', '--custom-background-text'
         ];
 
-        customProperties.forEach(prop => {
+        customCSSVariables.forEach(variable => {
+            root.style.removeProperty(variable);
+        });
+
+        console.log(`🧹 Cleared ${customCSSVariables.length} custom CSS variables`);
+    },
+
+    // SRP: Método responsável por remover todos os estilos inline de tema (CLEAN CODE)
+    _removeAllInlineThemeStyles() {
+        // CLEAN CODE: Buscar todos os elementos que podem ter estilos inline de tema
+        const elementsWithThemeStyles = document.querySelectorAll(`
+            .hospital-navbar[style],
+            .hospital-sidebar[style],
+            .hospital-content[style],
+            .hospital-main[style],
+            *[style*="background-color"],
+            *[style*="color: rgb"],
+            *[style*="color: #"]
+        `);
+
+        elementsWithThemeStyles.forEach(element => {
+            // Não mexer no theme manager para evitar quebrar a funcionalidade
+            if (!element.closest('[x-data*="themeManager"]')) {
+                this._removeElementInlineThemeStyles(element);
+            }
+        });
+
+        console.log(`🧹 Removed inline theme styles from ${elementsWithThemeStyles.length} elements`);
+    },
+
+    // SRP: Método responsável por remover estilos inline de um elemento específico
+    _removeElementInlineThemeStyles(element) {
+        const stylePropertiesToRemove = [
+            'background-color', 'color', 'border-color',
+            'fill', 'stroke', 'background', 'border'
+        ];
+
+        stylePropertiesToRemove.forEach(property => {
+            element.style.removeProperty(property);
+        });
+
+        // Limpar o atributo style se ficou vazio
+        if (!element.style.cssText.trim()) {
+            element.removeAttribute('style');
+        }
+    },
+
+    // SRP: Método responsável por aplicar ativamente as cores padrão após reset
+    _applyDefaultThemeColors(defaultColors) {
+        console.log('🎨 Applying default theme colors after reset:', defaultColors);
+
+        // PRIMEIRO: Limpar completamente as variáveis CSS customizadas
+        this._resetToSystemDefaultCSS();
+
+        // SEGUNDO: Aplicar cores padrão do sistema (não customizadas)
+        this._applySystemDefaultColors(defaultColors);
+
+        console.log('🎨 Default theme colors application completed');
+    },
+
+    // SRP: Método responsável por limpar variáveis CSS customizadas e voltar ao padrão do sistema
+    _resetToSystemDefaultCSS() {
+        const root = document.documentElement;
+
+        // Remover TODAS as variáveis CSS customizadas que podem estar sobrescrevendo o padrão
+        const allCustomVars = [
+            '--sidebar-bg', '--sidebar-text', '--sidebar-hover-bg', '--sidebar-active-bg',
+            '--sidebar-border', '--sidebar-divider', '--sidebar-muted-text', '--sidebar-icon-color',
+            '--navbar-bg', '--navbar-text', '--bg-color', '--text-color',
+            '--accent-color', '--accent-text', '--content-bg', '--content-text',
+            '--scrollbar-thumb', '--scrollbar-thumb-hover'
+        ];
+
+        allCustomVars.forEach(prop => {
             root.style.removeProperty(prop);
         });
+
+        console.log('🧹 Cleared all custom CSS variables - returning to system defaults');
     },
 
-    // SRP: Método responsável por remover estilos inline customizados
-    _removeCustomInlineStyles() {
-        this._removeThemeElementStyles();
-        this._removeThemeChildrenStyles();
+    // SRP: Método responsável por aplicar cores padrão do sistema
+    _applySystemDefaultColors(defaultColors) {
+        // Para o sistema padrão, queremos usar as cores das variáveis --gqa-*
+        // ao invés de aplicar cores customizadas forçadas
+
+        const isDarkMode = this._detectDarkMode();
+
+        if (isDarkMode) {
+            // Em dark mode, aplicar as cores corretas
+            this._applyMinimalDarkModeColors(defaultColors);
+        } else {
+            // Em light mode, simplesmente remover estilos inline para que o CSS padrão funcione
+            this._removeAllInlineStyles();
+        }
+
+        console.log('✅ Applied system default colors (not custom theme)');
     },
 
-    // SRP: Método responsável por remover estilos de elementos principais do tema
-    _removeThemeElementStyles() {
-        const elementsWithCustomTheme = document.querySelectorAll(
-            '.hospital-navbar[style], .hospital-sidebar[style], .hospital-content[style], [style*="background-color: rgb"]'
-        );
-
-        elementsWithCustomTheme.forEach(el => {
-            this._removeElementThemeProperties(el);
+    // SRP: Método responsável por aplicar cores mínimas no dark mode
+    _applyMinimalDarkModeColors(defaultColors) {
+        // Só aplicar o mínimo necessário para dark mode funcionar
+        const navbars = document.querySelectorAll('.hospital-navbar, nav.hospital-navbar');
+        navbars.forEach(navbar => {
+            navbar.style.backgroundColor = defaultColors.navbar;
+            navbar.style.color = '#f9fafb'; // Texto claro
         });
-    },
 
-    // SRP: Método responsável por remover propriedades de tema de um elemento
-    _removeElementThemeProperties(element) {
-        element.style.removeProperty('background-color');
-        element.style.removeProperty('color');
-        element.style.removeProperty('border-color');
-    },
-
-    // SRP: Método responsável por remover estilos de filhos de elementos do tema
-    _removeThemeChildrenStyles() {
-        const themeChildren = document.querySelectorAll(
-            '.hospital-navbar *, .hospital-sidebar *, .hospital-content *'
-        );
-
-        themeChildren.forEach(child => {
-            if (this._hasCustomThemeColor(child)) {
-                this._removeChildThemeProperties(child);
+        const sidebars = document.querySelectorAll('.hospital-sidebar, aside');
+        sidebars.forEach(sidebar => {
+            if (!sidebar.closest('[x-data*="themeManager"]')) {
+                sidebar.style.backgroundColor = defaultColors.sidebar;
+                sidebar.style.color = '#f9fafb'; // Texto claro
             }
         });
     },
 
-    // SRP: Método responsável por verificar se elemento tem cor customizada
-    _hasCustomThemeColor(child) {
-        return child.style.color && (
-            child.style.color.includes('rgb') ||
-            child.style.color.startsWith('#')
-        );
+    // SRP: Método responsável por remover todos os estilos inline
+    _removeAllInlineStyles() {
+        // Remove todos os estilos inline que possam estar sobrescrevendo o CSS padrão
+        const allElements = document.querySelectorAll('*[style]');
+        allElements.forEach(element => {
+            // Não mexer no theme manager
+            if (!element.closest('[x-data*="themeManager"]')) {
+                // Remover propriedades de cor que possam estar sobrescrevendo o padrão
+                element.style.removeProperty('background-color');
+                element.style.removeProperty('color');
+                element.style.removeProperty('border-color');
+                element.style.removeProperty('fill');
+                element.style.removeProperty('stroke');
+            }
+        });
+
+        console.log('🧹 Removed all inline color styles - CSS defaults will apply');
     },
 
-    // SRP: Método responsável por remover propriedades de tema de filho
-    _removeChildThemeProperties(child) {
-        child.style.removeProperty('color');
-        child.style.removeProperty('background-color');
-        child.style.removeProperty('fill');
-        child.style.removeProperty('stroke');
+    // SRP: Método responsável por restaurar o tema padrão do sistema (CLEAN CODE)
+    _restoreSystemDefaultTheme(isDarkMode) {
+        console.log(`🎨 Restoring system default theme (dark mode: ${isDarkMode})`);
+
+        // CLEAN CODE: Deixar que as variáveis CSS do sistema controlem as cores
+        this._updateSystemCSSVariables(isDarkMode);
+
+        // CLEAN CODE: Triggerar mudança de tema se necessário
+        this._ensureCorrectThemeClass(isDarkMode);
+
+        console.log('✅ System default theme restored');
+    },
+
+    // SRP: Método responsável por atualizar variáveis CSS do sistema para defaults
+    _updateSystemCSSVariables(isDarkMode) {
+        const root = document.documentElement;
+
+        if (isDarkMode) {
+            // Para dark mode, definir as variáveis sidebar para usar as cores do sistema
+            root.style.setProperty('--sidebar-bg', 'var(--gqa-surface)');
+            root.style.setProperty('--sidebar-text', 'var(--gqa-text-primary)');
+        } else {
+            // Para light mode, usar uma cor mais suave para sidebar
+            root.style.setProperty('--sidebar-bg', '#f8f9fa');
+            root.style.setProperty('--sidebar-text', 'var(--gqa-text-primary)');
+        }
+
+        // Sempre usar as cores do sistema para borders e outros elementos
+        root.style.setProperty('--sidebar-border', 'var(--gqa-border)');
+        root.style.setProperty('--sidebar-muted-text', 'var(--gqa-text-muted)');
+        root.style.setProperty('--sidebar-icon-color', 'var(--gqa-text-secondary)');
+    },
+
+    // SRP: Método responsável por garantir que a classe de tema esteja correta
+    _ensureCorrectThemeClass(isDarkMode) {
+        const html = document.documentElement;
+
+        if (isDarkMode) {
+            html.classList.add('dark');
+        } else {
+            html.classList.remove('dark');
+        }
     },
 
     // SRP: Método responsável por atualizar estados do tema
@@ -1899,6 +2047,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.Hospital.init();
 
     // Garantir que Alpine.js seja inicializado
+
     if (typeof Alpine !== 'undefined') {
         Alpine.start();
         console.log('✅ Alpine.js started');
@@ -1953,10 +2102,12 @@ window.testAllPresets = function() {
     console.log('🧪 Testing all available presets...');
 
     const presets = Object.keys(ThemeConfig.PRESETS);
+
     let index = 0;
 
     const testNext = () => {
         if (index < presets.length) {
+
             const presetName = presets[index];
             console.log(`🧪 Testing preset ${index + 1}/${presets.length}: ${presetName}`);
             window.testPreset(presetName);

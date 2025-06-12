@@ -194,15 +194,7 @@
             @endif
         }
 
-        .hospital-sidebar .hospital-nav-item:hover {
-            @if($userTheme['sidebar_color'])
-                @php
-                    $isDark = \App\Helpers\ThemeHelper::isDarkColor($userTheme['sidebar_color']);
-                    $hoverBg = $isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
-                @endphp
-                background-color: {{ $hoverBg }} !important;
-            @endif
-        }
+        /* Hover states serão aplicados via CSS variables dinâmicas */
 
         /* Ensure cards maintain good contrast and adapt to dark backgrounds */
         .hospital-content .hospital-card,

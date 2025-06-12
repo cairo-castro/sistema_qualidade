@@ -19,6 +19,10 @@
   --gqa-text-secondary: #6b7280;
   --gqa-text-muted: #9ca3af;
 
+  /* Cores da scrollbar - minimalistas */
+  --scrollbar-thumb: #e5e7eb;
+  --scrollbar-thumb-hover: #9ca3af;
+
   /* Status */
   --gqa-success: #22c55e;
   --gqa-warning: #eab308;
@@ -39,6 +43,20 @@
   /* Sidebar */
   --sidebar-width-expanded: 16rem;
   --sidebar-width-collapsed: 6rem;
+
+  /* ===== SISTEMA DE CORES HARMONIOSAS PARA SIDEBAR ===== */
+  /* CSS Variables para controle dinâmico das cores da sidebar */
+  /* NOTA: Cores padrão removidas - deixar que o theme system controle */
+  --sidebar-bg: var(--gqa-surface);
+  --sidebar-text: var(--gqa-text-primary);
+  --sidebar-hover-bg: rgba(34, 197, 94, 0.1);
+  --sidebar-active-bg: rgba(34, 197, 94, 0.15);
+
+  /* Cores para elementos secundários da sidebar */
+  --sidebar-border: var(--gqa-border);
+  --sidebar-divider: var(--gqa-border);
+  --sidebar-muted-text: var(--gqa-text-muted);
+  --sidebar-icon-color: var(--gqa-text-secondary);
 }
 
 /* ===== TEMA ESCURO ===== */
@@ -111,6 +129,10 @@ body {
   border-right: 1px solid var(--gqa-border);
   margin: 0;
   will-change: width;
+  /* REMOVIDO: Hardcoded green color - deixar theme system controlar */
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-right: 1px solid var(--sidebar-border);
 }
 
 .hospital-sidebar.collapsed {
@@ -151,6 +173,11 @@ body {
   flex: 1;
   padding: 1rem 0.75rem;
   overflow-y: auto;
+  background: transparent;
+}
+
+.sidebar-nav {
+  background: transparent;
 }
 
 .hospital-nav-section {
@@ -175,6 +202,32 @@ body {
   overflow: hidden;
 }
 
+.hospital-sidebar .nav-item,
+.hospital-sidebar .sidebar-nav-item,
+.hospital-sidebar .navigation-item,
+.hospital-sidebar .menu-item {
+  color: var(--sidebar-text, #ffffff);
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  margin: 2px 0;
+}
+
+.hospital-sidebar .nav-item:hover,
+.hospital-sidebar .sidebar-nav-item:hover,
+.hospital-sidebar .navigation-item:hover,
+.hospital-sidebar .menu-item:hover {
+  background-color: var(--sidebar-hover-bg, rgba(255, 255, 255, 0.1));
+  color: var(--sidebar-text, #ffffff);
+}
+
+.hospital-sidebar .nav-item.active,
+.hospital-sidebar .sidebar-nav-item.active,
+.hospital-sidebar .navigation-item.active,
+.hospital-sidebar .menu-item.active {
+  background-color: var(--sidebar-active-bg, rgba(255, 255, 255, 0.15));
+  color: var(--sidebar-text, #ffffff);
+}
+
 .hospital-nav-item {
   display: flex;
   align-items: center;
@@ -191,14 +244,14 @@ body {
 }
 
 .hospital-nav-item:hover {
-  background: rgba(34, 197, 94, 0.05);
+  background: var(--sidebar-hover-bg, rgba(34, 197, 94, 0.05));
   color: var(--gqa-primary);
   transform: translateX(2px);
 }
 
 .hospital-nav-item.active,
 .hospital-nav-item-active {
-  background: rgba(34, 197, 94, 0.1);
+  background: var(--sidebar-active-bg, rgba(34, 197, 94, 0.1));
   color: var(--gqa-primary-dark);
   border-left: 3px solid var(--gqa-primary);
 }
@@ -453,85 +506,137 @@ body {
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.5);
 }
 
-/* ===== SCROLLBAR PERSONALIZADA ===== */
-/* Para navegadores WebKit (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* ===== SCROLLBAR MINIMALISTA - BOAS PRÁTICAS ===== */
+/* Firefox - global apenas para scrollbar-width */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb, rgba(34, 197, 94, 0.6)) transparent;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--gqa-surface);
+/* Containers específicos que precisam de scrollbar customizada */
+.hospital-sidebar,
+.hospital-content,
+.hospital-sidebar-nav,
+.scrollable-container,
+.overflow-container,
+.gqa-dropdown,
+.hs-accordion,
+.hs-dropdown,
+.hs-overlay,
+.hs-tabs,
+[data-hs-scrollspy],
+[data-hs-scrollbar],
+.hs-scrollbar {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb, rgba(34, 197, 94, 0.6)) transparent;
+}
+
+.hospital-sidebar::-webkit-scrollbar,
+.hospital-content::-webkit-scrollbar,
+.hospital-sidebar-nav::-webkit-scrollbar,
+.scrollable-container::-webkit-scrollbar,
+.overflow-container::-webkit-scrollbar,
+.gqa-dropdown::-webkit-scrollbar,
+.hs-accordion::-webkit-scrollbar,
+.hs-dropdown::-webkit-scrollbar,
+.hs-overlay::-webkit-scrollbar,
+.hs-tabs::-webkit-scrollbar,
+[data-hs-scrollspy]::-webkit-scrollbar,
+[data-hs-scrollbar]::-webkit-scrollbar,
+.hs-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+/* Remover TODAS as setas/botões de forma completa */
+.hospital-sidebar::-webkit-scrollbar-button,
+.hospital-content::-webkit-scrollbar-button,
+.hospital-sidebar-nav::-webkit-scrollbar-button,
+.scrollable-container::-webkit-scrollbar-button,
+.overflow-container::-webkit-scrollbar-button,
+.gqa-dropdown::-webkit-scrollbar-button,
+.hs-accordion::-webkit-scrollbar-button,
+.hs-dropdown::-webkit-scrollbar-button,
+.hs-overlay::-webkit-scrollbar-button,
+.hs-tabs::-webkit-scrollbar-button,
+[data-hs-scrollspy]::-webkit-scrollbar-button,
+[data-hs-scrollbar]::-webkit-scrollbar-button,
+.hs-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Estilos específicos para track */
+.hospital-sidebar::-webkit-scrollbar-track,
+.hospital-content::-webkit-scrollbar-track,
+.hospital-sidebar-nav::-webkit-scrollbar-track,
+.scrollable-container::-webkit-scrollbar-track,
+.overflow-container::-webkit-scrollbar-track,
+.gqa-dropdown::-webkit-scrollbar-track,
+.hs-accordion::-webkit-scrollbar-track,
+.hs-dropdown::-webkit-scrollbar-track,
+.hs-overlay::-webkit-scrollbar-track,
+.hs-tabs::-webkit-scrollbar-track,
+[data-hs-scrollspy]::-webkit-scrollbar-track,
+[data-hs-scrollbar]::-webkit-scrollbar-track,
+.hs-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--gqa-border);
+/* Estilos específicos para thumb */
+.hospital-sidebar::-webkit-scrollbar-thumb,
+.hospital-content::-webkit-scrollbar-thumb,
+.hospital-sidebar-nav::-webkit-scrollbar-thumb,
+.scrollable-container::-webkit-scrollbar-thumb,
+.overflow-container::-webkit-scrollbar-thumb,
+.gqa-dropdown::-webkit-scrollbar-thumb,
+.hs-accordion::-webkit-scrollbar-thumb,
+.hs-dropdown::-webkit-scrollbar-thumb,
+.hs-overlay::-webkit-scrollbar-thumb,
+.hs-tabs::-webkit-scrollbar-thumb,
+[data-hs-scrollspy]::-webkit-scrollbar-thumb,
+[data-hs-scrollbar]::-webkit-scrollbar-thumb,
+.hs-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb, rgba(34, 197, 94, 0.6));
   border-radius: 4px;
   transition: background-color 0.2s ease;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--gqa-text-muted);
-}
-
-::-webkit-scrollbar-corner {
-  background: var(--gqa-surface);
-}
-
-/* Para Firefox */
-html {
-  scrollbar-width: thin;
-  scrollbar-color: var(--gqa-border) var(--gqa-surface);
-}
-
-/* Scrollbar personalizada para containers específicos */
-.hospital-sidebar-nav,
-.hospital-content,
-.gqa-dropdown {
-  scrollbar-width: thin;
-  scrollbar-color: var(--gqa-border) transparent;
-}
-
-.hospital-sidebar-nav::-webkit-scrollbar,
-.hospital-content::-webkit-scrollbar,
-.gqa-dropdown::-webkit-scrollbar {
-  width: 6px;
-}
-
-.hospital-sidebar-nav::-webkit-scrollbar-track,
-.hospital-content::-webkit-scrollbar-track,
-.gqa-dropdown::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.hospital-sidebar-nav::-webkit-scrollbar-thumb,
-.hospital-content::-webkit-scrollbar-thumb,
-.gqa-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
-}
-
-.hospital-sidebar-nav::-webkit-scrollbar-thumb:hover,
+/* Hover para thumb */
+.hospital-sidebar::-webkit-scrollbar-thumb:hover,
 .hospital-content::-webkit-scrollbar-thumb:hover,
-.gqa-dropdown::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.2);
+.hospital-sidebar-nav::-webkit-scrollbar-thumb:hover,
+.scrollable-container::-webkit-scrollbar-thumb:hover,
+.overflow-container::-webkit-scrollbar-thumb:hover,
+.gqa-dropdown::-webkit-scrollbar-thumb:hover,
+.hs-accordion::-webkit-scrollbar-thumb:hover,
+.hs-dropdown::-webkit-scrollbar-thumb:hover,
+.hs-overlay::-webkit-scrollbar-thumb:hover,
+.hs-tabs::-webkit-scrollbar-thumb:hover,
+[data-hs-scrollspy]::-webkit-scrollbar-thumb:hover,
+[data-hs-scrollbar]::-webkit-scrollbar-thumb:hover,
+.hs-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover, rgba(34, 197, 94, 0.8));
 }
 
-/* Tema escuro - scrollbar */
-[data-theme="dark"] ::-webkit-scrollbar-track,
-.dark ::-webkit-scrollbar-track {
-  background: var(--gqa-surface);
-}
-
-[data-theme="dark"] ::-webkit-scrollbar-thumb,
-.dark ::-webkit-scrollbar-thumb {
-  background: var(--gqa-border);
-}
-
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+/* Corner para containers específicos */
+.hospital-sidebar::-webkit-scrollbar-corner,
+.hospital-content::-webkit-scrollbar-corner,
+.hospital-sidebar-nav::-webkit-scrollbar-corner,
+.scrollable-container::-webkit-scrollbar-corner,
+.overflow-container::-webkit-scrollbar-corner,
+.gqa-dropdown::-webkit-scrollbar-corner,
+.hs-accordion::-webkit-scrollbar-corner,
+.hs-dropdown::-webkit-scrollbar-corner,
+.hs-overlay::-webkit-scrollbar-corner,
+.hs-tabs::-webkit-scrollbar-corner,
+[data-hs-scrollspy]::-webkit-scrollbar-corner,
+[data-hs-scrollbar]::-webkit-scrollbar-corner,
+.hs-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 [data-theme="dark"] html,
@@ -695,4 +800,778 @@ html {
 [data-theme="dark"] [data-hs-dropdown-item]:hover,
 .dark [data-hs-dropdown-item]:hover {
   background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ===== SCROLLBAR MINIMALISTA - BOAS PRÁTICAS ===== */
+/* Firefox - global apenas para scrollbar-width */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb, rgba(34, 197, 94, 0.6)) transparent;
+}
+
+/* Containers específicos que precisam de scrollbar customizada */
+.hospital-sidebar,
+.hospital-content,
+.hospital-sidebar-nav,
+.scrollable-container,
+.overflow-container,
+.gqa-dropdown,
+.hs-accordion,
+.hs-dropdown,
+.hs-overlay,
+.hs-tabs,
+[data-hs-scrollspy],
+[data-hs-scrollbar],
+.hs-scrollbar {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb, rgba(34, 197, 94, 0.6)) transparent;
+}
+
+.hospital-sidebar::-webkit-scrollbar,
+.hospital-content::-webkit-scrollbar,
+.hospital-sidebar-nav::-webkit-scrollbar,
+.scrollable-container::-webkit-scrollbar,
+.overflow-container::-webkit-scrollbar,
+.gqa-dropdown::-webkit-scrollbar,
+.hs-accordion::-webkit-scrollbar,
+.hs-dropdown::-webkit-scrollbar,
+.hs-overlay::-webkit-scrollbar,
+.hs-tabs::-webkit-scrollbar,
+[data-hs-scrollspy]::-webkit-scrollbar,
+[data-hs-scrollbar]::-webkit-scrollbar,
+.hs-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+/* Remover TODAS as setas/botões de forma completa */
+.hospital-sidebar::-webkit-scrollbar-button,
+.hospital-content::-webkit-scrollbar-button,
+.hospital-sidebar-nav::-webkit-scrollbar-button,
+.scrollable-container::-webkit-scrollbar-button,
+.overflow-container::-webkit-scrollbar-button,
+.gqa-dropdown::-webkit-scrollbar-button,
+.hs-accordion::-webkit-scrollbar-button,
+.hs-dropdown::-webkit-scrollbar-button,
+.hs-overlay::-webkit-scrollbar-button,
+.hs-tabs::-webkit-scrollbar-button,
+[data-hs-scrollspy]::-webkit-scrollbar-button,
+[data-hs-scrollbar]::-webkit-scrollbar-button,
+.hs-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Estilos específicos para track */
+.hospital-sidebar::-webkit-scrollbar-track,
+.hospital-content::-webkit-scrollbar-track,
+.hospital-sidebar-nav::-webkit-scrollbar-track,
+.scrollable-container::-webkit-scrollbar-track,
+.overflow-container::-webkit-scrollbar-track,
+.gqa-dropdown::-webkit-scrollbar-track,
+.hs-accordion::-webkit-scrollbar-track,
+.hs-dropdown::-webkit-scrollbar-track,
+.hs-overlay::-webkit-scrollbar-track,
+.hs-tabs::-webkit-scrollbar-track,
+[data-hs-scrollspy]::-webkit-scrollbar-track,
+[data-hs-scrollbar]::-webkit-scrollbar-track,
+.hs-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+/* Estilos específicos para thumb */
+.hospital-sidebar::-webkit-scrollbar-thumb,
+.hospital-content::-webkit-scrollbar-thumb,
+.hospital-sidebar-nav::-webkit-scrollbar-thumb,
+.scrollable-container::-webkit-scrollbar-thumb,
+.overflow-container::-webkit-scrollbar-thumb,
+.gqa-dropdown::-webkit-scrollbar-thumb,
+.hs-accordion::-webkit-scrollbar-thumb,
+.hs-dropdown::-webkit-scrollbar-thumb,
+.hs-overlay::-webkit-scrollbar-thumb,
+.hs-tabs::-webkit-scrollbar-thumb,
+[data-hs-scrollspy]::-webkit-scrollbar-thumb,
+[data-hs-scrollbar]::-webkit-scrollbar-thumb,
+.hs-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb, rgba(34, 197, 94, 0.6));
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+/* Hover para thumb */
+.hospital-sidebar::-webkit-scrollbar-thumb:hover,
+.hospital-content::-webkit-scrollbar-thumb:hover,
+.hospital-sidebar-nav::-webkit-scrollbar-thumb:hover,
+.scrollable-container::-webkit-scrollbar-thumb:hover,
+.overflow-container::-webkit-scrollbar-thumb:hover,
+.gqa-dropdown::-webkit-scrollbar-thumb:hover,
+.hs-accordion::-webkit-scrollbar-thumb:hover,
+.hs-dropdown::-webkit-scrollbar-thumb:hover,
+.hs-overlay::-webkit-scrollbar-thumb:hover,
+.hs-tabs::-webkit-scrollbar-thumb:hover,
+[data-hs-scrollspy]::-webkit-scrollbar-thumb:hover,
+[data-hs-scrollbar]::-webkit-scrollbar-thumb:hover,
+.hs-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover, rgba(34, 197, 94, 0.8));
+}
+
+/* Corner para containers específicos */
+.hospital-sidebar::-webkit-scrollbar-corner,
+.hospital-content::-webkit-scrollbar-corner,
+.hospital-sidebar-nav::-webkit-scrollbar-corner,
+.scrollable-container::-webkit-scrollbar-corner,
+.overflow-container::-webkit-scrollbar-corner,
+.gqa-dropdown::-webkit-scrollbar-corner,
+.hs-accordion::-webkit-scrollbar-corner,
+.hs-dropdown::-webkit-scrollbar-corner,
+.hs-overlay::-webkit-scrollbar-corner,
+.hs-tabs::-webkit-scrollbar-corner,
+[data-hs-scrollspy]::-webkit-scrollbar-corner,
+[data-hs-scrollbar]::-webkit-scrollbar-corner,
+.hs-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+[data-theme="dark"] html,
+.dark html {
+  scrollbar-color: var(--gqa-border) var(--gqa-surface);
+}
+
+.gqa-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gqa-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+/* ===== BUSCA PERSONALIZADA ===== */
+.gqa-search-container {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+}
+
+.gqa-search-input {
+  width: 100%;
+  padding: 0.5rem 1rem 0.5rem 3rem;
+  border: 1px solid var(--gqa-border);
+  border-radius: 0.5rem;
+  background: var(--gqa-surface);
+  color: var(--gqa-text-primary);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.gqa-search-input::placeholder {
+  color: var(--gqa-text-muted);
+}
+
+.gqa-search-input:focus {
+  border-color: var(--gqa-primary);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.gqa-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--gqa-text-muted);
+  pointer-events: none;
+}
+
+/* ===== OVERRIDE DE ESTILOS PRELINE ===== */
+/* Remover estilos padrão do Preline para scrollbars */
+[data-hs-scrollbar]::-webkit-scrollbar,
+.hs-scrollbar::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+[data-hs-scrollbar]::-webkit-scrollbar-track,
+.hs-scrollbar::-webkit-scrollbar-track {
+  background: var(--gqa-surface) !important;
+  border-radius: 4px !important;
+}
+
+[data-hs-scrollbar]::-webkit-scrollbar-thumb,
+.hs-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--gqa-border) !important;
+  border-radius: 4px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+[data-hs-scrollbar]::-webkit-scrollbar-thumb:hover,
+.hs-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--gqa-text-muted) !important;
+}
+
+/* Remover estilos padrão do Preline para inputs de busca */
+[data-hs-datatable-search] {
+  padding: 0.5rem 1rem !important;
+  border: 1px solid var(--gqa-border) !important;
+  border-radius: 0.5rem !important;
+  background: var(--gqa-surface) !important;
+  color: var(--gqa-text-primary) !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s ease !important;
+  outline: none !important;
+}
+
+[data-hs-datatable-search]:focus {
+  border-color: var(--gqa-primary) !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1) !important;
+}
+
+[data-hs-datatable-search]::placeholder {
+  color: var(--gqa-text-muted) !important;
+}
+
+/* ===== DROPDOWN PERSONALIZADO ===== */
+.hs-dropdown-menu,
+[data-hs-dropdown-menu] {
+  background: var(--gqa-surface) !important;
+  border: 1px solid var(--gqa-border) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: var(--gqa-shadow-lg) !important;
+  padding: 0.5rem !important;
+  min-width: 12rem !important;
+}
+
+.hs-dropdown-item,
+[data-hs-dropdown-item] {
+  padding: 0.5rem 0.75rem !important;
+  border-radius: 0.375rem !important;
+  color: var(--gqa-text-primary) !important;
+  font-size: 0.875rem !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+.hs-dropdown-item:hover,
+[data-hs-dropdown-item]:hover {
+  background: var(--gqa-background) !important;
+  color: var(--gqa-text-primary) !important;
+}
+
+/* ===== TEMA ESCURO - OVERRIDES ===== */
+[data-theme="dark"] [data-hs-scrollbar]::-webkit-scrollbar-track,
+.dark [data-hs-scrollbar]::-webkit-scrollbar-track,
+[data-theme="dark"] .hs-scrollbar::-webkit-scrollbar-track,
+.dark .hs-scrollbar::-webkit-scrollbar-track {
+  background: var(--gqa-surface) !important;
+}
+
+[data-theme="dark"] [data-hs-scrollbar]::-webkit-scrollbar-thumb,
+.dark [data-hs-scrollbar]::-webkit-scrollbar-thumb,
+[data-theme="dark"] .hs-scrollbar::-webkit-scrollbar-thumb,
+.dark .hs-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--gqa-border) !important;
+}
+
+[data-theme="dark"] [data-hs-scrollbar]::-webkit-scrollbar-thumb:hover,
+.dark [data-hs-scrollbar]::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] .hs-scrollbar::-webkit-scrollbar-thumb:hover,
+.dark .hs-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280 !important;
+}
+
+[data-theme="dark"] .hs-dropdown-menu,
+.dark .hs-dropdown-menu,
+[data-theme="dark"] [data-hs-dropdown-menu],
+.dark [data-hs-dropdown-menu] {
+  background: var(--gqa-surface) !important;
+  border-color: var(--gqa-border) !important;
+}
+
+[data-theme="dark"] .hs-dropdown-item:hover,
+.dark .hs-dropdown-item:hover,
+[data-theme="dark"] [data-hs-dropdown-item]:hover,
+.dark [data-hs-dropdown-item]:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ===== SCROLLBAR MINIMALISTA - BOAS PRÁTICAS ===== */
+/* Firefox - global apenas para scrollbar-width */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb, rgba(34, 197, 94, 0.6)) transparent;
+}
+
+/* Containers específicos que precisam de scrollbar customizada */
+.hospital-sidebar,
+.hospital-content,
+.hospital-sidebar-nav,
+.scrollable-container,
+.overflow-container,
+.gqa-dropdown,
+.hs-accordion,
+.hs-dropdown,
+.hs-overlay,
+.hs-tabs,
+[data-hs-scrollspy],
+[data-hs-scrollbar],
+.hs-scrollbar {
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb, rgba(34, 197, 94, 0.6)) transparent;
+}
+
+.hospital-sidebar::-webkit-scrollbar,
+.hospital-content::-webkit-scrollbar,
+.hospital-sidebar-nav::-webkit-scrollbar,
+.scrollable-container::-webkit-scrollbar,
+.overflow-container::-webkit-scrollbar,
+.gqa-dropdown::-webkit-scrollbar,
+.hs-accordion::-webkit-scrollbar,
+.hs-dropdown::-webkit-scrollbar,
+.hs-overlay::-webkit-scrollbar,
+.hs-tabs::-webkit-scrollbar,
+[data-hs-scrollspy]::-webkit-scrollbar,
+[data-hs-scrollbar]::-webkit-scrollbar,
+.hs-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+/* Remover TODAS as setas/botões de forma completa */
+.hospital-sidebar::-webkit-scrollbar-button,
+.hospital-content::-webkit-scrollbar-button,
+.hospital-sidebar-nav::-webkit-scrollbar-button,
+.scrollable-container::-webkit-scrollbar-button,
+.overflow-container::-webkit-scrollbar-button,
+.gqa-dropdown::-webkit-scrollbar-button,
+.hs-accordion::-webkit-scrollbar-button,
+.hs-dropdown::-webkit-scrollbar-button,
+.hs-overlay::-webkit-scrollbar-button,
+.hs-tabs::-webkit-scrollbar-button,
+[data-hs-scrollspy]::-webkit-scrollbar-button,
+[data-hs-scrollbar]::-webkit-scrollbar-button,
+.hs-scrollbar::-webkit-scrollbar-button {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+/* Estilos específicos para track */
+.hospital-sidebar::-webkit-scrollbar-track,
+.hospital-content::-webkit-scrollbar-track,
+.hospital-sidebar-nav::-webkit-scrollbar-track,
+.scrollable-container::-webkit-scrollbar-track,
+.overflow-container::-webkit-scrollbar-track,
+.gqa-dropdown::-webkit-scrollbar-track,
+.hs-accordion::-webkit-scrollbar-track,
+.hs-dropdown::-webkit-scrollbar-track,
+.hs-overlay::-webkit-scrollbar-track,
+.hs-tabs::-webkit-scrollbar-track,
+[data-hs-scrollspy]::-webkit-scrollbar-track,
+[data-hs-scrollbar]::-webkit-scrollbar-track,
+.hs-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 4px;
+}
+
+/* Estilos específicos para thumb */
+.hospital-sidebar::-webkit-scrollbar-thumb,
+.hospital-content::-webkit-scrollbar-thumb,
+.hospital-sidebar-nav::-webkit-scrollbar-thumb,
+.scrollable-container::-webkit-scrollbar-thumb,
+.overflow-container::-webkit-scrollbar-thumb,
+.gqa-dropdown::-webkit-scrollbar-thumb,
+.hs-accordion::-webkit-scrollbar-thumb,
+.hs-dropdown::-webkit-scrollbar-thumb,
+.hs-overlay::-webkit-scrollbar-thumb,
+.hs-tabs::-webkit-scrollbar-thumb,
+[data-hs-scrollspy]::-webkit-scrollbar-thumb,
+[data-hs-scrollbar]::-webkit-scrollbar-thumb,
+.hs-scrollbar::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb, rgba(34, 197, 94, 0.6));
+  border-radius: 4px;
+  transition: background-color 0.2s ease;
+}
+
+/* Hover para thumb */
+.hospital-sidebar::-webkit-scrollbar-thumb:hover,
+.hospital-content::-webkit-scrollbar-thumb:hover,
+.hospital-sidebar-nav::-webkit-scrollbar-thumb:hover,
+.scrollable-container::-webkit-scrollbar-thumb:hover,
+.overflow-container::-webkit-scrollbar-thumb:hover,
+.gqa-dropdown::-webkit-scrollbar-thumb:hover,
+.hs-accordion::-webkit-scrollbar-thumb:hover,
+.hs-dropdown::-webkit-scrollbar-thumb:hover,
+.hs-overlay::-webkit-scrollbar-thumb:hover,
+.hs-tabs::-webkit-scrollbar-thumb:hover,
+[data-hs-scrollspy]::-webkit-scrollbar-thumb:hover,
+[data-hs-scrollbar]::-webkit-scrollbar-thumb:hover,
+.hs-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: var(--scrollbar-thumb-hover, rgba(34, 197, 94, 0.8));
+}
+
+/* Corner para containers específicos */
+.hospital-sidebar::-webkit-scrollbar-corner,
+.hospital-content::-webkit-scrollbar-corner,
+.hospital-sidebar-nav::-webkit-scrollbar-corner,
+.scrollable-container::-webkit-scrollbar-corner,
+.overflow-container::-webkit-scrollbar-corner,
+.gqa-dropdown::-webkit-scrollbar-corner,
+.hs-accordion::-webkit-scrollbar-corner,
+.hs-dropdown::-webkit-scrollbar-corner,
+.hs-overlay::-webkit-scrollbar-corner,
+.hs-tabs::-webkit-scrollbar-corner,
+[data-hs-scrollspy]::-webkit-scrollbar-corner,
+[data-hs-scrollbar]::-webkit-scrollbar-corner,
+.hs-scrollbar::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+[data-theme="dark"] html,
+.dark html {
+  scrollbar-color: var(--gqa-border) var(--gqa-surface);
+}
+
+.gqa-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--gqa-text-primary);
+  margin-bottom: 0.5rem;
+}
+
+/* ===== BUSCA PERSONALIZADA ===== */
+.gqa-search-container {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+}
+
+.gqa-search-input {
+  width: 100%;
+  padding: 0.5rem 1rem 0.5rem 3rem;
+  border: 1px solid var(--gqa-border);
+  border-radius: 0.5rem;
+  background: var(--gqa-surface);
+  color: var(--gqa-text-primary);
+  font-size: 0.875rem;
+  transition: all 0.2s ease;
+  outline: none;
+}
+
+.gqa-search-input::placeholder {
+  color: var(--gqa-text-muted);
+}
+
+.gqa-search-input:focus {
+  border-color: var(--gqa-primary);
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1);
+}
+
+.gqa-search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: var(--gqa-text-muted);
+  pointer-events: none;
+}
+
+/* ===== OVERRIDE DE ESTILOS PRELINE ===== */
+/* Remover estilos padrão do Preline para scrollbars */
+[data-hs-scrollbar]::-webkit-scrollbar,
+.hs-scrollbar::-webkit-scrollbar {
+  width: 8px !important;
+  height: 8px !important;
+}
+
+[data-hs-scrollbar]::-webkit-scrollbar-track,
+.hs-scrollbar::-webkit-scrollbar-track {
+  background: var(--gqa-surface) !important;
+  border-radius: 4px !important;
+}
+
+[data-hs-scrollbar]::-webkit-scrollbar-thumb,
+.hs-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--gqa-border) !important;
+  border-radius: 4px !important;
+  transition: background-color 0.2s ease !important;
+}
+
+[data-hs-scrollbar]::-webkit-scrollbar-thumb:hover,
+.hs-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--gqa-text-muted) !important;
+}
+
+/* Remover estilos padrão do Preline para inputs de busca */
+[data-hs-datatable-search] {
+  padding: 0.5rem 1rem !important;
+  border: 1px solid var(--gqa-border) !important;
+  border-radius: 0.5rem !important;
+  background: var(--gqa-surface) !important;
+  color: var(--gqa-text-primary) !important;
+  font-size: 0.875rem !important;
+  transition: all 0.2s ease !important;
+  outline: none !important;
+}
+
+[data-hs-datatable-search]:focus {
+  border-color: var(--gqa-primary) !important;
+  box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.1) !important;
+}
+
+[data-hs-datatable-search]::placeholder {
+  color: var(--gqa-text-muted) !important;
+}
+
+/* ===== DROPDOWN PERSONALIZADO ===== */
+.hs-dropdown-menu,
+[data-hs-dropdown-menu] {
+  background: var(--gqa-surface) !important;
+  border: 1px solid var(--gqa-border) !important;
+  border-radius: 0.5rem !important;
+  box-shadow: var(--gqa-shadow-lg) !important;
+  padding: 0.5rem !important;
+  min-width: 12rem !important;
+}
+
+.hs-dropdown-item,
+[data-hs-dropdown-item] {
+  padding: 0.5rem 0.75rem !important;
+  border-radius: 0.375rem !important;
+  color: var(--gqa-text-primary) !important;
+  font-size: 0.875rem !important;
+  transition: all 0.15s ease !important;
+  cursor: pointer !important;
+}
+
+.hs-dropdown-item:hover,
+[data-hs-dropdown-item]:hover {
+  background: var(--gqa-background) !important;
+  color: var(--gqa-text-primary) !important;
+}
+
+/* ===== TEMA ESCURO - OVERRIDES ===== */
+[data-theme="dark"] [data-hs-scrollbar]::-webkit-scrollbar-track,
+.dark [data-hs-scrollbar]::-webkit-scrollbar-track,
+[data-theme="dark"] .hs-scrollbar::-webkit-scrollbar-track,
+.dark .hs-scrollbar::-webkit-scrollbar-track {
+  background: var(--gqa-surface) !important;
+}
+
+[data-theme="dark"] [data-hs-scrollbar]::-webkit-scrollbar-thumb,
+.dark [data-hs-scrollbar]::-webkit-scrollbar-thumb,
+[data-theme="dark"] .hs-scrollbar::-webkit-scrollbar-thumb,
+.dark .hs-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--gqa-border) !important;
+}
+
+[data-theme="dark"] [data-hs-scrollbar]::-webkit-scrollbar-thumb:hover,
+.dark [data-hs-scrollbar]::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] .hs-scrollbar::-webkit-scrollbar-thumb:hover,
+.dark .hs-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280 !important;
+}
+
+[data-theme="dark"] .hs-dropdown-menu,
+.dark .hs-dropdown-menu,
+[data-theme="dark"] [data-hs-dropdown-menu],
+.dark [data-hs-dropdown-menu] {
+  background: var(--gqa-surface) !important;
+  border-color: var(--gqa-border) !important;
+}
+
+[data-theme="dark"] .hs-dropdown-item:hover,
+.dark .hs-dropdown-item:hover,
+[data-theme="dark"] [data-hs-dropdown-item]:hover,
+.dark [data-hs-dropdown-item]:hover {
+  background: rgba(255, 255, 255, 0.05) !important;
+}
+
+/* ===== SISTEMA DE CORES HARMONIOSAS PARA SIDEBAR ===== */
+/* CSS Variables para controle dinâmico das cores da sidebar */
+:root {
+  /* CLEAN CODE: Cores base da sidebar - deixar theme system controlar */
+  --sidebar-bg: var(--gqa-surface);
+  --sidebar-text: var(--gqa-text-primary);
+  --sidebar-hover-bg: rgba(34, 197, 94, 0.1);
+  --sidebar-active-bg: rgba(34, 197, 94, 0.15);
+
+  /* Cores para elementos secundários da sidebar */
+  --sidebar-border: var(--gqa-border);
+  --sidebar-divider: var(--gqa-border);
+  --sidebar-muted-text: var(--gqa-text-muted);
+  --sidebar-icon-color: var(--gqa-text-secondary);
+}
+
+/* ===== ESTILOS HARMONIOSOS PARA SIDEBAR ===== */
+.hospital-sidebar {
+  /* CLEAN CODE: Não forçar cores hardcoded - deixar variáveis CSS controlarem */
+  background-color: var(--sidebar-bg);
+  color: var(--sidebar-text);
+  border-right: 1px solid var(--sidebar-border);
+}
+
+/* Navegação da sidebar */
+.hospital-sidebar-nav,
+.sidebar-nav {
+  background: transparent;
+}
+
+/* Itens de navegação da sidebar */
+.hospital-sidebar .nav-item,
+.hospital-sidebar .sidebar-nav-item,
+.hospital-sidebar .navigation-item,
+.hospital-sidebar .menu-item {
+  color: var(--sidebar-text);
+  transition: all 0.2s ease;
+  border-radius: 6px;
+  margin: 2px 0;
+}
+
+.hospital-sidebar .nav-item:hover,
+.hospital-sidebar .sidebar-nav-item:hover,
+.hospital-sidebar .navigation-item:hover,
+.hospital-sidebar .menu-item:hover {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--sidebar-text);
+}
+
+.hospital-sidebar .nav-item.active,
+.hospital-sidebar .sidebar-nav-item.active,
+.hospital-sidebar .navigation-item.active,
+.hospital-sidebar .menu-item.active {
+  background-color: var(--sidebar-active-bg);
+  color: var(--sidebar-text);
+}
+
+/* Links na sidebar */
+.hospital-sidebar a,
+.hospital-sidebar .nav-link,
+.hospital-sidebar .sidebar-link {
+  color: var(--sidebar-text);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 6px;
+}
+
+.hospital-sidebar a:hover,
+.hospital-sidebar .nav-link:hover,
+.hospital-sidebar .sidebar-link:hover {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--sidebar-text);
+}
+
+.hospital-sidebar a.active,
+.hospital-sidebar .nav-link.active,
+.hospital-sidebar .sidebar-link.active {
+  background-color: var(--sidebar-active-bg);
+  color: var(--sidebar-text);
+}
+
+/* Ícones na sidebar */
+.hospital-sidebar svg,
+.hospital-sidebar .icon,
+.hospital-sidebar [class*="icon"] {
+  color: var(--sidebar-icon-color);
+  fill: var(--sidebar-icon-color);
+  stroke: var(--sidebar-icon-color);
+  transition: all 0.2s ease;
+}
+
+.hospital-sidebar .nav-item:hover svg,
+.hospital-sidebar .nav-item:hover .icon,
+.hospital-sidebar a:hover svg,
+.hospital-sidebar a:hover .icon {
+  color: var(--sidebar-text);
+  fill: var(--sidebar-text);
+  stroke: var(--sidebar-text);
+}
+
+/* Texto secundário e badges na sidebar */
+.hospital-sidebar .text-muted,
+.hospital-sidebar .secondary-text,
+.hospital-sidebar .badge {
+  color: var(--sidebar-muted-text);
+}
+
+/* Divisores na sidebar */
+.hospital-sidebar .divider,
+.hospital-sidebar hr,
+.hospital-sidebar .separator {
+  border-color: var(--sidebar-divider);
+  background-color: var(--sidebar-divider);
+}
+
+/* Submenu na sidebar */
+.hospital-sidebar .submenu,
+.hospital-sidebar .sub-navigation {
+  background-color: rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  margin: 4px 0;
+  padding: 4px;
+}
+
+.hospital-sidebar .submenu .nav-item,
+.hospital-sidebar .sub-navigation .nav-item {
+  padding-left: 20px;
+  font-size: 0.9em;
+  opacity: 0.9;
+}
+
+/* Botões na sidebar */
+.hospital-sidebar .btn,
+.hospital-sidebar button {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--sidebar-text);
+  border: 1px solid var(--sidebar-border);
+  transition: all 0.2s ease;
+}
+
+.hospital-sidebar .btn:hover,
+.hospital-sidebar button:hover {
+  background-color: var(--sidebar-active-bg);
+  color: var(--sidebar-text);
+}
+
+/* Formulários na sidebar */
+.hospital-sidebar input,
+.hospital-sidebar select,
+.hospital-sidebar textarea {
+  background-color: var(--sidebar-hover-bg);
+  color: var(--sidebar-text);
+  border: 1px solid var(--sidebar-border);
+}
+
+.hospital-sidebar input::placeholder,
+.hospital-sidebar textarea::placeholder {
+  color: var(--sidebar-muted-text);
+}
+
+/* Dropdown e acordeão na sidebar */
+.hospital-sidebar .dropdown-menu,
+.hospital-sidebar .accordion-content {
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--sidebar-border);
+  backdrop-filter: blur(10px);
+}
+
+.hospital-sidebar .dropdown-item,
+.hospital-sidebar .accordion-item {
+  color: var(--sidebar-text);
+  transition: all 0.2s ease;
+}
+
+.hospital-sidebar .dropdown-item:hover,
+.hospital-sidebar .accordion-item:hover {
+  background-color: var(--sidebar-hover-bg);
 }
