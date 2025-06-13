@@ -158,6 +158,11 @@ window.Hospital.themeManager = {
         // Aplicar cada cor de forma sequencial e robusta
         this._applyPresetColors(preset);
 
+        // Trigger business rules for custom theme activation
+        if (typeof onCustomThemeActivated === 'function') {
+            onCustomThemeActivated();
+        }
+
         console.log(`✅ Preset ${presetName} applied successfully!`);
     },
 
@@ -405,7 +410,7 @@ window.Hospital.themeManager = {
             children.forEach(child => {
                 if (!child.style.backgroundColor &&
                     !child.classList.contains('bg-') &&
-                    !(child.className && child.className.includes('dark:'))) {
+                    !this._classNameIncludes(child, 'dark:')) {
                     child.style.color = contrastColor;
                 }
             });
@@ -475,7 +480,7 @@ window.Hospital.themeManager = {
     _shouldApplyNavbarStyle(element) {
         const hasOwnBackground = element.style.backgroundColor ||
                                element.classList.contains('bg-') ||
-                               (element.className && element.className.includes('dark:bg-'));
+                               this._classNameIncludes(element, 'dark:bg-');
 
         const isThemeButton = element.closest('[x-data*="themeManager"]') ||
                             element.hasAttribute('x-data') ||
@@ -533,7 +538,7 @@ window.Hospital.themeManager = {
         dropdownItems.forEach(item => {
             if (!item.style.backgroundColor &&
                 !item.classList.contains('bg-') &&
-                !(item.className && item.className.includes('dark:'))) {
+                !this._classNameIncludes(item, 'dark:')) {
                 this._applyElementTextStyle(item, textColor);
             }
         });
@@ -649,7 +654,7 @@ window.Hospital.themeManager = {
                               element.classList.contains('theme-manager');
         const hasOwnBg = element.style.backgroundColor ||
                        element.classList.contains('bg-') ||
-                       (element.className && element.className.includes('dark:bg-'));
+                       this._classNameIncludes(element, 'dark:bg-');
 
         return isInNavbar && !isThemeManager && !hasOwnBg;
     },
@@ -779,6 +784,7 @@ window.Hospital.themeManager = {
     _applySidebarStyles(color, textColor, root) {
         this._setCSSVariables(root, 'sidebar', color, textColor);
         this._applySidebarElementStyles(color, textColor);
+        this._applySidebarScrollbarStyles(color, textColor, root);
         console.log(`✅ Sidebar styles applied: ${color} with text: ${textColor}`);
     },    // SRP: Método responsável por aplicar estilos aos elementos da sidebar
     _applySidebarElementStyles(color, textColor) {
@@ -813,7 +819,7 @@ window.Hospital.themeManager = {
         let foundSidebarElements = 0;
 
         allElements.forEach(element => {
-            const className = element.className || '';
+            const className = this._getElementClassName(element);
             const id = element.id || '';
 
             // Verificar se contém 'sidebar' no nome da classe ou ID
@@ -917,7 +923,7 @@ window.Hospital.themeManager = {
 
     // SRP: Método para identificar elementos que podem ser sidebar
     _isPotentialSidebar(element) {
-        const className = element.className || '';
+        const className = this._getElementClassName(element);
         const id = element.id || '';
 
         // Verificar por palavras-chave relacionadas a sidebar
@@ -958,6 +964,7 @@ window.Hospital.themeManager = {
         this._applyHeaderAndBreadcrumbColors(color, textColor);
         this._applyToAllPageHeadings(textColor);
         this._setContentCSSVariables(root, color, textColor);
+        this._applyContentScrollbarStyles(color, textColor, root);
 
         console.log(`✅ Background styles applied to content area: ${color} with text: ${textColor}`);
     },
@@ -1086,7 +1093,7 @@ window.Hospital.themeManager = {
                !child.classList.contains('hospital-sidebar') &&
                !child.closest('.hospital-navbar') &&
                !child.closest('.hospital-sidebar') &&
-               !(child.className && child.className.includes('dark:'));
+               !this._classNameIncludes(child, 'dark:');
     },
 
     // SRP: Método responsável por aplicar estilos a elementos de texto
@@ -1104,7 +1111,7 @@ window.Hospital.themeManager = {
     _shouldApplyTextStyle(textEl) {
         return !textEl.style.backgroundColor &&
                !textEl.classList.contains('bg-') &&
-               !(textEl.className && textEl.className.includes('dark:')) &&
+               !this._classNameIncludes(textEl, 'dark:') &&
                !textEl.closest('.hospital-navbar') &&
                !textEl.closest('.hospital-sidebar');
     },
@@ -1243,6 +1250,12 @@ window.Hospital.themeManager = {
         try {
             this._performThemeReset();
             this._updateThemeStates();
+            
+            // Trigger business rules for theme reset to default
+            if (typeof onThemeResetToDefault === 'function') {
+                onThemeResetToDefault();
+            }
+            
             console.log(`✅ Theme reset completed successfully`);
         } catch (error) {
             console.error('❌ Error during theme reset:', error);
@@ -1451,7 +1464,7 @@ window.Hospital.themeManager = {
         const isNotInNavbar = !element.closest('.hospital-navbar, nav.hospital-navbar');
         const isNotInSidebar = !element.closest('.hospital-sidebar, .sidebar, aside');
         const hasNoOwnBackground = !element.style.backgroundColor && !element.classList.contains('bg-');
-        const isNotDarkMode = !(element.className && element.className.includes('dark:'));
+        const isNotDarkMode = !this._classNameIncludes(element, 'dark:');
 
         return isInMainContent && isNotInNavbar && isNotInSidebar && hasNoOwnBackground && isNotDarkMode;
     },
@@ -1506,7 +1519,7 @@ window.Hospital.themeManager = {
         const isNotInNavbar = !element.closest('.hospital-navbar, nav.hospital-navbar');
         const isNotInSidebar = !element.closest('.hospital-sidebar, .sidebar, aside');
         const hasNoOwnBackground = !element.style.backgroundColor && !element.classList.contains('bg-');
-        const isNotDarkMode = !(element.className && element.className.includes('dark:'));
+        const isNotDarkMode = !this._classNameIncludes(element, 'dark:');
 
         return isInMainContent && isNotInNavbar && isNotInSidebar && hasNoOwnBackground && isNotDarkMode;
     },
@@ -1667,6 +1680,96 @@ window.Hospital.themeManager = {
                 this._styleSVGElements(child, textColor);
             }
         });
+    },
+
+    // ===== MÉTODOS UTILITÁRIOS =====
+
+    // DRY: Método utilitário para verificar className de forma segura
+    _getElementClassName(element) {
+        if (!element.className) return '';
+        return typeof element.className === 'string' ? element.className : element.className.toString();
+    },
+
+    // DRY: Método utilitário para verificar se className contém uma string
+    _classNameIncludes(element, searchString) {
+        const className = this._getElementClassName(element);
+        return className.includes(searchString);
+    },
+
+    // ===== MÉTODOS DE SCROLLBAR DINÂMICA =====
+
+    // SRP: Método responsável por aplicar estilos de scrollbar da sidebar
+    _applySidebarScrollbarStyles(color, textColor, root) {
+        console.log(`🎨 Applying sidebar scrollbar styles: ${color}`);
+        
+        // Calcular cores derivadas para scrollbar
+        const scrollbarBg = this._adjustColorOpacity(color, 0.1);
+        const scrollbarThumb = this._adjustColorOpacity(textColor, 0.4);
+        const scrollbarThumbHover = this._adjustColorOpacity(textColor, 0.7);
+        
+        // Definir variáveis CSS para scrollbar da sidebar
+        root.style.setProperty('--scrollbar-sidebar-bg', scrollbarBg);
+        root.style.setProperty('--scrollbar-sidebar-thumb', scrollbarThumb);
+        root.style.setProperty('--scrollbar-sidebar-thumb-hover', scrollbarThumbHover);
+        
+        console.log(`✅ Sidebar scrollbar applied - BG: ${scrollbarBg}, Thumb: ${scrollbarThumb}, Hover: ${scrollbarThumbHover}`);
+    },
+
+    // SRP: Método responsável por aplicar estilos de scrollbar do content
+    _applyContentScrollbarStyles(color, textColor, root) {
+        console.log(`🎨 Applying content scrollbar styles: ${color}`);
+        
+        // Calcular cores derivadas para scrollbar
+        const scrollbarBg = this._adjustColorOpacity(color, 0.1);
+        const scrollbarThumb = this._adjustColorOpacity(textColor, 0.3);
+        const scrollbarThumbHover = this._adjustColorOpacity(textColor, 0.6);
+        
+        // Definir variáveis CSS para scrollbar do content
+        root.style.setProperty('--scrollbar-content-bg', scrollbarBg);
+        root.style.setProperty('--scrollbar-content-thumb', scrollbarThumb);
+        root.style.setProperty('--scrollbar-content-thumb-hover', scrollbarThumbHover);
+        
+        console.log(`✅ Content scrollbar applied - BG: ${scrollbarBg}, Thumb: ${scrollbarThumb}, Hover: ${scrollbarThumbHover}`);
+    },
+
+    // DRY: Método utilitário para ajustar opacidade de cores
+    _adjustColorOpacity(color, opacity) {
+        // Se a cor já é hex, converter para rgba
+        if (color.startsWith('#')) {
+            const r = parseInt(color.slice(1, 3), 16);
+            const g = parseInt(color.slice(3, 5), 16);
+            const b = parseInt(color.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+        }
+        
+        // Se a cor já é rgb/rgba, ajustar opacidade
+        if (color.startsWith('rgb')) {
+            const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+            if (match) {
+                const [, r, g, b] = match;
+                return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+            }
+        }
+        
+        // Fallback: usar a cor original com opacidade padrão
+        return color;
+    },
+
+    // SRP: Método para calcular cor complementar para scrollbar
+    _getComplementaryScrollbarColor(baseColor, isLight = true) {
+        // Se é cor clara, usar tom escuro; se é escura, usar tom claro
+        const lightColors = ['#ffffff', '#f9fafb', '#f8f9fa', '#f5f5f5'];
+        const isDarkBase = !lightColors.some(light => 
+            baseColor.toLowerCase().includes(light.toLowerCase())
+        );
+        
+        if (isDarkBase) {
+            // Base escura: scrollbar clara
+            return isLight ? 'rgba(255, 255, 255, 0.2)' : 'rgba(255, 255, 255, 0.4)';
+        } else {
+            // Base clara: scrollbar escura
+            return isLight ? 'rgba(0, 0, 0, 0.1)' : 'rgba(0, 0, 0, 0.3)';
+        }
     },
 
     // MÉTODO DE TESTE SIMPLES: Para diagnosticar o problema dos presets
@@ -1896,6 +1999,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Inicializar o theme manager primeiro
     window.Hospital.themeManager.init();
 
+    // Initialize animated theme switches
+    initializeAnimatedThemeSwitches();
+
+    // Initialize theme business rules
+    initializeThemeBusinessRules();
+
     window.Hospital.init();
 
     // Garantir que Alpine.js seja inicializado
@@ -1906,6 +2015,347 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('❌ Alpine.js not found');
     }
 });
+
+// ===== ANIMATED THEME SWITCH FUNCTIONALITY =====
+function initializeAnimatedThemeSwitches() {
+    console.log('🎨 Initializing animated theme switches...');
+    
+    // Find all theme switches
+    const themeSwitches = document.querySelectorAll('[data-hs-theme-switch]');
+    
+    themeSwitches.forEach(switchElement => {
+        const checkbox = switchElement.querySelector('.hs-theme-checkbox');
+        const label = switchElement.querySelector('label');
+        
+        if (checkbox && label) {
+            // Set initial state based on current theme
+            updateSwitchState(checkbox);
+            
+            // Add click handler
+            label.addEventListener('click', (e) => {
+                e.preventDefault();
+                handleThemeSwitch(checkbox);
+            });
+            
+            // Add keyboard support
+            checkbox.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleThemeSwitch(checkbox);
+                }
+            });
+        }
+    });
+    
+    // Listen for theme changes from other sources
+    window.addEventListener('theme-changed', () => {
+        updateAllSwitches();
+    });
+    
+    console.log(`✅ ${themeSwitches.length} animated theme switches initialized`);
+}
+
+function handleThemeSwitch(checkbox) {
+    // Don't switch if custom theme is active
+    if (window.hasCustomTheme) {
+        console.log('🚫 Custom theme active, theme switch disabled');
+        return;
+    }
+    
+    const currentTheme = getCurrentTheme();
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    
+    console.log(`🎨 Switching theme: ${currentTheme} → ${newTheme}`);
+    
+    // Apply theme with smooth animation
+    applyThemeWithAnimation(newTheme);
+    
+    // Update all switches
+    setTimeout(() => {
+        updateAllSwitches();
+    }, 50);
+}
+
+function applyThemeWithAnimation(theme) {
+    const html = document.documentElement;
+    const body = document.body;
+    
+    // Add transition class for smooth animation
+    html.classList.add('theme-transitioning');
+    
+    // Apply theme with proper class management
+    if (theme === 'dark') {
+        html.classList.add('dark');
+        html.classList.add('hs-dark-mode-active');
+        body.classList.add('dark');
+        body.classList.add('hs-dark-mode-active');
+    } else {
+        html.classList.remove('dark');
+        html.classList.remove('hs-dark-mode-active');
+        body.classList.remove('dark');
+        body.classList.remove('hs-dark-mode-active');
+    }
+    
+    // Force update all theme switches immediately
+    updateAllSwitchesImmediate(theme === 'dark');
+    
+    // Store preference
+    localStorage.setItem('theme', theme);
+    
+    // Trigger custom event
+    window.dispatchEvent(new CustomEvent('theme-changed', { 
+        detail: { theme, previousTheme: theme === 'dark' ? 'light' : 'dark' }
+    }));
+    
+    // Remove transition class after animation
+    setTimeout(() => {
+        html.classList.remove('theme-transitioning');
+    }, 300);
+    
+    console.log(`✅ Theme applied: ${theme}, dark mode active: ${theme === 'dark'}`);
+}
+
+function getCurrentTheme() {
+    if (document.documentElement.classList.contains('dark') || 
+        document.documentElement.classList.contains('hs-dark-mode-active')) {
+        return 'dark';
+    }
+    return 'light';
+}
+
+function updateSwitchState(checkbox) {
+    const isDark = getCurrentTheme() === 'dark';
+    checkbox.checked = isDark;
+    
+    // Add visual feedback
+    const switchContainer = checkbox.closest('[data-hs-theme-switch]');
+    if (switchContainer) {
+        if (isDark) {
+            switchContainer.classList.add('theme-dark');
+        } else {
+            switchContainer.classList.remove('theme-dark');
+        }
+    }
+}
+
+function updateAllSwitches() {
+    const checkboxes = document.querySelectorAll('.hs-theme-checkbox');
+    checkboxes.forEach(checkbox => {
+        updateSwitchState(checkbox);
+    });
+}
+
+function updateAllSwitchesImmediate(isDark) {
+    const checkboxes = document.querySelectorAll('.hs-theme-checkbox');
+    const switches = document.querySelectorAll('[data-hs-theme-switch]');
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = isDark;
+    });
+    
+    switches.forEach(switchElement => {
+        if (isDark) {
+            switchElement.classList.add('theme-dark');
+            switchElement.classList.add('hs-dark-mode-active');
+        } else {
+            switchElement.classList.remove('theme-dark');
+            switchElement.classList.remove('hs-dark-mode-active');
+        }
+    });
+    
+    console.log(`🔄 All switches updated: isDark=${isDark}`);
+}
+
+// ===== THEME BUSINESS RULES =====
+
+// Function to manage dark mode switch visibility based on custom theme state
+function manageDarkModeSwitchVisibility() {
+    const hasCustomTheme = window.hasCustomTheme || false;
+    const body = document.body;
+    const html = document.documentElement;
+    
+    console.log(`🎨 Managing switch visibility - Custom theme active: ${hasCustomTheme}`);
+    
+    if (hasCustomTheme) {
+        // Add transitioning class for smooth fade out
+        body.classList.add('custom-theme-active', 'transitioning');
+        html.classList.add('custom-theme-active', 'transitioning');
+        
+        // If dark mode is currently active, switch to light mode
+        const isDarkMode = getCurrentTheme() === 'dark';
+        if (isDarkMode) {
+            console.log('🌙→☀️ Switching to light mode due to custom theme activation');
+            applyThemeWithAnimation('light');
+        }
+        
+        // Disable all dark mode switches
+        disableAllDarkModeSwitches();
+        
+        // Remove transitioning class after animation completes
+        setTimeout(() => {
+            body.classList.remove('transitioning');
+            html.classList.remove('transitioning');
+        }, 300);
+        
+    } else {
+        // Show dark mode switches when using default theme with smooth transition
+        body.classList.add('transitioning');
+        html.classList.add('transitioning');
+        
+        // Remove custom theme classes
+        body.classList.remove('custom-theme-active');
+        html.classList.remove('custom-theme-active');
+        
+        // Re-enable all dark mode switches
+        enableAllDarkModeSwitches();
+        
+        // Remove transitioning class after animation completes
+        setTimeout(() => {
+            body.classList.remove('transitioning');
+            html.classList.remove('transitioning');
+        }, 300);
+    }
+}
+
+// Function to disable all dark mode switches
+function disableAllDarkModeSwitches() {
+    const switches = document.querySelectorAll('[data-hs-theme-switch]');
+    const checkboxes = document.querySelectorAll('.hs-theme-checkbox');
+    
+    switches.forEach(switchElement => {
+        switchElement.classList.add('disabled');
+        switchElement.setAttribute('aria-disabled', 'true');
+        
+        // Add tooltip explaining why it's disabled
+        const label = switchElement.querySelector('label');
+        if (label) {
+            label.title = 'Modo escuro desabilitado - tema personalizado ativo';
+        }
+    });
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.disabled = true;
+    });
+    
+    console.log('🚫 Dark mode switches disabled');
+}
+
+// Function to enable all dark mode switches
+function enableAllDarkModeSwitches() {
+    const switches = document.querySelectorAll('[data-hs-theme-switch]');
+    const checkboxes = document.querySelectorAll('.hs-theme-checkbox');
+    
+    switches.forEach(switchElement => {
+        switchElement.classList.remove('disabled');
+        switchElement.removeAttribute('aria-disabled');
+        
+        // Restore original tooltip
+        const label = switchElement.querySelector('label');
+        if (label) {
+            label.title = 'Alternar modo claro/escuro';
+        }
+    });
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.disabled = false;
+    });
+    
+    console.log('✅ Dark mode switches enabled');
+}
+
+// Function to handle custom theme activation
+function onCustomThemeActivated() {
+    console.log('🎨 Custom theme activated - applying business rules');
+    
+    // Update global state
+    window.hasCustomTheme = true;
+    
+    // Manage switch visibility
+    manageDarkModeSwitchVisibility();
+    
+    // Trigger custom event
+    window.dispatchEvent(new CustomEvent('custom-theme-activated'));
+}
+
+// Function to handle theme reset to default
+function onThemeResetToDefault() {
+    console.log('🔄 Theme reset to default - applying business rules');
+    
+    // Update global state
+    window.hasCustomTheme = false;
+    
+    // Manage switch visibility
+    manageDarkModeSwitchVisibility();
+    
+    // Trigger custom event
+    window.dispatchEvent(new CustomEvent('theme-reset-to-default'));
+}
+
+// Enhanced theme application with business rules
+function applyCustomThemeWithBusinessRules(colors) {
+    console.log('🎨 Applying custom theme with business rules', colors);
+    
+    // First, activate custom theme (this will handle dark mode switch)
+    onCustomThemeActivated();
+    
+    // Then apply the custom colors
+    // This should integrate with your existing theme manager
+    if (window.Hospital && window.Hospital.themeManager) {
+        // Apply colors using existing theme manager
+        Object.entries(colors).forEach(([type, color]) => {
+            if (color) {
+                window.Hospital.themeManager.updateColor(type, color);
+            }
+        });
+    }
+}
+
+// Enhanced theme reset with business rules
+function resetThemeWithBusinessRules() {
+    console.log('🔄 Resetting theme with business rules');
+    
+    // First, reset theme using existing theme manager
+    if (window.Hospital && window.Hospital.themeManager) {
+        window.Hospital.themeManager.resetTheme();
+    }
+    
+    // Then handle business rules
+    onThemeResetToDefault();
+}
+
+// Monitor custom theme state changes
+function initializeThemeBusinessRules() {
+    console.log('🎯 Initializing theme business rules...');
+    
+    // Initial state management
+    manageDarkModeSwitchVisibility();
+    
+    // Listen for theme manager events
+    window.addEventListener('custom-theme-applied', onCustomThemeActivated);
+    window.addEventListener('theme-reset', onThemeResetToDefault);
+    
+    // Override existing theme manager methods to include business rules
+    if (window.Hospital && window.Hospital.themeManager) {
+        const originalSaveTheme = window.Hospital.themeManager.saveTheme;
+        const originalResetTheme = window.Hospital.themeManager.resetTheme;
+        
+        // Enhance saveTheme method
+        window.Hospital.themeManager.saveTheme = function() {
+            const result = originalSaveTheme.call(this);
+            onCustomThemeActivated();
+            return result;
+        };
+        
+        // Enhance resetTheme method
+        window.Hospital.themeManager.resetTheme = function() {
+            const result = originalResetTheme.call(this);
+            onThemeResetToDefault();
+            return result;
+        };
+    }
+    
+    console.log('✅ Theme business rules initialized');
+}
 
 // Global utilities for easy access
 window.hospitalUtils = {

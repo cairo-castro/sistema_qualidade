@@ -13,89 +13,117 @@ export const ThemeConfig = {
     },
 
     PRESETS: {
-        azure: {
-            name: 'Azure',
-            navbar: '#0078d4',
-            sidebar: '#005a9e',
-            background: '#f8fcff',
-            accent: '#2196f3'
-        },
-        emerald: {
-            name: 'Esmeralda',
-            navbar: '#00a96e',
-            sidebar: '#008659',
-            background: '#f0fff4',
-            accent: '#4caf50'
+        crimson: {
+            name: 'Daniela',
+            navbar: '#dc143c',
+            sidebar: '#b91c3c',
+            background: '#fff0f5',
+            accent: '#f06292'
         },
         coral: {
-            name: 'Coral',
+            name: 'Milena',
             navbar: '#ff6b6b',
             sidebar: '#ee5a52',
             background: '#fff8f6',
             accent: '#ff7043'
         },
         amethyst: {
-            name: 'Ametista',
+            name: 'Jo',
             navbar: '#9c27b0',
             sidebar: '#7b1fa2',
             background: '#faf4ff',
             accent: '#ba68c8'
         },
-        golden: {
-            name: 'Dourado',
-            navbar: '#ff9800',
-            sidebar: '#f57c00',
-            background: '#fffdf7',
-            accent: '#ffb74d'
-        },
-        sage: {
-            name: 'Sálvia',
-            navbar: '#8bc34a',
-            sidebar: '#689f38',
-            background: '#f7fff0',
-            accent: '#9ccc65'
+        azure: {
+            name: 'Hugo',
+            navbar: '#0078d4',
+            sidebar: '#005a9e',
+            background: '#f8fcff',
+            accent: '#2196f3'
         },
         indigo: {
-            name: 'Índigo',
+            name: 'Claudio',
             navbar: '#3f51b5',
             sidebar: '#303f9f',
             background: '#f3f4ff',
             accent: '#5c6bc0'
         },
-        teal: {
-            name: 'Cerceta',
-            navbar: '#009688',
-            sidebar: '#00796b',
-            background: '#f0fffc',
-            accent: '#26a69a'
+        sunset: {
+            name: 'Danyara',
+            navbar: '#ff6347',
+            sidebar: '#ff4500',
+            background: '#fff5ee',
+            accent: '#ff7f50'
         },
-        crimson: {
-            name: 'Carmesim',
-            navbar: '#e91e63',
-            sidebar: '#c2185b',
-            background: '#fff0f5',
-            accent: '#f06292'
+        emerald: {
+            name: 'Andre',
+            navbar: '#00a96e',
+            sidebar: '#008659',
+            background: '#f0fff4',
+            accent: '#4caf50'
         },
-        slate: {
-            name: 'Ardósia',
-            navbar: '#607d8b',
-            sidebar: '#455a64',
-            background: '#f8fafc',
-            accent: '#78909c'
+        lightpink: {
+            name: 'Carol',
+            navbar: '#ffb6c1',
+            sidebar: '#ff91a4',
+            background: '#fffafc',
+            accent: '#ffc0cb'
         },
-        amber: {
-            name: 'Âmbar',
-            navbar: '#ffc107',
-            sidebar: '#ffa000',
-            background: '#fffef7',
-            accent: '#ffca28'
+        lightblue: {
+            name: 'Izabela',
+            navbar: '#87ceeb',
+            sidebar: '#5f9ea0',
+            background: '#f0f8ff',
+            accent: '#87cefa'
         },
-        navy: {
-            name: 'Marinho',
-            navbar: '#1565c0',
-            sidebar: '#0d47a1',
-            background: '#f5f8ff',
-            accent: '#42a5f5'
+        lightred: {
+            name: 'Makerlya',
+            navbar: '#ff7f7f',
+            sidebar: '#ff6b6b',
+            background: '#fff5f5',
+            accent: '#ff9999'
+        },
+        lightgreen: {
+            name: 'Thamirys',
+            navbar: '#90ee90',
+            sidebar: '#7bc97b',
+            background: '#f0fff0',
+            accent: '#98fb98'
+        },
+        beige: {
+            name: 'Carol Mendes',
+            navbar: '#f5f5dc',
+            sidebar: '#ddd8c0',
+            background: '#fdfdf5',
+            accent: '#d2b48c'
+        },
+        lilac: {
+            name: 'Thayanne',
+            navbar: '#dda0dd',
+            sidebar: '#ba90ba',
+            background: '#faf7ff',
+            accent: '#e6b3ff'
+        },
+        militarygreen: {
+            name: 'Mercia',
+            navbar: '#556b2f',
+            sidebar: '#4f5f2a',
+            background: '#f7f8f0',
+            accent: '#6b8e23'
+        },
+        turquoise: {
+            name: 'Turquesa',
+            navbar: '#40e0d0',
+            sidebar: '#20b2aa',
+            background: '#f0ffff',
+            accent: '#48d1cc'
+        },
+        gold: {
+            name: 'Ouro',
+            navbar: '#ffd700',
+            sidebar: '#daa520',
+            background: '#fffacd',
+            accent: '#ffb347'
         }
     },
 

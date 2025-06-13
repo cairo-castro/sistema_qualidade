@@ -39,6 +39,14 @@
   /* Sidebar */
   --sidebar-width-expanded: 16rem;
   --sidebar-width-collapsed: 6rem;
+
+  /* Dynamic Scrollbars */
+  --scrollbar-sidebar-bg: var(--gqa-surface);
+  --scrollbar-sidebar-thumb: var(--gqa-border);
+  --scrollbar-sidebar-thumb-hover: var(--gqa-text-muted);
+  --scrollbar-content-bg: var(--gqa-surface);
+  --scrollbar-content-thumb: var(--gqa-border);
+  --scrollbar-content-thumb-hover: var(--gqa-text-muted);
 }
 
 /* ===== TEMA ESCURO ===== */
@@ -453,90 +461,345 @@ body {
   box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.5);
 }
 
-/* ===== SCROLLBAR PERSONALIZADA ===== */
+/* ===== SCROLLBAR DINÂMICA E PERSONALIZADA ===== */
 /* Para navegadores WebKit (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--gqa-surface);
-  border-radius: 4px;
+  background: transparent;
+  border-radius: 3px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--gqa-border);
-  border-radius: 4px;
-  transition: background-color 0.2s ease;
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 3px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--gqa-text-muted);
+  background: rgba(156, 163, 175, 0.6);
 }
 
 ::-webkit-scrollbar-corner {
-  background: var(--gqa-surface);
+  background: transparent;
 }
 
 /* Para Firefox */
 html {
   scrollbar-width: thin;
-  scrollbar-color: var(--gqa-border) var(--gqa-surface);
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
 }
 
-/* Scrollbar personalizada para containers específicos */
+/* ===== SCROLLBAR ESPECÍFICA DA SIDEBAR ===== */
+.hospital-sidebar,
+.hospital-sidebar *,
 .hospital-sidebar-nav,
-.hospital-content,
-.gqa-dropdown {
+.hospital-sidebar-nav * {
   scrollbar-width: thin;
-  scrollbar-color: var(--gqa-border) transparent;
+  scrollbar-color: var(--scrollbar-sidebar-thumb) var(--scrollbar-sidebar-bg);
 }
 
+.hospital-sidebar::-webkit-scrollbar,
+.hospital-sidebar *::-webkit-scrollbar,
 .hospital-sidebar-nav::-webkit-scrollbar,
-.hospital-content::-webkit-scrollbar,
-.gqa-dropdown::-webkit-scrollbar {
-  width: 6px;
+.hospital-sidebar-nav *::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
 }
 
+.hospital-sidebar::-webkit-scrollbar-track,
+.hospital-sidebar *::-webkit-scrollbar-track,
 .hospital-sidebar-nav::-webkit-scrollbar-track,
-.hospital-content::-webkit-scrollbar-track,
-.gqa-dropdown::-webkit-scrollbar-track {
-  background: transparent;
+.hospital-sidebar-nav *::-webkit-scrollbar-track {
+  background: var(--scrollbar-sidebar-bg);
+  border-radius: 2px;
 }
 
+.hospital-sidebar::-webkit-scrollbar-thumb,
+.hospital-sidebar *::-webkit-scrollbar-thumb,
 .hospital-sidebar-nav::-webkit-scrollbar-thumb,
-.hospital-content::-webkit-scrollbar-thumb,
-.gqa-dropdown::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.1);
-  border-radius: 3px;
+.hospital-sidebar-nav *::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-sidebar-thumb);
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.hospital-sidebar::-webkit-scrollbar-thumb:hover,
+.hospital-sidebar *::-webkit-scrollbar-thumb:hover,
 .hospital-sidebar-nav::-webkit-scrollbar-thumb:hover,
-.hospital-content::-webkit-scrollbar-thumb:hover,
-.gqa-dropdown::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.2);
+.hospital-sidebar-nav *::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-sidebar-thumb-hover);
 }
 
-/* Tema escuro - scrollbar */
-[data-theme="dark"] ::-webkit-scrollbar-track,
-.dark ::-webkit-scrollbar-track {
-  background: var(--gqa-surface);
+/* ===== SCROLLBAR ESPECÍFICA DO CONTENT ===== */
+.hospital-content,
+.hospital-content *,
+.hospital-main,
+.hospital-main *,
+main,
+main * {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-content-thumb) var(--scrollbar-content-bg);
+}
+
+.hospital-content::-webkit-scrollbar,
+.hospital-content *::-webkit-scrollbar,
+.hospital-main::-webkit-scrollbar,
+.hospital-main *::-webkit-scrollbar,
+main::-webkit-scrollbar,
+main *::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.hospital-content::-webkit-scrollbar-track,
+.hospital-content *::-webkit-scrollbar-track,
+.hospital-main::-webkit-scrollbar-track,
+.hospital-main *::-webkit-scrollbar-track,
+main::-webkit-scrollbar-track,
+main *::-webkit-scrollbar-track {
+  background: var(--scrollbar-content-bg);
+  border-radius: 2px;
+}
+
+.hospital-content::-webkit-scrollbar-thumb,
+.hospital-content *::-webkit-scrollbar-thumb,
+.hospital-main::-webkit-scrollbar-thumb,
+.hospital-main *::-webkit-scrollbar-thumb,
+main::-webkit-scrollbar-thumb,
+main *::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-content-thumb);
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hospital-content::-webkit-scrollbar-thumb:hover,
+.hospital-content *::-webkit-scrollbar-thumb:hover,
+.hospital-main::-webkit-scrollbar-thumb:hover,
+.hospital-main *::-webkit-scrollbar-thumb:hover,
+main::-webkit-scrollbar-thumb:hover,
+main *::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-content-thumb-hover);
+}
+
+/* ===== SCROLLBAR PARA DROPDOWNS E OUTROS ELEMENTOS ===== */
+.gqa-dropdown,
+[x-show],
+.dropdown-menu,
+.hs-dropdown-menu {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+.gqa-dropdown::-webkit-scrollbar,
+[x-show]::-webkit-scrollbar,
+.dropdown-menu::-webkit-scrollbar,
+.hs-dropdown-menu::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.gqa-dropdown::-webkit-scrollbar-track,
+[x-show]::-webkit-scrollbar-track,
+.dropdown-menu::-webkit-scrollbar-track,
+.hs-dropdown-menu::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 2px;
+}
+
+.gqa-dropdown::-webkit-scrollbar-thumb,
+[x-show]::-webkit-scrollbar-thumb,
+.dropdown-menu::-webkit-scrollbar-thumb,
+.hs-dropdown-menu::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 2px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.gqa-dropdown::-webkit-scrollbar-thumb:hover,
+[x-show]::-webkit-scrollbar-thumb:hover,
+.dropdown-menu::-webkit-scrollbar-thumb:hover,
+.hs-dropdown-menu::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.6);
+}
+
+/* ===== TEMA ESCURO - SCROLLBARS ===== */
+[data-theme="dark"] html,
+.dark html {
+  scrollbar-color: rgba(107, 114, 128, 0.3) transparent;
 }
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb,
 .dark ::-webkit-scrollbar-thumb {
-  background: var(--gqa-border);
+  background: rgba(107, 114, 128, 0.3);
 }
 
 [data-theme="dark"] ::-webkit-scrollbar-thumb:hover,
 .dark ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280;
+  background: rgba(107, 114, 128, 0.6);
 }
 
-[data-theme="dark"] html,
-.dark html {
-  scrollbar-color: var(--gqa-border) var(--gqa-surface);
+/* ===== ANIMATED THEME SWITCH ===== */
+.hs-theme-switch label {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hs-theme-switch label:hover {
+  transform: scale(1.02);
+}
+
+.hs-theme-switch .hs-theme-checkbox:checked + div {
+  background-color: #374151;
+}
+
+.hs-theme-switch .hs-theme-checkbox:checked + div::before {
+  transform: translateX(1.25rem);
+  background-color: #1f2937;
+}
+
+/* Enhanced icon animations */
+.hs-theme-switch svg {
+  will-change: transform, opacity;
+}
+
+/* Smooth knob transition */
+.hs-theme-switch [class*="translate-x"] {
+  will-change: transform;
+}
+
+/* Focus states for accessibility */
+.hs-theme-switch input:focus-visible + div {
+  ring: 2px;
+  ring-color: #3b82f6;
+  ring-offset: 2px;
+}
+
+/* Enhanced hover effects */
+.hs-theme-switch:hover [class*="shadow"] {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* Icon transition animations */
+@keyframes fadeInRotate {
+  0% {
+    opacity: 0;
+    transform: rotate(-90deg) scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+}
+
+@keyframes fadeOutRotate {
+  0% {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(90deg) scale(0.5);
+  }
+}
+
+/* Light mode icons (sun visible, moon hidden) */
+.hs-theme-switch .sun-icon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hs-theme-switch .moon-icon {
+  opacity: 0;
+  transform: rotate(-90deg) scale(0.5);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Dark mode icons (moon visible, sun hidden) */
+.hs-dark-mode-active .hs-theme-switch .sun-icon {
+  opacity: 0;
+  transform: rotate(90deg) scale(0.5);
+}
+
+.hs-dark-mode-active .hs-theme-switch .moon-icon {
+  opacity: 1;
+  transform: rotate(0deg) scale(1);
+}
+
+/* Enhanced transition with more dramatic effect */
+.hs-theme-switch .icon-container {
+  position: relative;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.hs-dark-mode-active .hs-theme-switch .icon-container {
+  transform: rotate(180deg);
+}
+
+/* Prevent layout shift during animations */
+.hs-theme-switch {
+  contain: layout style paint;
+}
+
+/* Smooth theme transition */
+.theme-transitioning,
+.theme-transitioning * {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Enhanced switch states */
+.hs-theme-switch.theme-dark label {
+  transform: scale(1.02);
+}
+
+.hs-theme-switch.theme-dark [class*="translate-x"] {
+  transform: translateX(1.25rem) !important;
+  background-color: #1f2937 !important;
+}
+
+/* Accessibility improvements */
+.hs-theme-switch input:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Loading state for theme transitions */
+.theme-transitioning .hs-theme-switch {
+  pointer-events: none;
+}
+
+.theme-transitioning .hs-theme-switch label {
+  opacity: 0.8;
+}
+
+/* Hide dark mode switch when custom theme is active */
+.custom-theme-active .hs-theme-switch {
+  display: none !important;
+}
+
+/* Smooth transition when showing/hiding switch */
+.hs-theme-switch {
+  display: block;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Alternative: Fade out effect before hiding completely */
+.custom-theme-active.transitioning .hs-theme-switch {
+  opacity: 0;
+  transform: scale(0.9);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Visual feedback for disabled state */
+.hs-theme-switch.disabled {
+  opacity: 0.3;
+  pointer-events: none;
+  filter: grayscale(1);
 }
 
 .gqa-label {

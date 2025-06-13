@@ -58,16 +58,43 @@
 
         <!-- Theme Controls - Always visible -->
         <div class="flex items-center space-x-1">
-            <!-- Light/Dark Mode Toggle -->
-            <button class="gqa-btn ghost"
-                    onclick="toggleHospitalTheme()"
-                    :disabled="window.hasCustomTheme"
-                    :class="{ 'opacity-50 cursor-not-allowed': window.hasCustomTheme }"
-                    :title="window.hasCustomTheme ? 'Tema personalizado ativo - modo claro/escuro desabilitado' : 'Alternar modo claro/escuro'">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                </svg>
-            </button>
+            <!-- Animated Light/Dark Mode Toggle -->
+            <div class="hs-theme-switch" data-hs-theme-switch>
+                <label class="relative inline-flex items-center cursor-pointer"
+                       :class="{ 'opacity-50 cursor-not-allowed': window.hasCustomTheme }"
+                       :title="window.hasCustomTheme ? 'Tema personalizado ativo - modo claro/escuro desabilitado' : 'Alternar modo claro/escuro'">
+                    
+                    <!-- Hidden checkbox for state management -->
+                    <input type="checkbox" class="sr-only hs-theme-checkbox" 
+                           :disabled="window.hasCustomTheme">
+                    
+                    <!-- Toggle background -->
+                    <div class="relative w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full transition-colors duration-300 ease-in-out">
+                        
+                        <!-- Toggle knob with icons -->
+                        <div class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-md 
+                                    transition-all duration-300 ease-in-out transform flex items-center justify-center
+                                    hs-dark-mode-active:translate-x-5 hs-dark-mode-active:bg-slate-800
+                                    translate-x-0 bg-white z-10">
+                            
+                            <!-- Icon container for rotation effect -->
+                            <div class="icon-container relative w-4 h-4">
+                                <!-- Sun icon (visible in light mode) -->
+                                <svg class="sun-icon absolute inset-0 w-4 h-4 text-yellow-500"
+                                     fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                                </svg>
+                                
+                                <!-- Moon icon (visible in dark mode) -->
+                                <svg class="moon-icon absolute inset-0 w-4 h-4 text-slate-200"
+                                     fill="currentColor" viewBox="0 0 20 20">
+                                    <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </label>
+            </div>
 
             <!-- Custom Theme Manager -->
             <div class="relative" x-data="themeManager" x-init="console.log('ThemeManager component initialized')">
@@ -219,61 +246,79 @@
                         <!-- Presets de Cores -->
                         <div class="space-y-2">
                             <label class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Temas Pré-definidos
+                                Temas da Equipe Hospitalar
                             </label>
                             <div class="grid grid-cols-4 gap-2">
                                 <!-- Linha 1 -->
-                                <button @click="window.Hospital.themeManager.applyPreset('azure')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
-                                        title="Tema Azure">
-                                </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('emerald')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 transition-all duration-200"
-                                        title="Tema Esmeralda">
+                                <button @click="window.Hospital.themeManager.applyPreset('crimson')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 transition-all duration-200"
+                                        title="Tema Daniela (Carmesim)">
                                 </button>
                                 <button @click="window.Hospital.themeManager.applyPreset('coral')"
                                         class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-red-400 to-pink-500 hover:from-red-500 hover:to-pink-600 transition-all duration-200"
-                                        title="Tema Coral">
+                                        title="Tema Milena (Coral)">
                                 </button>
                                 <button @click="window.Hospital.themeManager.applyPreset('amethyst')"
                                         class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 transition-all duration-200"
-                                        title="Tema Ametista">
+                                        title="Tema Jo (Ametista)">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('azure')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 transition-all duration-200"
+                                        title="Tema Hugo (Azure)">
                                 </button>
 
                                 <!-- Linha 2 -->
-                                <button @click="window.Hospital.themeManager.applyPreset('golden')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 transition-all duration-200"
-                                        title="Tema Dourado">
-                                </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('sage')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-lime-500 to-green-500 hover:from-lime-600 hover:to-green-600 transition-all duration-200"
-                                        title="Tema Sálvia">
-                                </button>
                                 <button @click="window.Hospital.themeManager.applyPreset('indigo')"
                                         class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 transition-all duration-200"
-                                        title="Tema Índigo">
+                                        title="Tema Claudio (Índigo)">
                                 </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('teal')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 transition-all duration-200"
-                                        title="Tema Cerceta">
+                                <button @click="window.Hospital.themeManager.applyPreset('sunset')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 transition-all duration-200"
+                                        title="Tema Danyara (Pôr do Sol)">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('emerald')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 transition-all duration-200"
+                                        title="Tema Andre (Esmeralda)">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('lightpink')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-pink-300 to-pink-400 hover:from-pink-400 hover:to-pink-500 transition-all duration-200"
+                                        title="Tema Carol (Rosa Claro)">
                                 </button>
 
                                 <!-- Linha 3 -->
-                                <button @click="window.Hospital.themeManager.applyPreset('crimson')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 transition-all duration-200"
-                                        title="Tema Carmesim">
+                                <button @click="window.Hospital.themeManager.applyPreset('lightblue')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-sky-300 to-blue-300 hover:from-sky-400 hover:to-blue-400 transition-all duration-200"
+                                        title="Tema Izabela (Azul Claro)">
                                 </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('slate')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-slate-500 to-gray-600 hover:from-slate-600 hover:to-gray-700 transition-all duration-200"
-                                        title="Tema Ardósia">
+                                <button @click="window.Hospital.themeManager.applyPreset('lightred')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-red-300 to-red-400 hover:from-red-400 hover:to-red-500 transition-all duration-200"
+                                        title="Tema Makerlya (Vermelho Claro)">
                                 </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('amber')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600 transition-all duration-200"
-                                        title="Tema Âmbar">
+                                <button @click="window.Hospital.themeManager.applyPreset('lightgreen')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-green-300 to-green-400 hover:from-green-400 hover:to-green-500 transition-all duration-200"
+                                        title="Tema Thamirys (Verde Claro)">
                                 </button>
-                                <button @click="window.Hospital.themeManager.applyPreset('navy')"
-                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-blue-700 to-blue-800 hover:from-blue-800 hover:to-blue-900 transition-all duration-200"
-                                        title="Tema Marinho">
+                                <button @click="window.Hospital.themeManager.applyPreset('beige')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-yellow-100 to-orange-100 hover:from-yellow-200 hover:to-orange-200 transition-all duration-200"
+                                        title="Tema Carol Mendes (Bege)">
+                                </button>
+
+                                <!-- Linha 4 -->
+                                <button @click="window.Hospital.themeManager.applyPreset('lilac')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-purple-300 to-purple-400 hover:from-purple-400 hover:to-purple-500 transition-all duration-200"
+                                        title="Tema Thayanne (Lilás)">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('militarygreen')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-green-700 to-green-800 hover:from-green-800 hover:to-green-900 transition-all duration-200"
+                                        title="Tema Mercia (Verde Militar)">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('turquoise')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-cyan-400 to-teal-500 hover:from-cyan-500 hover:to-teal-600 transition-all duration-200"
+                                        title="Tema Turquesa">
+                                </button>
+                                <button @click="window.Hospital.themeManager.applyPreset('gold')"
+                                        class="w-full h-8 rounded-md border border-gray-300 dark:border-gray-600 bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 transition-all duration-200"
+                                        title="Tema Dourado">
                                 </button>
                             </div>
                         </div>
@@ -463,24 +508,46 @@
 
                     <div class="border-t border-gray-200 dark:border-gray-600 my-2"></div>
 
-                    <!-- Theme Toggle - FIXED DARK MODE -->
-                    <div class="hs-dropdown relative inline-flex">
-                        <button type="button"
-                                class="hs-dropdown-toggle hs-dark-mode-active:hidden block gqa-dropdown-item flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                data-hs-theme-click-value="dark">
-                            <svg class="w-4 h-4 mr-3 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
-                            </svg>
-                            Modo Escuro
-                        </button>
-                        <button type="button"
-                                class="hs-dropdown-toggle hs-dark-mode-active:block hidden gqa-dropdown-item flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                                data-hs-theme-click-value="light">
-                            <svg class="w-4 h-4 mr-3 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                            </svg>
-                            Modo Claro
-                        </button>
+                    <!-- Animated Theme Toggle -->
+                    <div class="hs-theme-switch" data-hs-theme-switch>
+                        <label class="gqa-dropdown-item flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
+                            
+                            <!-- Animated Toggle Switch -->
+                            <div class="relative w-9 h-5 mr-3">
+                                <!-- Hidden checkbox -->
+                                <input type="checkbox" class="sr-only hs-theme-checkbox">
+                                
+                                <!-- Toggle background -->
+                                <div class="w-9 h-5 bg-gray-300 dark:bg-gray-600 rounded-full transition-colors duration-300 ease-in-out">
+                                    
+                                    <!-- Toggle knob with icons -->
+                                    <div class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow-md 
+                                                transition-all duration-300 ease-in-out transform flex items-center justify-center
+                                                hs-dark-mode-active:translate-x-4 hs-dark-mode-active:bg-slate-800
+                                                translate-x-0 bg-white">
+                                        
+                                        <!-- Icon container for rotation effect -->
+                                        <div class="icon-container relative w-3 h-3">
+                                            <!-- Sun icon (light mode) -->
+                                            <svg class="sun-icon absolute inset-0 w-3 h-3 text-yellow-500"
+                                                 fill="currentColor" viewBox="0 0 20 20">
+                                                <path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z" clip-rule="evenodd" />
+                                            </svg>
+                                            
+                                            <!-- Moon icon (dark mode) -->
+                                            <svg class="moon-icon absolute inset-0 w-3 h-3 text-slate-200"
+                                                 fill="currentColor" viewBox="0 0 20 20">
+                                                <path d="M17.293 13.293A8 8 0 016.707 2.707a8.001 8.001 0 1010.586 10.586z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Dynamic text -->
+                            <span class="hs-dark-mode-active:hidden">Ativar Modo Escuro</span>
+                            <span class="hs-dark-mode-active:block hidden">Ativar Modo Claro</span>
+                        </label>
                     </div>
 
                     <div class="border-t border-gray-200 dark:border-gray-600 my-2"></div>

@@ -93,6 +93,10 @@ export default defineConfig({
         hmr: {
             overlay: false,
         },
+        host: '127.0.0.1',
+        port: 5173,
+        strictPort: true,
+        cors: true,
     },
     experimental: {
         renderBuiltUrl(filename, { hostType }) {
