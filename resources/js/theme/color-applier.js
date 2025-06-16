@@ -103,10 +103,11 @@ export class ColorApplier {
     }
 
     _applyNavbarStyles(color, textColor, root) {
+        console.log(`🎨 Applying navbar styles - BG: ${color}, Text: ${textColor}`);
         this._setCSSVariables(root, 'navbar', color, textColor);
         this._applyNavbarElementStyles(color, textColor);
         this._applyNavbarComprehensiveStyles(color, textColor);
-        console.log(`✅ Navbar styles applied: ${color} with text: ${textColor}`);
+        console.log(`✅ Navbar styles applied: ${color} with calculated contrast text: ${textColor}`);
     }
 
     _setCSSVariables(root, type, color, textColor) {
@@ -129,13 +130,23 @@ export class ColorApplier {
     _styleNavbarContainer(nav, color, textColor) {
         nav.style.backgroundColor = color;
         nav.style.color = textColor;
+        console.log(`📝 Navbar container styled: BG=${color}, Text=${textColor}`);
     }
 
     _styleNavbarDescendants(nav, textColor) {
         const allNavbarElements = nav.querySelectorAll('*');
         allNavbarElements.forEach(element => {
             if (this._shouldApplyNavbarStyle(element)) {
-                this._applyElementTextStyle(element, textColor);
+                // Verificar se é um elemento de dropdown antes de aplicar
+                if (this._isDropdownElement(element)) {
+                    // Para dropdowns, usar cor padrão
+                    const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor();
+                    element.style.color = defaultDropdownTextColor;
+                    element.style.setProperty('color', defaultDropdownTextColor, 'important');
+                } else {
+                    // Para elementos normais da navbar, usar contraste calculado
+                    this._applyElementTextStyle(element, textColor);
+                }
                 this._styleSVGElements(element, textColor);
                 this._styleQuickStatElements(element, textColor);
             }
@@ -315,7 +326,17 @@ export class ColorApplier {
     }
 
     _applyComprehensiveElementStyle(element, color, textColor) {
-        this._applyElementTextStyle(element, textColor);
+        // Verificar se é um elemento de dropdown antes de aplicar estilos
+        if (this._isDropdownElement(element)) {
+            // Para dropdowns, usar cor padrão
+            const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor();
+            element.style.color = defaultDropdownTextColor;
+            element.style.setProperty('color', defaultDropdownTextColor, 'important');
+        } else {
+            // Para elementos normais da navbar, usar contraste calculado
+            this._applyElementTextStyle(element, textColor);
+        }
+        
         this._styleSVGElements(element, textColor);
         this._handleSpecialNavbarElements(element, color, textColor);
         this._handleDropdownElements(element, color, textColor);
@@ -630,6 +651,16 @@ export class ColorApplier {
         const isDarkMode = document.documentElement.classList.contains('dark');
         // Para dropdowns da navbar, sempre manter texto claro para legibilidade
         return isDarkMode ? '#f8fafc' : '#374151'; // Texto claro em ambos os modos
+    }
+
+    // Método para identificar se um elemento é parte de um dropdown
+    _isDropdownElement(element) {
+        return element.classList.contains('dropdown') ||
+               element.classList.contains('dropdown-menu') ||
+               element.hasAttribute('x-show') ||
+               element.closest('.dropdown, .dropdown-menu, [x-show]') ||
+               element.closest('[role="menu"]') ||
+               element.classList.contains('dropdown-item');
     }
 
     _applyAccentStyles(color, textColor, root) {
