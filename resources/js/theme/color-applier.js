@@ -119,7 +119,7 @@ export class ColorApplier {
         const navbars = document.querySelectorAll('.hospital-navbar, nav.hospital-navbar');
         navbars.forEach(nav => {
             this._styleNavbarContainer(nav, color, textColor);
-            this._styleNavbarDescendants(nav, textColor);
+            this._styleNavbarDescendants(nav, color, textColor);
             this._styleNavbarDropdowns(nav, color, textColor);
             this._styleNavbarBadges(nav, color, textColor);
             this._styleNavbarButtons(nav, textColor);
@@ -133,14 +133,14 @@ export class ColorApplier {
         console.log(`📝 Navbar container styled: BG=${color}, Text=${textColor}`);
     }
 
-    _styleNavbarDescendants(nav, textColor) {
+    _styleNavbarDescendants(nav, navbarBackgroundColor, textColor) {
         const allNavbarElements = nav.querySelectorAll('*');
         allNavbarElements.forEach(element => {
             if (this._shouldApplyNavbarStyle(element)) {
                 // Verificar se é um elemento de dropdown antes de aplicar
                 if (this._isDropdownElement(element)) {
-                    // Para dropdowns, usar cor padrão
-                    const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor();
+                    // Para dropdowns, calcular contraste adequado com a cor de fundo da navbar
+                    const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor(navbarBackgroundColor);
                     element.style.color = defaultDropdownTextColor;
                     element.style.setProperty('color', defaultDropdownTextColor, 'important');
                 } else {
@@ -191,7 +191,7 @@ export class ColorApplier {
         dropdowns.forEach(dropdown => {
             if (!dropdown.closest('[x-data*="themeManager"]')) {
                 this._styleDropdownContainer(dropdown, color, textColor);
-                this._styleDropdownItems(dropdown);
+                this._styleDropdownItems(dropdown, color);
             }
         });
     }
@@ -199,15 +199,16 @@ export class ColorApplier {
     _styleDropdownContainer(dropdown, color, textColor) {
         if (!dropdown.style.backgroundColor && !dropdown.classList.contains('bg-')) {
             dropdown.style.backgroundColor = color;
-            // Para dropdowns da navbar, usar cor de texto padrão ao invés de contraste automático
-            const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor();
+            // Para dropdowns da navbar, calcular contraste adequado com a cor de fundo
+            const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor(color);
             dropdown.style.color = defaultDropdownTextColor;
+            console.log(`📋 Dropdown container: BG=${color}, Text=${defaultDropdownTextColor}`);
         }
     }
 
-    _styleDropdownItems(dropdown) {
-        // Para itens dos dropdowns da navbar, sempre usar cor de texto padrão
-        const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor();
+    _styleDropdownItems(dropdown, navbarBackgroundColor) {
+        // Para itens dos dropdowns da navbar, calcular contraste adequado
+        const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor(navbarBackgroundColor);
         const dropdownItems = dropdown.querySelectorAll('*');
         dropdownItems.forEach(item => {
             if (!item.style.backgroundColor &&
@@ -218,7 +219,7 @@ export class ColorApplier {
             }
         });
         
-        console.log(`📋 Dropdown items styled with default text color: ${defaultDropdownTextColor}`);
+        console.log(`📋 Dropdown items styled with calculated contrast color: ${defaultDropdownTextColor} for BG: ${navbarBackgroundColor}`);
     }
 
     _styleNavbarBadges(nav, color, textColor) {
@@ -328,8 +329,8 @@ export class ColorApplier {
     _applyComprehensiveElementStyle(element, color, textColor) {
         // Verificar se é um elemento de dropdown antes de aplicar estilos
         if (this._isDropdownElement(element)) {
-            // Para dropdowns, usar cor padrão
-            const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor();
+            // Para dropdowns, calcular contraste adequado com a cor de fundo da navbar
+            const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor(color);
             element.style.color = defaultDropdownTextColor;
             element.style.setProperty('color', defaultDropdownTextColor, 'important');
         } else {
@@ -364,8 +365,8 @@ export class ColorApplier {
             element.hasAttribute('x-show') ||
             element.closest('.dropdown, .dropdown-menu, [x-show]')) {
 
-            // Para elementos de dropdown da navbar, usar cor de texto padrão
-            const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor();
+            // Para elementos de dropdown da navbar, calcular contraste adequado
+            const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor(color);
             element.style.color = defaultDropdownTextColor;
             element.style.setProperty('color', defaultDropdownTextColor, 'important');
 
@@ -647,10 +648,21 @@ export class ColorApplier {
     }
 
     // Método para obter cor de texto padrão dos dropdowns da navbar
-    _getDefaultNavbarDropdownTextColor() {
+    _getDefaultNavbarDropdownTextColor(navbarBackgroundColor = null) {
+        // Se temos a cor de fundo da navbar, calcular contraste adequado
+        if (navbarBackgroundColor && ColorUtils.isValidHexColor(navbarBackgroundColor)) {
+            // Para dropdowns, garantir contraste adequado com a cor de fundo da navbar
+            return ColorUtils.getSmartContrastColor(navbarBackgroundColor, {
+                lightColor: '#ffffff',
+                darkColor: '#1f2937',
+                mediumLightColor: '#f9fafb',
+                mediumDarkColor: '#374151'
+            });
+        }
+        
+        // Fallback baseado no tema atual
         const isDarkMode = document.documentElement.classList.contains('dark');
-        // Para dropdowns da navbar, sempre manter texto claro para legibilidade
-        return isDarkMode ? '#f8fafc' : '#374151'; // Texto claro em ambos os modos
+        return isDarkMode ? '#f8fafc' : '#1f2937'; // Contraste forte em ambos os modos
     }
 
     // Método para identificar se um elemento é parte de um dropdown
