@@ -239,12 +239,22 @@ export class ColorApplier {
         dropdown.style.color = defaultDropdownTextColor;
         dropdown.style.setProperty('color', defaultDropdownTextColor, 'important');
         
+        // Primeiro, remover classes CSS que interferem com o background
+        this._removeConflictingClasses(dropdown);
+        
         // Aplicar a TODOS os elementos filhos sem exceção (header, footer, body, etc.)
         const dropdownItems = dropdown.querySelectorAll('*');
         dropdownItems.forEach(item => {
+            // Remover classes conflitantes de cada elemento
+            this._removeConflictingClasses(item);
+            
             // Aplicar cor de fundo a todos os elementos do dropdown
             item.style.backgroundColor = navbarBackgroundColor;
             item.style.setProperty('background-color', navbarBackgroundColor, 'important');
+            
+            // Remover qualquer background-image que possa interferir
+            item.style.backgroundImage = 'none';
+            item.style.setProperty('background-image', 'none', 'important');
             
             // Aplicar cor de texto a todos os elementos do dropdown
             item.style.color = defaultDropdownTextColor;
@@ -257,7 +267,50 @@ export class ColorApplier {
             }
         });
         
-        console.log(`📋 All dropdown elements forced styling: Text=${defaultDropdownTextColor}, BG=${navbarBackgroundColor}`);
+        console.log(`📋 All dropdown elements forced styling with class removal: Text=${defaultDropdownTextColor}, BG=${navbarBackgroundColor}`);
+    }
+
+    // Método para remover classes CSS que interferem com o background
+    _removeConflictingClasses(element) {
+        // Lista de classes que interferem com background/cores
+        const conflictingClasses = [
+            // Backgrounds sólidos
+            'bg-white', 'bg-gray-50', 'bg-gray-100', 'bg-gray-200', 'bg-gray-700', 'bg-gray-800',
+            'bg-blue-50', 'bg-purple-50', 'bg-green-50', 
+            // Dark mode backgrounds
+            'dark:bg-gray-600', 'dark:bg-gray-700', 'dark:bg-gray-800',
+            // Gradients que interferem
+            'bg-gradient-to-r', 'from-blue-50', 'to-purple-50', 'dark:from-gray-700', 'dark:to-gray-600',
+            'bg-gradient-to-l', 'bg-gradient-to-t', 'bg-gradient-to-b',
+            // Outras classes de background
+            'bg-opacity-5', 'bg-opacity-10', 'bg-opacity-20'
+        ];
+        
+        // Remover classes conflitantes
+        conflictingClasses.forEach(className => {
+            if (element.classList && element.classList.contains(className)) {
+                element.classList.remove(className);
+                console.log(`🧹 Removed conflicting class: ${className} from ${element.tagName}`);
+            }
+        });
+        
+        // Também remover qualquer classe que contenha 'bg-' para ser mais agressivo
+        if (element.classList) {
+            const classesToRemove = [];
+            element.classList.forEach(className => {
+                if (className.startsWith('bg-') || 
+                    className.startsWith('from-') || 
+                    className.startsWith('to-') ||
+                    className.includes('gradient')) {
+                    classesToRemove.push(className);
+                }
+            });
+            
+            classesToRemove.forEach(className => {
+                element.classList.remove(className);
+                console.log(`🧹 Removed background class: ${className}`);
+            });
+        }
     }
 
     // Método adicional para forçar estilização de dropdowns que possam ter sido perdidos
