@@ -131,6 +131,8 @@ window.formatNumber(1234) // "1.234"
 ✅ **Save/Reset**: Should persist to backend and update UI state
 ✅ **Alpine.js**: Components should access theme state reactively
 ✅ **Business Rules**: Dark mode disabled when custom theme active
+✅ **Content Text Protection**: Main content text always keeps default readable colors
+✅ **Navbar Dropdown Text**: Dropdown text always keeps clear/readable colors
 
 ## Testing Instructions
 
@@ -147,6 +149,19 @@ window.formatNumber(1234) // "1.234"
 3. **Knob should slide**: Smooth transition between left/right positions
 4. **Colors should change**: Toggle background and knob colors
 5. **Page theme should update**: All elements switch between light/dark mode
+
+### ✅ Text Color Protection (NEW)
+1. **Apply any preset theme** (crimson, azure, emerald, etc.)
+2. **Main content text should remain readable**: Titles, paragraphs, and content text keep default colors
+3. **Navbar dropdown text should stay clear**: User menu and dropdown items maintain legible colors
+4. **Sidebar can change**: Sidebar text adapts to background for contrast
+5. **Background color changes**: Only background colors change, not content text colors
+
+#### Test Steps:
+- Apply **crimson preset** → Content text stays dark/light (not red)
+- Apply **azure preset** → Content text stays readable (not blue)
+- Open **user menu dropdown** → Text remains clear and legible
+- Check **main content area** → Titles and paragraphs keep default colors
 
 ## File Structure Created
 
