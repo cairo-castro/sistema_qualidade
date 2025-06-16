@@ -7,177 +7,26 @@ export class PresetHandler {
     }
 
     applyPresetColors(preset) {
+        console.log('🎨 Applying preset colors using ColorApplier:', preset);
+        
+        // Usar o ColorApplier para garantir que toda a lógica de dropdown seja aplicada
         if (preset.navbar) {
-            const navbarTextColor = ColorUtils.getSmartContrastColor(preset.navbar, {
-                lightColor: '#ffffff',
-                darkColor: '#1f2937',
-                mediumLightColor: '#f8fafc',
-                mediumDarkColor: '#374151'
-            });
-            this._applyNavbarColor(preset.navbar, navbarTextColor);
+            this.colorApplier.applyColorRealTime('navbar', preset.navbar);
         }
 
         if (preset.sidebar) {
-            const sidebarTextColor = ColorUtils.getSmartContrastColor(preset.sidebar, {
-                lightColor: '#ffffff',
-                darkColor: '#1f2937',
-                mediumLightColor: '#f8fafc',
-                mediumDarkColor: '#374151'
-            });
-            this._applySidebarColor(preset.sidebar, sidebarTextColor);
+            this.colorApplier.applyColorRealTime('sidebar', preset.sidebar);
         }
 
         if (preset.background) {
-            const backgroundTextColor = ColorUtils.getSmartContrastColor(preset.background, {
-                lightColor: '#1f2937',
-                darkColor: '#f8fafc',
-                mediumLightColor: '#374151',
-                mediumDarkColor: '#e5e7eb'
-            });
-            this._applyBackgroundColor(preset.background, backgroundTextColor);
+            this.colorApplier.applyColorRealTime('background', preset.background);
         }
 
         if (preset.accent) {
-            const accentTextColor = ColorUtils.getSmartContrastColor(preset.accent, {
-                lightColor: '#ffffff',
-                darkColor: '#1f2937',
-                mediumLightColor: '#f8fafc',
-                mediumDarkColor: '#374151'
-            });
-            this._applyAccentColor(preset.accent, accentTextColor);
+            this.colorApplier.applyColorRealTime('accent', preset.accent);
         }
-    }
-
-    _applyNavbarColor(color, textColor) {
-        console.log(`🎨 Applying navbar color: ${color} with text: ${textColor}`);
-
-        document.documentElement.style.setProperty('--navbar-bg', color);
-        document.documentElement.style.setProperty('--navbar-text', textColor);
-
-        const navbars = document.querySelectorAll('.hospital-navbar, nav.hospital-navbar');
-        navbars.forEach(navbar => {
-            navbar.style.backgroundColor = color;
-            navbar.style.color = textColor;
-
-            const children = navbar.querySelectorAll('*:not([x-data*="themeManager"])');
-            children.forEach(child => {
-                if (!child.style.backgroundColor && !child.classList.contains('bg-')) {
-                    child.style.color = textColor;
-                    child.style.setProperty('color', textColor, 'important');
-
-                    if (child.tagName === 'SVG') {
-                        child.style.fill = textColor;
-                        child.style.stroke = textColor;
-                    }
-                }
-            });
-        });
-    }
-
-    _applySidebarColor(color, textColor) {
-        console.log(`🎨 Applying sidebar color: ${color} with text: ${textColor}`);
-
-        document.documentElement.style.setProperty('--sidebar-bg', color);
-        document.documentElement.style.setProperty('--sidebar-text', textColor);
-
-        const sidebarSelectors = [
-            '.hospital-sidebar',
-            '.sidebar',
-            'aside',
-            '[class*="sidebar"]'
-        ];
-
-        sidebarSelectors.forEach(selector => {
-            const sidebars = document.querySelectorAll(selector);
-            sidebars.forEach(sidebar => {
-                if (!sidebar.closest('[x-data*="themeManager"]')) {
-                    sidebar.style.backgroundColor = color;
-                    sidebar.style.color = textColor;
-
-                    const children = sidebar.querySelectorAll('*');
-                    children.forEach(child => {
-                        if (!child.closest('[x-data*="themeManager"]') &&
-                            !child.style.backgroundColor &&
-                            !child.classList.contains('bg-')) {
-                            child.style.color = textColor;
-
-                            if (child.tagName === 'SVG') {
-                                child.style.fill = textColor;
-                                child.style.stroke = textColor;
-                            }
-                        }
-                    });
-                }
-            });
-        });
-    }
-
-    _applyBackgroundColor(color, textColor) {
-        console.log(`🎨 Applying background color: ${color} with text: ${textColor}`);
-
-        document.documentElement.style.setProperty('--bg-color', color);
-        document.documentElement.style.setProperty('--text-color', textColor);
-        document.documentElement.style.setProperty('--content-bg', color);
-        document.documentElement.style.setProperty('--content-text', textColor);
-
-        const contentSelectors = [
-            '.hospital-content',
-            'main.hospital-main',
-            'main',
-            '.content-area',
-            '.main-content'
-        ];
-
-        let contentArea = null;
-        for (const selector of contentSelectors) {
-            contentArea = document.querySelector(selector);
-            if (contentArea) break;
-        }
-
-        if (contentArea) {
-            contentArea.style.backgroundColor = color;
-
-            const textElements = contentArea.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div:not([class*="bg-"]), a:not([class*="bg-"]), label');
-            textElements.forEach(textEl => {
-                if (!textEl.closest('.hospital-navbar') &&
-                    !textEl.closest('.hospital-sidebar') &&
-                    !textEl.style.backgroundColor &&
-                    !textEl.classList.contains('bg-')) {
-                    textEl.style.color = textColor;
-                    textEl.style.setProperty('color', textColor, 'important');
-                }
-            });
-        } else {
-            document.body.style.backgroundColor = color;
-        }
-    }
-
-    _applyAccentColor(color, textColor) {
-        console.log(`🎨 Applying accent color: ${color} with text: ${textColor}`);
-
-        document.documentElement.style.setProperty('--accent-color', color);
-        document.documentElement.style.setProperty('--accent-text', textColor);
-
-        const accentElements = document.querySelectorAll(
-            '.btn-primary, .gqa-btn.primary, .text-blue-500, .bg-blue-500, ' +
-            '.border-blue-500, [class*="blue-"], .btn-accent, .accent-color, .primary-button'
-        );
-
-        accentElements.forEach(element => {
-            if (element.classList.contains('bg-blue-500') ||
-                element.classList.contains('btn-primary') ||
-                element.classList.contains('btn-accent') ||
-                element.classList.contains('primary-button')) {
-                element.style.backgroundColor = color;
-                element.style.borderColor = color;
-                element.style.color = textColor;
-            } else if (element.classList.contains('text-blue-500') ||
-                       element.classList.contains('accent-color')) {
-                element.style.color = color;
-            } else if (element.classList.contains('border-blue-500')) {
-                element.style.borderColor = color;
-            }
-        });
+        
+        console.log('✅ Preset colors applied through ColorApplier');
     }
 
     validatePreset(presetName) {

@@ -232,24 +232,32 @@ export class ColorApplier {
     _styleDropdownItems(dropdown, navbarBackgroundColor) {
         // Para itens dos dropdowns da navbar, calcular contraste adequado
         const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor(navbarBackgroundColor);
+        
+        // Aplicar ao dropdown container também
+        dropdown.style.backgroundColor = navbarBackgroundColor;
+        dropdown.style.setProperty('background-color', navbarBackgroundColor, 'important');
+        dropdown.style.color = defaultDropdownTextColor;
+        dropdown.style.setProperty('color', defaultDropdownTextColor, 'important');
+        
+        // Aplicar a TODOS os elementos filhos sem exceção (header, footer, body, etc.)
         const dropdownItems = dropdown.querySelectorAll('*');
         dropdownItems.forEach(item => {
-            // Aplicar cor de texto com mais agressividade, mas evitar elementos com background próprio
-            if (!item.classList.contains('bg-blue-') && 
-                !item.classList.contains('bg-red-') && 
-                !item.classList.contains('bg-green-') &&
-                !this._classNameIncludes(item, 'bg-')) {
-                item.style.color = defaultDropdownTextColor;
-                item.style.setProperty('color', defaultDropdownTextColor, 'important');
-                
-                // Se o item não tem background próprio, aplicar o background da navbar
-                if (!item.style.backgroundColor && !this._classNameIncludes(item, 'bg-')) {
-                    item.style.backgroundColor = navbarBackgroundColor;
-                }
+            // Aplicar cor de fundo a todos os elementos do dropdown
+            item.style.backgroundColor = navbarBackgroundColor;
+            item.style.setProperty('background-color', navbarBackgroundColor, 'important');
+            
+            // Aplicar cor de texto a todos os elementos do dropdown
+            item.style.color = defaultDropdownTextColor;
+            item.style.setProperty('color', defaultDropdownTextColor, 'important');
+            
+            // SVGs também precisam ser estilizados
+            if (item.tagName === 'SVG') {
+                item.style.fill = defaultDropdownTextColor;
+                item.style.stroke = defaultDropdownTextColor;
             }
         });
         
-        console.log(`📋 Dropdown items forced styling: Text=${defaultDropdownTextColor}, BG=${navbarBackgroundColor}`);
+        console.log(`📋 All dropdown elements forced styling: Text=${defaultDropdownTextColor}, BG=${navbarBackgroundColor}`);
     }
 
     // Método adicional para forçar estilização de dropdowns que possam ter sido perdidos
