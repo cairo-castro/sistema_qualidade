@@ -168,9 +168,12 @@ export class ColorApplier {
             this._styleElementRecursively(navbar, color, textColor, {
                 isRoot: true,
                 skipThemeManager: true,
-                handleDropdowns: true
+                handleDropdowns: false
             });
         });
+        
+        // Apply smart SVG coloring to all SVGs in navbar
+        this._applyGlobalSVGColoring(color, 'navbar');
         
         console.log(`✅ Navbar styles applied`);
     }
@@ -193,6 +196,10 @@ export class ColorApplier {
         });
         
         this._applySidebarScrollbarStyles(color, root);
+        
+        // Apply smart SVG coloring to all SVGs in sidebar
+        this._applyGlobalSVGColoring(color, 'sidebar');
+        
         console.log(`✅ Sidebar styles applied`);
     }
 
@@ -353,7 +360,8 @@ export class ColorApplier {
                     break;
                 case 'svg':
                     if (!this._isThemeManagerElement(element)) {
-                        this._styleSVG(element, textColor);
+                        // Pass background color to SVG for smart coloring
+                        this._styleSVG(element, color);
                     }
                     break;
                 default:
@@ -396,8 +404,8 @@ export class ColorApplier {
                 item.style.setProperty('color', dropdownTextColor, 'important');
                 
                 if (item.tagName === 'SVG') {
-                    item.style.fill = dropdownTextColor;
-                    item.style.stroke = dropdownTextColor;
+                    // Use smart SVG coloring for dropdown SVGs too
+                    this._applySVGSmartColoring(item, color);
                 }
             }
         });
@@ -450,11 +458,120 @@ export class ColorApplier {
         }
     }
 
-    _styleSVG(svg, textColor) {
-        svg.style.fill = textColor;
-        svg.style.stroke = textColor;
-        svg.style.setProperty('fill', textColor, 'important');
-        svg.style.setProperty('stroke', textColor, 'important');
+    _styleSVG(svg, backgroundColor) {
+        // Use smart SVG coloring instead of direct fill application
+        this._applySVGSmartColoring(svg, backgroundColor);
+    }
+
+    // SVG Smart Coloring System
+    _applySVGSmartColoring(svg, backgroundColor) {
+        if (!svg || !backgroundColor) return;
+        
+        try {
+            // Remove any existing fill colors to let CSS control it
+            svg.style.removeProperty('fill');
+            svg.style.removeProperty('stroke');
+            
+            // Determine if background is dark or light
+            const isBackgroundDark = this._isColorDark(backgroundColor);
+            
+            // Apply smart SVG coloring based on contrast
+            if (isBackgroundDark) {
+                // Dark background: white icons for better visibility
+                svg.style.setProperty('color', '#ffffff', 'important');
+                svg.classList.remove('text-gray-600', 'text-gray-700', 'text-gray-800', 'text-black');
+                svg.classList.add('text-white');
+            } else {
+                // Light background: dark icons for better visibility  
+                svg.style.setProperty('color', '#1f2937', 'important');
+                svg.classList.remove('text-white', 'text-gray-100', 'text-gray-200');
+                svg.classList.add('text-gray-800');
+            }
+            
+            // Force SVG to use currentColor for fill if it doesn't have explicit fill
+            if (!svg.getAttribute('fill') || svg.getAttribute('fill') === 'currentColor') {
+                svg.setAttribute('fill', 'currentColor');
+            }
+            
+            // Ensure stroke also uses currentColor for consistency
+            if (!svg.getAttribute('stroke') || svg.getAttribute('stroke') === 'currentColor') {
+                svg.setAttribute('stroke', 'currentColor');
+            }
+            
+            console.log(`🎨 Applied smart SVG coloring: ${isBackgroundDark ? 'white' : 'dark'} icons for ${backgroundColor} background`);
+            
+        } catch (e) {
+            console.warn('Error applying smart SVG coloring:', e);
+            // Fallback to simple coloring
+            svg.style.setProperty('color', isBackgroundDark ? '#ffffff' : '#1f2937', 'important');
+        }
+    }
+    
+    _isColorDark(hexColor) {
+        // Convert hex to RGB and calculate luminance
+        if (!hexColor || !hexColor.startsWith('#')) return false;
+        
+        try {
+            const r = parseInt(hexColor.slice(1, 3), 16);
+            const g = parseInt(hexColor.slice(3, 5), 16);
+            const b = parseInt(hexColor.slice(5, 7), 16);
+            
+            // Calculate relative luminance using standard formula
+            const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            
+            // Return true if luminance is less than 0.5 (dark color)
+            return luminance < 0.5;
+        } catch (e) {
+            console.warn('Error calculating color luminance:', e);
+            return false;
+        }
+    }
+    
+    _applyGlobalSVGColoring(backgroundColor, context = 'global') {
+        // Apply smart SVG coloring to all relevant SVGs
+        const svgSelectors = [
+            'svg',
+            '.hospital-navbar svg',
+            '.hospital-sidebar svg', 
+            '.dropdown svg',
+            '.dropdown-menu svg',
+            'button svg',
+            'a svg'
+        ];
+        
+        // Get container-specific SVGs based on context
+        let containerSelector = '';
+        switch (context) {
+            case 'navbar':
+                containerSelector = '.hospital-navbar ';
+                break;
+            case 'sidebar':
+                containerSelector = '.hospital-sidebar ';
+                break;
+            case 'dropdown':
+                containerSelector = '.dropdown ';
+                break;
+            default:
+                containerSelector = '';
+        }
+        
+        const finalSelectors = containerSelector ? 
+            [`${containerSelector}svg`] : 
+            svgSelectors;
+            
+        finalSelectors.forEach(selector => {
+            const svgs = document.querySelectorAll(selector);
+            svgs.forEach(svg => {
+                // Skip theme manager SVGs and SVGs with explicit preserve attributes
+                if (!this._isThemeManagerElement(svg) && 
+                    !svg.hasAttribute('data-preserve-color') &&
+                    !svg.closest('[data-preserve-color]')) {
+                    this._applySVGSmartColoring(svg, backgroundColor);
+                }
+            });
+        });
+        
+        console.log(`🎨 Applied global SVG coloring for ${context} context with background ${backgroundColor}`);
     }
 
     // Text Contrast and Color Utilities
@@ -659,8 +776,11 @@ export class ColorApplier {
         root.style.removeProperty('--gqa-primary');
         root.style.removeProperty('--gqa-secondary');
         
-        // Reset all elements
+        // Reset all elements including SVGs
         this._resetAllElements();
+        
+        // Reset SVG coloring to default
+        this._resetSVGColoring();
         
         // Remove dynamic styles
         const dynamicStyles = document.querySelectorAll('style[data-theme], style[data-sidebar-scrollbar]');
@@ -694,6 +814,31 @@ export class ColorApplier {
         });
         
         console.log(`🔄 Reset ${resetCount} elements`);
+    }
+    
+    _resetSVGColoring() {
+        // Reset all SVG coloring to default state
+        const svgs = document.querySelectorAll('svg');
+        
+        svgs.forEach(svg => {
+            // Remove inline color styles
+            svg.style.removeProperty('color');
+            svg.style.removeProperty('fill');
+            svg.style.removeProperty('stroke');
+            
+            // Remove smart coloring classes
+            svg.classList.remove('text-white', 'text-gray-800', 'text-gray-600', 'text-gray-700');
+            
+            // Reset to default attributes if they were currentColor
+            if (svg.getAttribute('fill') === 'currentColor') {
+                svg.removeAttribute('fill');
+            }
+            if (svg.getAttribute('stroke') === 'currentColor') {
+                svg.removeAttribute('stroke');
+            }
+        });
+        
+        console.log(`🎨 Reset SVG coloring for ${svgs.length} SVG elements`);
     }
 
     // Dynamic Color Application Setup
@@ -744,6 +889,7 @@ export class ColorApplier {
         this.mutationObservers.add(observer);
         console.log('✅ Dynamic navbar color application setup complete');
     }
+
 
     // Cleanup method to be called when the instance is no longer needed
     destroy() {

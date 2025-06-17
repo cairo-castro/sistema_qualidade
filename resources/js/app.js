@@ -3,6 +3,7 @@ import { ThemeConfig } from './config/theme-config.js';
 import { ColorUtils } from './utils/color-utils.js';
 import { ThemeManager } from './theme/theme-manager.js';
 import { AnimatedSwitches } from './theme/animated-switches.js';
+import { DarkModeController } from './theme/dark-mode-controller.js';
 import { registerAlpineComponents } from './theme/alpine-components.js';
 
 class HospitalSystem {
@@ -143,6 +144,8 @@ window.Hospital.themeManager = new ThemeManager();
 window.themeManager = window.Hospital.themeManager; // Global access for backward compatibility
 
 window.Hospital.animatedSwitches = new AnimatedSwitches(window.Hospital.themeManager);
+
+window.Hospital.darkModeController = new DarkModeController();
 
 registerAlpineComponents(Alpine);
 
@@ -316,17 +319,31 @@ window.toggleHospitalTheme = function() {
     const isDark = document.documentElement.classList.contains('dark');
     const newIsDark = !isDark;
     
-    // Toggle dark mode
-    document.documentElement.classList.toggle('dark', newIsDark);
-    localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
+    console.log(`🌓 Toggling theme: ${isDark ? 'dark' : 'light'} → ${newIsDark ? 'dark' : 'light'}`);
     
-    // Update all theme switch visuals
-    const themeSwitches = document.querySelectorAll('[data-hs-theme-switch]');
-    themeSwitches.forEach(switchElement => {
-        updateThemeSwitchVisuals(switchElement, newIsDark);
-    });
+    // Use dark mode controller for robust switching
+    if (window.Hospital?.darkModeController) {
+        if (newIsDark) {
+            // Switching to dark mode
+            window.Hospital.darkModeController.restoreDarkMode();
+        } else {
+            // Switching to light mode
+            window.Hospital.darkModeController.forceLightMode();
+        }
+    } else {
+        // Fallback to basic toggle if controller not available
+        document.documentElement.classList.toggle('dark', newIsDark);
+        localStorage.setItem('theme', newIsDark ? 'dark' : 'light');
+        localStorage.setItem('hs_theme', newIsDark ? 'dark' : 'light');
+        
+        // Update all theme switch visuals
+        const themeSwitches = document.querySelectorAll('[data-hs-theme-switch]');
+        themeSwitches.forEach(switchElement => {
+            updateThemeSwitchVisuals(switchElement, newIsDark);
+        });
+    }
     
-    console.log(`🌓 Toggled to ${newIsDark ? 'dark' : 'light'} mode`);
+    console.log(`✅ Theme toggled to ${newIsDark ? 'dark' : 'light'} mode`);
 };
 
 // Make theme manager methods available globally for HTML onclick handlers
@@ -352,6 +369,131 @@ window.resetTheme = function() {
     if (window.Hospital?.themeManager) {
         return window.Hospital.themeManager.resetTheme();
     }
+};
+
+// Global utility function for dark mode diagnostics
+window.diagnoseDarkMode = function() {
+    console.group('🔍 Dark Mode Diagnostic Report');
+    
+    // Document state
+    console.log('📄 Document Classes:', document.documentElement.className);
+    console.log('📄 Body Classes:', document.body.className);
+    console.log('📄 Data Theme:', document.documentElement.getAttribute('data-theme'));
+    
+    // LocalStorage state
+    console.log('💾 localStorage theme:', localStorage.getItem('theme'));
+    console.log('💾 localStorage hs_theme:', localStorage.getItem('hs_theme'));
+    console.log('💾 localStorage darkMode:', localStorage.getItem('darkMode'));
+    
+    // Custom theme state
+    console.log('🎨 hasCustomTheme:', window.hasCustomTheme);
+    console.log('🎨 isCustomActive:', window.isCustomActive);
+    
+    // CSS Variables
+    const root = document.documentElement;
+    const computedStyle = getComputedStyle(root);
+    console.log('🎨 CSS Variables:');
+    ['--navbar-bg', '--sidebar-bg', '--background-bg', '--gqa-primary'].forEach(prop => {
+        const value = computedStyle.getPropertyValue(prop);
+        if (value) console.log(`  ${prop}: ${value}`);
+    });
+    
+    // Dark mode controllers
+    console.log('🎛️ Dark Mode Controller Available:', !!window.Hospital?.darkModeController);
+    console.log('🎛️ Theme Manager Available:', !!window.Hospital?.themeManager);
+    
+    // Theme switches
+    const switches = document.querySelectorAll('[data-hs-theme-switch]');
+    console.log('🔘 Theme Switches Found:', switches.length);
+    switches.forEach((sw, i) => {
+        console.log(`  Switch ${i}: classes=${sw.className}, visible=${sw.style.display !== 'none'}`);
+    });
+    
+    console.groupEnd();
+};
+
+// Global utility function to force complete dark mode reset
+window.forceResetDarkMode = function() {
+    console.log('🔄 Gentle dark mode reset to light...');
+    
+    if (window.Hospital?.darkModeController) {
+        window.Hospital.darkModeController.forceLightMode();
+    } else {
+        // Manual gentle reset - preserve Tailwind functionality
+        document.documentElement.classList.remove('dark', 'hs-dark-mode-active');
+        document.documentElement.removeAttribute('data-theme');
+        
+        localStorage.setItem('theme', 'light');
+        localStorage.setItem('hs_theme', 'light');
+        localStorage.removeItem('darkMode');
+        
+        // Update checkboxes
+        document.querySelectorAll('.hs-theme-checkbox').forEach(cb => cb.checked = false);
+        
+        // Only clear custom theme inline styles, not all styles
+        document.querySelectorAll('.hospital-navbar, .hospital-sidebar, .hospital-content').forEach(el => {
+            if (el.style.backgroundColor && el.style.backgroundColor.includes('#')) {
+                el.style.removeProperty('background-color');
+            }
+            if (el.style.color && el.style.color.includes('#')) {
+                el.style.removeProperty('color');
+            }
+        });
+        
+        console.log('✅ Gentle dark mode reset completed (preserving Tailwind)');
+    }
+};
+
+// Global utility to fix dropdown dark mode specifically
+window.fixDropdowns = function() {
+    console.log('🔧 Fixing dropdown dark mode issues...');
+    
+    const isDark = document.documentElement.classList.contains('dark');
+    const dropdowns = document.querySelectorAll('.dropdown, .dropdown-menu, .hs-dropdown-menu, [x-show], [role="menu"]');
+    
+    console.log(`Found ${dropdowns.length} dropdowns to fix for ${isDark ? 'dark' : 'light'} mode`);
+    
+    dropdowns.forEach((dropdown, index) => {
+        // Remove interfering inline styles
+        ['background-color', 'color', 'border-color'].forEach(prop => {
+            if (dropdown.style[prop] && dropdown.style[prop].includes('#')) {
+                dropdown.style.removeProperty(prop);
+                console.log(`Removed inline ${prop} from dropdown ${index}`);
+            }
+        });
+        
+        // Remove custom theme attributes
+        dropdown.removeAttribute('data-theme');
+        dropdown.classList.remove('hs-dark-mode-active');
+        
+        // Force Tailwind recalculation
+        dropdown.offsetHeight;
+    });
+    
+    console.log('✅ Dropdown fixes applied');
+};
+
+// Global utility to test SVG smart coloring
+window.testSVGColoring = function(backgroundColor = '#2563eb') {
+    console.log(`🧪 Testing SVG smart coloring with background: ${backgroundColor}`);
+    
+    const colorApplier = window.Hospital?.themeManager?.colorApplier;
+    if (!colorApplier) {
+        console.warn('⚠️ ColorApplier not available');
+        return;
+    }
+    
+    // Test the smart coloring system
+    const svgs = document.querySelectorAll('svg');
+    console.log(`Found ${svgs.length} SVG elements to test`);
+    
+    svgs.forEach((svg, index) => {
+        console.log(`Testing SVG ${index}:`, svg);
+        colorApplier._applySVGSmartColoring(svg, backgroundColor);
+    });
+    
+    const isDark = colorApplier._isColorDark(backgroundColor);
+    console.log(`✅ Applied ${isDark ? 'white' : 'dark'} SVG coloring for ${backgroundColor} background`);
 };
 
 // Initialize theme switches in the DOM
@@ -653,6 +795,10 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('✅ Animated switches initialized');
     }
     
+    if (window.Hospital?.darkModeController) {
+        console.log('✅ Dark mode controller initialized');
+    }
+    
     initializeThemeBusinessRules();
     
     Alpine.start();
@@ -668,9 +814,13 @@ function cleanupResources() {
         window.Hospital.animatedSwitches.destroy();
     }
     
+    if (window.Hospital?.darkModeController) {
+        window.Hospital.darkModeController.destroy();
+    }
+    
     console.log('✅ Cleanup completed');
 }
 
 window.addEventListener('beforeunload', cleanupResources);
 
-export { HospitalSystem, ThemeManager, AnimatedSwitches };
+export { HospitalSystem, ThemeManager, AnimatedSwitches, DarkModeController };

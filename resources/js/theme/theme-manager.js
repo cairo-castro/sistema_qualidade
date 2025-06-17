@@ -71,6 +71,13 @@ export class ThemeManager {
         console.log(`🎨 updateColor called: ${type} = ${value}`);
         this.colors[type] = value;
         this.colorApplier.applyColorRealTime(type, value);
+        
+        // Update custom theme state and dispatch event
+        window.hasCustomTheme = true;
+        const themeAppliedEvent = new CustomEvent('themeApplied', {
+            detail: { type: 'color-update', colorType: type, color: value }
+        });
+        document.dispatchEvent(themeAppliedEvent);
     }
 
     applyColorRealTime(type, color) {
@@ -99,6 +106,12 @@ export class ThemeManager {
             onCustomThemeActivated();
         }
 
+        // Dispatch theme applied event
+        const themeAppliedEvent = new CustomEvent('themeApplied', {
+            detail: { presetName, type: 'preset' }
+        });
+        document.dispatchEvent(themeAppliedEvent);
+
         console.log(`✅ Preset ${presetName} applied successfully!`);
     }
 
@@ -117,6 +130,13 @@ export class ThemeManager {
             if (success) {
                 this.updateIsCustomActive();
                 window.hasCustomTheme = true;
+                
+                // Dispatch theme applied event
+                const themeAppliedEvent = new CustomEvent('themeApplied', {
+                    detail: { type: 'custom', colors: this.colors }
+                });
+                document.dispatchEvent(themeAppliedEvent);
+                
                 this.showToast('Tema salvo com sucesso!', 'success');
                 console.log('✅ Theme saved successfully');
             } else {
@@ -157,6 +177,12 @@ export class ThemeManager {
                 if (typeof onThemeResetToDefault === 'function') {
                     onThemeResetToDefault();
                 }
+
+                // Dispatch theme reset event
+                const themeResetEvent = new CustomEvent('themeReset', {
+                    detail: { type: 'reset' }
+                });
+                document.dispatchEvent(themeResetEvent);
 
                 this.showToast('Tema restaurado com sucesso!', 'success');
                 console.log('✅ Theme reset completed successfully');

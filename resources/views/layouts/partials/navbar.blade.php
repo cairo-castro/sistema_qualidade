@@ -56,17 +56,23 @@
             </button>
         </div>
 
-        <!-- Theme Controls - Always visible -->
+        <!-- Theme Controls -->
         <div class="flex items-center space-x-1">
-            <!-- Animated Light/Dark Mode Toggle -->
-            <div class="hs-theme-switch" data-hs-theme-switch>
+            <!-- Animated Light/Dark Mode Toggle - Hidden when custom theme is active -->
+            <div class="hs-theme-switch" 
+                 data-hs-theme-switch
+                 x-show="!window.hasCustomTheme"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 scale-95"
+                 x-transition:enter-end="opacity-100 scale-100"
+                 x-transition:leave="transition ease-in duration-150"
+                 x-transition:leave-start="opacity-100 scale-100"
+                 x-transition:leave-end="opacity-0 scale-95">
                 <label class="relative inline-flex items-center cursor-pointer"
-                       :class="{ 'opacity-50 cursor-not-allowed': window.hasCustomTheme }"
-                       :title="window.hasCustomTheme ? 'Tema personalizado ativo - modo claro/escuro desabilitado' : 'Alternar modo claro/escuro'">
+                       title="Alternar modo claro/escuro">
                     
                     <!-- Hidden checkbox for state management -->
-                    <input type="checkbox" class="sr-only hs-theme-checkbox" 
-                           :disabled="window.hasCustomTheme">
+                    <input type="checkbox" class="sr-only hs-theme-checkbox">
                     
                     <!-- Toggle background -->
                     <div class="relative w-11 h-6 bg-gray-200 dark:bg-gray-700 rounded-full transition-colors duration-300 ease-in-out">
@@ -429,7 +435,7 @@
                 </svg>
             </button>
 
-            <!-- User dropdown - FIXED DARK MODE -->
+            <!-- User dropdown -->
             <div x-show="open"
                  @click.outside="open = false"
                  x-transition:enter="transition ease-out duration-200"
@@ -438,19 +444,11 @@
                  x-transition:leave="transition ease-in duration-150"
                  x-transition:leave-start="opacity-100 scale-100"
                  x-transition:leave-end="opacity-0 scale-95"
-                 class="absolute right-0 mt-2 w-64 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 dark:ring-gray-600 overflow-hidden z-50"
-                 :class="{
-                     'bg-white dark:bg-gray-800': !window.hasCustomTheme,
-                     'gqa-navbar-bg': window.hasCustomTheme
-                 }"
+                 class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 dark:ring-gray-600 overflow-hidden z-50"
                  style="display: none; z-index: 9999;">
 
-                <!-- User Info Header - FIXED DARK MODE -->
-                <div class="p-4 border-b"
-                     :class="{
-                         'border-gray-200 dark:border-gray-600 bg-gradient-to-r from-green-50 to-blue-50 dark:from-gray-700 dark:to-gray-600': !window.hasCustomTheme,
-                         'gqa-navbar-border gqa-navbar-header-bg': window.hasCustomTheme
-                     }">
+                <!-- User Info Header -->
+                <div class="p-4 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-green-50 to-blue-50 dark:from-gray-700 dark:to-gray-600">
                     <div class="flex items-center space-x-3">
                         <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white dark:border-gray-500 shadow-md">
                             <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=22c55e&color=fff&size=48"
@@ -516,8 +514,16 @@
 
                     <div class="border-t border-gray-200 dark:border-gray-600 my-2"></div>
 
-                    <!-- Animated Theme Toggle -->
-                    <div class="hs-theme-switch" data-hs-theme-switch>
+                    <!-- Animated Theme Toggle - Hidden when custom theme is active -->
+                    <div class="hs-theme-switch" 
+                         data-hs-theme-switch
+                         x-show="!window.hasCustomTheme"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95">
                         <label class="gqa-dropdown-item flex items-center w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors cursor-pointer">
                             
                             <!-- Animated Toggle Switch -->
@@ -558,13 +564,38 @@
                         </label>
                     </div>
 
-                    <div class="border-t border-gray-200 dark:border-gray-600 my-2"></div>
+                    <!-- Custom Theme Active Notice - Only visible when custom theme is active -->
+                    <div x-show="window.hasCustomTheme"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 scale-95"
+                         x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100 scale-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="px-4 py-3 mx-2 mb-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                            <span class="text-xs font-medium text-blue-700 dark:text-blue-400">Tema Personalizado Ativo</span>
+                        </div>
+                        <p class="text-xs text-blue-600 dark:text-blue-300 mt-1">Modo claro/escuro desabilitado</p>
+                    </div>
+
+                    <!-- Divisor - Only visible when dark mode toggle is visible -->
+                    <div class="border-t border-gray-200 dark:border-gray-600 my-2"
+                         x-show="!window.hasCustomTheme"
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0"
+                         x-transition:enter-end="opacity-100"
+                         x-transition:leave="transition ease-in duration-150"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0"></div>
 
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit"
                                 class="gqa-dropdown-item flex items-center w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                            <svg class="w-4 h-4 mr-3 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg class="w-4 h-4 mr-3 text-red-500 dark:text-red-400"
+                                 fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
                             </svg>
                             Sair do Sistema
@@ -572,12 +603,8 @@
                     </form>
                 </div>
 
-                <!-- Footer with system info - FIXED DARK MODE -->
-                <div class="p-3 border-t"
-                     :class="{
-                         'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700': !window.hasCustomTheme,
-                         'gqa-navbar-border gqa-navbar-footer-bg': window.hasCustomTheme
-                     }">
+                <!-- Footer with system info -->
+                <div class="p-3 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
                     <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                         <span>Sessão: {{ substr(session()->getId(), 0, 8) }}...</span>
                         <span>{{ now()->format('H:i') }}</span>
@@ -695,3 +722,4 @@
         }));
     });
 </script>
+
