@@ -6,6 +6,9 @@ export class ColorApplier {
         this.cachedElements = new Map();
         this.eventListeners = new Set();
         this.mutationObservers = new Set();
+        
+        // Inicializar listener para mudanças de dark mode
+        this._setupDarkModeChangeListener();
     }
 
     isValidHexColor(color) {
@@ -13,12 +16,7 @@ export class ColorApplier {
     }
 
     applyColorRealTime(type, color) {
-        console.log(`🎯 applyColorRealTime: ${type} = ${color}`);
-        
-        if (!this.isValidHexColor(color)) {
-            console.warn(`⚠️ Invalid color provided: ${color}`);
-            return;
-        }
+        if (!this.isValidHexColor(color)) return;
 
         const textColor = ColorUtils.getSmartContrastColor(color, {
             lightColor: type === 'background' ? '#1f2937' : '#ffffff',
@@ -27,13 +25,10 @@ export class ColorApplier {
             mediumDarkColor: type === 'background' ? '#e5e7eb' : '#374151'
         });
         
-        console.log(`🎯 Calculated smart contrast text color: ${textColor}`);
         this.applyStyles(type, color, textColor);
     }
 
     applyStyles(type, color, textColor) {
-        console.log(`🎯 applyStyles called: ${type} = ${color} (text: ${textColor})`);
-        
         const root = document.documentElement;
         this._setCSSVariables(root, type, color, textColor);
 
@@ -46,10 +41,8 @@ export class ColorApplier {
 
         const applier = styleAppliers[type];
         if (applier) {
-            console.log(`🏗️ Applying ${type} styles...`);
             applier();
             this._ensureTextContrast();
-            console.log(`✅ Completed ${type} styles application`);
         } else {
             console.warn(`⚠️ Unknown style type: ${type}`);
         }
@@ -135,7 +128,6 @@ export class ColorApplier {
             
             return !hasOwnBackground && !isThemeManager;
         } catch (e) {
-            console.warn('Error checking if should apply style:', element, e);
             return false;
         }
     }
@@ -160,8 +152,6 @@ export class ColorApplier {
 
     // Navbar Styling
     _applyNavbarStyles(color, textColor) {
-        console.log(`🎨 _applyNavbarStyles: ${color} / ${textColor}`);
-        
         const navbars = this._getElementsOnce('.hospital-navbar, nav.hospital-navbar');
         
         navbars.forEach(navbar => {
@@ -174,8 +164,6 @@ export class ColorApplier {
         
         // Apply smart SVG coloring to all SVGs in navbar
         this._applyGlobalSVGColoring(color, 'navbar');
-        
-        console.log(`✅ Navbar styles applied`);
     }
 
     // Sidebar Styling
@@ -199,8 +187,6 @@ export class ColorApplier {
         
         // Apply smart SVG coloring to all SVGs in sidebar
         this._applyGlobalSVGColoring(color, 'sidebar');
-        
-        console.log(`✅ Sidebar styles applied`);
     }
 
     _applySidebarScrollbarStyles(color, root) {
@@ -231,8 +217,6 @@ export class ColorApplier {
         } else {
             document.body.style.backgroundColor = color;
         }
-
-        console.log(`✅ Background styles applied`);
     }
 
     _findMainContentArea() {
@@ -267,8 +251,6 @@ export class ColorApplier {
                 textEl.style.setProperty('color', defaultTextColor, 'important');
             }
         });
-        
-        console.log(`📝 Content area styled with background: ${color}`);
     }
 
     // Accent Styling
@@ -292,8 +274,6 @@ export class ColorApplier {
                 element.style.setProperty('color', textColor, 'important');
             }
         });
-        
-        console.log(`✅ Accent styles applied`);
     }
 
     // Unified Element Styling
@@ -522,7 +502,6 @@ export class ColorApplier {
             // Return true if luminance is less than 0.5 (dark color)
             return luminance < 0.5;
         } catch (e) {
-            console.warn('Error calculating color luminance:', e);
             return false;
         }
     }
@@ -570,8 +549,6 @@ export class ColorApplier {
                 }
             });
         });
-        
-        console.log(`🎨 Applied global SVG coloring for ${context} context with background ${backgroundColor}`);
     }
 
     // Text Contrast and Color Utilities
@@ -762,6 +739,10 @@ export class ColorApplier {
         
         const root = document.documentElement;
         
+        // Preservar o estado atual do dark mode
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        console.log(`🌙 Current dark mode state before reset: ${isDarkMode}`);
+        
         // Clean up event listeners and observers
         this._cleanupAllListeners();
         this._cleanupMutationObservers();
@@ -779,19 +760,68 @@ export class ColorApplier {
         // Reset all elements including SVGs
         this._resetAllElements();
         
-        // Reset SVG coloring to default
+        // Reset SVG coloring com suporte ao dark mode
         this._resetSVGColoring();
         
         // Remove dynamic styles
         const dynamicStyles = document.querySelectorAll('style[data-theme], style[data-sidebar-scrollbar]');
         dynamicStyles.forEach(style => style.remove());
         
-        console.log('✅ Comprehensive theme reset completed');
+        // Garantir que o dark mode esteja correto após o reset
+        if (isDarkMode) {
+            document.documentElement.classList.add('dark');
+            document.documentElement.classList.add('hs-dark-mode-active');
+            
+            // Se o sistema tiver um controlador de modo escuro, notificar
+            if (window.Hospital?.darkModeController) {
+                try {
+                    // Restaurar dark mode com todos os seus efeitos
+                    window.Hospital.darkModeController.onCustomThemeDeactivated();
+                    
+                    // Atualizar todos os checkboxes e toggles de dark mode
+                    window.Hospital.darkModeController.updateDarkModeCheckboxes(true);
+                    
+                    // Atualizar o localStorage também
+                    localStorage.setItem('hs_theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                } catch (e) {
+                    console.warn('Erro ao restaurar dark mode após reset:', e);
+                }
+            }
+        } else {
+            document.documentElement.classList.remove('dark');
+            document.documentElement.classList.remove('hs-dark-mode-active');
+            
+            // Se o sistema tiver um controlador de modo escuro, notificar
+            if (window.Hospital?.darkModeController) {
+                try {
+                    // Forçar light mode
+                    localStorage.setItem('hs_theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    
+                    // Atualizar todos os checkboxes e toggles de dark mode
+                    window.Hospital.darkModeController.updateDarkModeCheckboxes(false);
+                } catch (e) {
+                    // Silenciar erro
+                }
+            }
+        }
+        
+        // Vamos adicionar um pequeno delay para garantir que o DOM esteja atualizado
+        setTimeout(() => {
+            // Force style recalculation para garantir que as mudanças são aplicadas
+            document.documentElement.offsetHeight;
+            window.dispatchEvent(new Event('resize'));
+            
+            // Disparar um evento customizado para notificar outros componentes
+            document.dispatchEvent(new CustomEvent('themeReset', {
+                detail: { isDarkMode: isDarkMode }
+            }));
+        }, 50);
     }
 
     _resetAllElements() {
         const allElements = document.querySelectorAll('*');
-        let resetCount = 0;
         
         allElements.forEach(element => {
             if (!this._isThemeManagerElement(element)) {
@@ -806,14 +836,14 @@ export class ColorApplier {
                     element.style.removeProperty(prop);
                 });
                 
+                // Não remover as classes relacionadas ao dark mode
+                // Exemplo: dark:text-white, dark:bg-gray-800
+                
                 if (hadStyles && !element.getAttribute('style')) {
                     element.removeAttribute('style');
-                    resetCount++;
                 }
             }
         });
-        
-        console.log(`🔄 Reset ${resetCount} elements`);
     }
     
     _resetSVGColoring() {
@@ -821,24 +851,58 @@ export class ColorApplier {
         const svgs = document.querySelectorAll('svg');
         
         svgs.forEach(svg => {
-            // Remove inline color styles
-            svg.style.removeProperty('color');
-            svg.style.removeProperty('fill');
-            svg.style.removeProperty('stroke');
-            
-            // Remove smart coloring classes
-            svg.classList.remove('text-white', 'text-gray-800', 'text-gray-600', 'text-gray-700');
-            
-            // Reset to default attributes if they were currentColor
-            if (svg.getAttribute('fill') === 'currentColor') {
-                svg.removeAttribute('fill');
+            if (this._isThemeManagerElement(svg)) {
+                return; // Não alterar SVGs no gerenciador de tema
             }
-            if (svg.getAttribute('stroke') === 'currentColor') {
-                svg.removeAttribute('stroke');
+            
+            try {
+                // Remove inline color styles
+                svg.style.removeProperty('color');
+                svg.style.removeProperty('fill');
+                svg.style.removeProperty('stroke');
+                
+                // Obter contexto do SVG (navbar, sidebar, etc)
+                const inNavbar = svg.closest('.hospital-navbar');
+                const inSidebar = svg.closest('.hospital-sidebar');
+                const inDropdown = svg.closest('.dropdown, .dropdown-menu');
+                
+                // Remover todas as classes de cor existentes
+                const colorClasses = [
+                    'text-white', 'text-black',
+                    'text-gray-100', 'text-gray-200', 'text-gray-300', 'text-gray-400',
+                    'text-gray-500', 'text-gray-600', 'text-gray-700', 'text-gray-800', 'text-gray-900',
+                    'dark:text-white', 'dark:text-black',
+                    'dark:text-gray-100', 'dark:text-gray-200', 'dark:text-gray-300', 'dark:text-gray-400',
+                    'dark:text-gray-500', 'dark:text-gray-600', 'dark:text-gray-700', 'dark:text-gray-800', 'dark:text-gray-900'
+                ];
+                
+                colorClasses.forEach(cls => {
+                    svg.classList.remove(cls);
+                });
+                
+                // Adicionar classes responsivas ao dark mode (usando prefixo dark:)
+                if (inNavbar) {
+                    // SVGs da navbar: escuros no light mode, claros no dark mode
+                    svg.classList.add('text-gray-600', 'dark:text-gray-200');
+                } else if (inSidebar) {
+                    // SVGs da sidebar: escuros no light mode, claros no dark mode
+                    svg.classList.add('text-gray-700', 'dark:text-gray-300');
+                } else if (inDropdown) {
+                    // SVGs de dropdowns: escuros no light mode, claros no dark mode
+                    svg.classList.add('text-gray-600', 'dark:text-gray-200');
+                } else {
+                    // SVGs gerais
+                    svg.classList.add('text-gray-700', 'dark:text-gray-300');
+                }
+                
+                // Garantir que o SVG use currentColor para preenchimento
+                if (!svg.hasAttribute('fill') || svg.getAttribute('fill') === 'currentColor') {
+                    svg.setAttribute('fill', 'currentColor');
+                }
+            } catch (e) {
+                // Silenciar erro
             }
         });
-        
-        console.log(`🎨 Reset SVG coloring for ${svgs.length} SVG elements`);
     }
 
     // Dynamic Color Application Setup
@@ -890,6 +954,27 @@ export class ColorApplier {
         console.log('✅ Dynamic navbar color application setup complete');
     }
 
+    // Setup dark mode change listener
+    _setupDarkModeChangeListener() {
+        // Monitor de atributos da classe dark no documentElement
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class' && 
+                    mutation.target === document.documentElement) {
+                    
+                    // Não precisamos recolorir os SVGs aqui porque o Tailwind já cuida disso
+                    // com classes responsivas dark: que adicionamos no método _resetSVGColoring
+                }
+            });
+        });
+        
+        observer.observe(document.documentElement, {
+            attributes: true,
+            attributeFilter: ['class']
+        });
+        
+        this.mutationObservers.add(observer);
+    }
 
     // Cleanup method to be called when the instance is no longer needed
     destroy() {
