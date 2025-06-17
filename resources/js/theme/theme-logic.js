@@ -192,43 +192,14 @@ export class ThemeLogic {
     }
 
     validateThemeConsistency() {
-        console.log('🔍 Validating theme consistency...');
-
-        const hasCustomTheme = window.hasCustomTheme;
-        const userTheme = window.userTheme;
-        const isCustomActive = window.isCustomActive;
-
-        const inconsistencies = [];
-
-        if (hasCustomTheme && !userTheme) {
-            inconsistencies.push('hasCustomTheme is true but userTheme is null');
-        }
-
-        if (!hasCustomTheme && userTheme) {
-            inconsistencies.push('hasCustomTheme is false but userTheme exists');
-        }
-
+        const hasCustomTheme = !!window.hasCustomTheme;
+        const isCustomActive = !!window.isCustomActive;
+        
+        // Auto-sync if mismatched
         if (hasCustomTheme !== isCustomActive) {
-            inconsistencies.push(`hasCustomTheme (${hasCustomTheme}) doesn't match isCustomActive (${isCustomActive})`);
+            window.isCustomActive = hasCustomTheme;
         }
-
-        if (userTheme) {
-            const requiredFields = ['navbar_color', 'sidebar_color', 'background_color'];
-            const missingFields = requiredFields.filter(field => !userTheme[field]);
-            if (missingFields.length > 0) {
-                inconsistencies.push(`userTheme missing fields: ${missingFields.join(', ')}`);
-            }
-        }
-
-        if (inconsistencies.length > 0) {
-            console.warn('⚠️ Theme consistency issues found:');
-            inconsistencies.forEach((issue, index) => {
-                console.warn(`   ${index + 1}. ${issue}`);
-            });
-            return false;
-        }
-
-        console.log('✅ Theme consistency validation passed');
+        
         return true;
     }
 

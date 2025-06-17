@@ -3,6 +3,9 @@ import { ColorUtils } from '../utils/color-utils.js';
 export class ColorApplier {
     constructor() {
         this.applyTimeout = null;
+        this.cachedElements = new Map();
+        this.eventListeners = new Set();
+        this.mutationObservers = new Set();
     }
 
     isValidHexColor(color) {
@@ -11,52 +14,450 @@ export class ColorApplier {
 
     applyColorRealTime(type, color) {
         console.log(`🎯 applyColorRealTime: ${type} = ${color}`);
+        
+        if (!this.isValidHexColor(color)) {
+            console.warn(`⚠️ Invalid color provided: ${color}`);
+            return;
+        }
+
         const textColor = ColorUtils.getSmartContrastColor(color, {
             lightColor: type === 'background' ? '#1f2937' : '#ffffff',
             darkColor: type === 'background' ? '#f8fafc' : '#1f2937',
             mediumLightColor: type === 'background' ? '#374151' : '#f8fafc',
             mediumDarkColor: type === 'background' ? '#e5e7eb' : '#374151'
         });
+        
         console.log(`🎯 Calculated smart contrast text color: ${textColor}`);
         this.applyStyles(type, color, textColor);
     }
 
     applyStyles(type, color, textColor) {
         console.log(`🎯 applyStyles called: ${type} = ${color} (text: ${textColor})`);
+        
         const root = document.documentElement;
+        this._setCSSVariables(root, type, color, textColor);
 
         const styleAppliers = {
-            navbar: () => {
-                console.log(`🏗️ EXEC: Applying navbar styles...`);
-                this._applyNavbarStyles(color, textColor, root);
-            },
-            sidebar: () => {
-                console.log(`🏗️ EXEC: Applying sidebar styles...`);
-                this._applySidebarStyles(color, textColor, root);
-            },
-            background: () => {
-                console.log(`🏗️ EXEC: Applying background styles...`);
-                this._applyBackgroundStyles(color, textColor, root);
-            },
-            accent: () => {
-                console.log(`🏗️ EXEC: Applying accent styles...`);
-                this._applyAccentStyles(color, textColor, root);
-            }
+            navbar: () => this._applyNavbarStyles(color, textColor),
+            sidebar: () => this._applySidebarStyles(color, textColor, root),
+            background: () => this._applyBackgroundStyles(color, textColor, root),
+            accent: () => this._applyAccentStyles(color, textColor)
         };
 
         const applier = styleAppliers[type];
         if (applier) {
-            console.log(`🏗️ Found applier for ${type}, executing...`);
+            console.log(`🏗️ Applying ${type} styles...`);
             applier();
+            this._ensureTextContrast();
             console.log(`✅ Completed ${type} styles application`);
         } else {
             console.warn(`⚠️ Unknown style type: ${type}`);
-            console.log(`🔍 Available types:`, Object.keys(styleAppliers));
         }
-
-        this._ensureTextContrast();
     }
 
+    // CSS Variables Management
+    _setCSSVariables(root, type, color, textColor) {
+        root.style.setProperty(`--${type}-bg`, color);
+        root.style.setProperty(`--${type}-text`, textColor);
+        
+        if (type === 'accent') {
+            root.style.setProperty('--gqa-primary', color);
+            root.style.setProperty('--gqa-secondary', color);
+        }
+    }
+
+    // Element Identification Methods
+    _isDropdownElement(element) {
+        if (!element) return false;
+        
+        const dropdownIndicators = [
+            'dropdown', 'dropdown-menu', 'hs-dropdown-menu'
+        ];
+        
+        const hasDropdownClass = dropdownIndicators.some(indicator => {
+            if (element.classList && element.classList.contains(indicator)) {
+                return true;
+            }
+            
+            // Safely get className as string for SVG and other elements
+            const className = this._getElementClassName(element);
+            return className.includes(indicator);
+        });
+        
+        const hasDropdownAttributes = element.hasAttribute && (
+            element.hasAttribute('x-show') ||
+            (element.hasAttribute('role') && element.getAttribute('role') === 'menu') ||
+            element.hasAttribute('aria-labelledby')
+        );
+        
+        const hasDropdownParent = element.closest && 
+                                element.closest('.dropdown, [x-show], [role="menu"], .hs-dropdown');
+        
+        return hasDropdownClass || hasDropdownAttributes || !!hasDropdownParent;
+    }
+
+    _isThemeManagerElement(element) {
+        if (!element) return false;
+        
+        try {
+            return (element.closest && element.closest('[x-data*="themeManager"]')) ||
+                   (element.hasAttribute && element.hasAttribute('x-data')) ||
+                   (element.classList && element.classList.contains('theme-manager'));
+        } catch (e) {
+            console.warn('Error checking theme manager element:', element, e);
+            return false;
+        }
+    }
+
+    _isPresetButton(element) {
+        if (!element) return false;
+        
+        try {
+            const className = this._getElementClassName(element);
+            return className.includes('preset-') || 
+                   className.includes('gqa-btn') || 
+                   (element.tagName === 'BUTTON' && className.includes('bg-'));
+        } catch (e) {
+            console.warn('Error checking preset button:', element, e);
+            return false;
+        }
+    }
+
+    _shouldApplyStyle(element, skipThemeManager = true) {
+        if (!element) return false;
+        
+        try {
+            const hasOwnBackground = (element.style && element.style.backgroundColor) ||
+                                   (element.classList && element.classList.contains('bg-')) ||
+                                   this._classNameIncludes(element, 'dark:bg-');
+
+            const isThemeManager = skipThemeManager && this._isThemeManagerElement(element);
+            
+            return !hasOwnBackground && !isThemeManager;
+        } catch (e) {
+            console.warn('Error checking if should apply style:', element, e);
+            return false;
+        }
+    }
+
+    // Optimized Element Queries
+    _getElementsOnce(selector, useCache = true) {
+        if (useCache && this.cachedElements.has(selector)) {
+            return this.cachedElements.get(selector);
+        }
+        
+        const elements = document.querySelectorAll(selector);
+        if (useCache) {
+            this.cachedElements.set(selector, elements);
+        }
+        
+        return elements;
+    }
+
+    _clearElementCache() {
+        this.cachedElements.clear();
+    }
+
+    // Navbar Styling
+    _applyNavbarStyles(color, textColor) {
+        console.log(`🎨 _applyNavbarStyles: ${color} / ${textColor}`);
+        
+        const navbars = this._getElementsOnce('.hospital-navbar, nav.hospital-navbar');
+        
+        navbars.forEach(navbar => {
+            this._styleElementRecursively(navbar, color, textColor, {
+                isRoot: true,
+                skipThemeManager: true,
+                handleDropdowns: true
+            });
+        });
+        
+        console.log(`✅ Navbar styles applied`);
+    }
+
+    // Sidebar Styling
+    _applySidebarStyles(color, textColor, root) {
+        const sidebarSelectors = [
+            '.hospital-sidebar', '.sidebar', '[class*="sidebar"]',
+            'aside', 'nav[role="navigation"]', '.nav-sidebar',
+            '.side-nav', '.side-navigation', '.main-sidebar', '#sidebar'
+        ].join(', ');
+        
+        const sidebars = this._getElementsOnce(sidebarSelectors);
+        
+        sidebars.forEach(sidebar => {
+            this._styleElementRecursively(sidebar, color, textColor, {
+                isRoot: true,
+                skipThemeManager: true
+            });
+        });
+        
+        this._applySidebarScrollbarStyles(color, root);
+        console.log(`✅ Sidebar styles applied`);
+    }
+
+    _applySidebarScrollbarStyles(color, root) {
+        const sidebarScrollbarColor = this._adjustColorOpacity(color, 0.3);
+        const sidebarScrollbarHoverColor = this._adjustColorOpacity(color, 0.5);
+
+        root.style.setProperty('--sidebar-scrollbar-color', sidebarScrollbarColor);
+        root.style.setProperty('--sidebar-scrollbar-hover-color', sidebarScrollbarHoverColor);
+
+        this._createOrUpdateStyle('sidebar-scrollbar', `
+            .hospital-sidebar::-webkit-scrollbar-thumb {
+                background-color: ${sidebarScrollbarColor} !important;
+            }
+            .hospital-sidebar::-webkit-scrollbar-thumb:hover {
+                background-color: ${sidebarScrollbarHoverColor} !important;
+            }
+        `);
+    }
+
+    // Background Styling
+    _applyBackgroundStyles(color, textColor, root) {
+        this._setCSSVariables(root, 'content', color, textColor);
+        this._setCSSVariables(root, 'bg', color, textColor);
+        
+        const contentArea = this._findMainContentArea();
+        if (contentArea) {
+            this._styleContentArea(contentArea, color);
+        } else {
+            document.body.style.backgroundColor = color;
+        }
+
+        console.log(`✅ Background styles applied`);
+    }
+
+    _findMainContentArea() {
+        const contentSelectors = [
+            '.hospital-content', 'main.hospital-main', 'main',
+            '.content-area', '.main-content'
+        ];
+
+        for (const selector of contentSelectors) {
+            const contentArea = document.querySelector(selector);
+            if (contentArea) return contentArea;
+        }
+        return null;
+    }
+
+    _styleContentArea(contentArea, color) {
+        contentArea.style.backgroundColor = color;
+
+        const textElements = contentArea.querySelectorAll(
+            'h1, h2, h3, h4, h5, h6, p, span, div:not([class*="bg-"]), a:not([class*="bg-"]), label'
+        );
+        
+        const defaultTextColor = this._getDefaultContentTextColor();
+        
+        textElements.forEach(textEl => {
+            if (!textEl.closest('.hospital-navbar') &&
+                !textEl.closest('.hospital-sidebar') &&
+                !textEl.style.backgroundColor &&
+                !textEl.classList.contains('bg-')) {
+                
+                textEl.style.color = defaultTextColor;
+                textEl.style.setProperty('color', defaultTextColor, 'important');
+            }
+        });
+        
+        console.log(`📝 Content area styled with background: ${color}`);
+    }
+
+    // Accent Styling
+    _applyAccentStyles(color, textColor) {
+        const accentSelectors = [
+            '.btn-primary', '.gqa-btn.primary', '.text-blue-500',
+            '.bg-blue-500', '.border-blue-500', '[class*="accent"]',
+            '.highlight', '.primary-action'
+        ];
+        
+        const accentElements = this._getElementsOnce(accentSelectors.join(', '));
+        
+        accentElements.forEach(element => {
+            if (element.classList.contains('bg-blue-500') ||
+                element.classList.contains('btn-primary') ||
+                element.classList.contains('primary')) {
+                
+                element.style.backgroundColor = color;
+                element.style.setProperty('background-color', color, 'important');
+                element.style.color = textColor;
+                element.style.setProperty('color', textColor, 'important');
+            }
+        });
+        
+        console.log(`✅ Accent styles applied`);
+    }
+
+    // Unified Element Styling
+    _styleElementRecursively(element, color, textColor, options = {}) {
+        const {
+            isRoot = false,
+            skipThemeManager = true,
+            handleDropdowns = false
+        } = options;
+
+        if (!element) return;
+
+        try {
+            if (skipThemeManager && this._isThemeManagerElement(element)) {
+                return;
+            }
+
+            // Style root element
+            if (isRoot && element.style) {
+                element.style.backgroundColor = color;
+                element.style.color = textColor;
+            }
+
+            // Handle different element types
+            this._applyElementStyles(element, color, textColor, handleDropdowns);
+
+            // Recursively style children
+            if (element.children) {
+                Array.from(element.children).forEach(child => {
+                    if (this._shouldApplyStyle(child, skipThemeManager)) {
+                        this._styleElementRecursively(child, color, textColor, {
+                            ...options,
+                            isRoot: false
+                        });
+                    }
+                });
+            }
+        } catch (e) {
+            console.warn('Error styling element recursively:', element, e);
+        }
+    }
+
+    _applyElementStyles(element, color, textColor, handleDropdowns) {
+        if (!element || !element.tagName) return;
+        
+        try {
+            const tagName = element.tagName.toLowerCase();
+            
+            // Handle dropdowns specially
+            if (handleDropdowns && this._isDropdownElement(element)) {
+                this._styleDropdownElement(element, color);
+                return;
+            }
+
+            // Handle specific element types
+            switch (tagName) {
+                case 'a':
+                    this._styleLink(element, textColor);
+                    break;
+                case 'button':
+                    if (!this._isThemeManagerElement(element)) {
+                        this._styleButton(element, textColor);
+                    }
+                    break;
+                case 'svg':
+                    if (!this._isThemeManagerElement(element)) {
+                        this._styleSVG(element, textColor);
+                    }
+                    break;
+                default:
+                    if (this._shouldApplyStyle(element) && element.style) {
+                        element.style.color = textColor;
+                        element.style.setProperty('color', textColor, 'important');
+                    }
+                    break;
+            }
+
+            // Handle special classes
+            this._handleSpecialElements(element, color, textColor);
+        } catch (e) {
+            console.warn('Error applying element styles:', element, e);
+        }
+    }
+
+    _styleDropdownElement(dropdown, color) {
+        // Apply navbar background to dropdown
+        dropdown.style.backgroundColor = color;
+        dropdown.style.setProperty('background-color', color, 'important');
+        
+        // Calculate appropriate text color for dropdown
+        const dropdownTextColor = this._getDropdownTextColor(color);
+        dropdown.style.color = dropdownTextColor;
+        dropdown.style.setProperty('color', dropdownTextColor, 'important');
+        
+        // Remove conflicting classes
+        this._removeConflictingClasses(dropdown);
+        
+        // Style all dropdown items
+        const dropdownItems = dropdown.querySelectorAll('*');
+        dropdownItems.forEach(item => {
+            if (!this._isPresetButton(item) && !this._isThemeManagerElement(item)) {
+                this._removeConflictingClasses(item);
+                
+                item.style.backgroundColor = color;
+                item.style.setProperty('background-color', color, 'important');
+                item.style.color = dropdownTextColor;
+                item.style.setProperty('color', dropdownTextColor, 'important');
+                
+                if (item.tagName === 'SVG') {
+                    item.style.fill = dropdownTextColor;
+                    item.style.stroke = dropdownTextColor;
+                }
+            }
+        });
+        
+        console.log(`📋 Dropdown styled: BG=${color}, Text=${dropdownTextColor}`);
+    }
+
+    _handleSpecialElements(element, color, textColor) {
+        // Quick stat badges
+        if (element.classList.contains('quick-stat-badge') ||
+            element.classList.contains('stat-value') ||
+            element.classList.contains('stat-label') ||
+            element.closest('.quick-stat-badge')) {
+            
+            if (element.classList.contains('quick-stat-badge')) {
+                element.style.backgroundColor = color;
+                element.style.borderColor = textColor;
+            }
+            element.style.color = textColor;
+            element.style.setProperty('color', textColor, 'important');
+        }
+    }
+
+    // Element Type Styling Methods
+    _styleLink(link, textColor) {
+        if (this._shouldApplyStyle(link)) {
+            link.style.color = textColor;
+            link.style.setProperty('color', textColor, 'important');
+            
+            // Clean up old event listeners
+            this._cleanupElementListeners(link);
+            
+            // Add hover effects
+            const mouseEnterHandler = () => link.style.setProperty('opacity', '0.8', 'important');
+            const mouseLeaveHandler = () => link.style.removeProperty('opacity');
+            
+            link.addEventListener('mouseenter', mouseEnterHandler);
+            link.addEventListener('mouseleave', mouseLeaveHandler);
+            
+            this.eventListeners.add({ element: link, type: 'mouseenter', handler: mouseEnterHandler });
+            this.eventListeners.add({ element: link, type: 'mouseleave', handler: mouseLeaveHandler });
+        }
+    }
+
+    _styleButton(button, textColor) {
+        if (this._shouldApplyStyle(button)) {
+            button.style.color = textColor;
+            button.style.borderColor = textColor;
+            button.style.setProperty('color', textColor, 'important');
+        }
+    }
+
+    _styleSVG(svg, textColor) {
+        svg.style.fill = textColor;
+        svg.style.stroke = textColor;
+        svg.style.setProperty('fill', textColor, 'important');
+        svg.style.setProperty('stroke', textColor, 'important');
+    }
+
+    // Text Contrast and Color Utilities
     _ensureTextContrast() {
         const elementsWithBg = document.querySelectorAll(
             '.hospital-navbar[style*="background-color"], .hospital-sidebar[style*="background-color"], .hospital-content[style*="background-color"], main[style*="background-color"]'
@@ -68,27 +469,48 @@ export class ColorApplier {
                 const hexColor = this._rgbToHex(bgColor) || bgColor;
                 if (ColorUtils.isValidHexColor(hexColor)) {
                     const contrastColor = ColorUtils.getSmartContrastColor(hexColor);
-                    this._applyContrastToElement(element, contrastColor);
+                    this._applyContrastToChildren(element, contrastColor);
                 }
             }
         });
     }
 
-    _applyContrastToElement(element, contrastColor) {
+    _applyContrastToChildren(element, contrastColor) {
         if (!element.classList.toString().includes('dark:')) {
             element.style.color = contrastColor;
 
-            const children = element.querySelectorAll(':scope > span, :scope > a, :scope > p, :scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6, :scope > div:not([class*="bg-"]):not([style*="background"])');
+            const children = element.querySelectorAll(
+                ':scope > span, :scope > a, :scope > p, :scope > h1, :scope > h2, :scope > h3, :scope > h4, :scope > h5, :scope > h6, :scope > div:not([class*="bg-"]):not([style*="background"])'
+            );
+            
             children.forEach(child => {
-                if (!child.style.backgroundColor &&
-                    !child.classList.contains('bg-') &&
-                    !this._classNameIncludes(child, 'dark:')) {
+                if (this._shouldApplyStyle(child, false)) {
                     child.style.color = contrastColor;
                 }
             });
         }
     }
 
+    _getDefaultContentTextColor() {
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        return isDarkMode ? '#f8fafc' : '#1f2937';
+    }
+
+    _getDropdownTextColor(navbarBackgroundColor) {
+        if (navbarBackgroundColor && ColorUtils.isValidHexColor(navbarBackgroundColor)) {
+            return ColorUtils.getSmartContrastColor(navbarBackgroundColor, {
+                lightColor: '#ffffff',
+                darkColor: '#1f2937',
+                mediumLightColor: '#f9fafb',
+                mediumDarkColor: '#374151'
+            });
+        }
+        
+        const isDarkMode = document.documentElement.classList.contains('dark');
+        return isDarkMode ? '#f8fafc' : '#1f2937';
+    }
+
+    // Utility Methods
     _rgbToHex(rgb) {
         if (!rgb || rgb === 'transparent') return null;
 
@@ -102,598 +524,6 @@ export class ColorApplier {
         }).join('');
     }
 
-    _applyNavbarStyles(color, textColor, root) {
-        console.log(`🎨 Applying navbar styles - BG: ${color}, Text: ${textColor}`);
-        this._setCSSVariables(root, 'navbar', color, textColor);
-        this._applyNavbarElementStyles(color, textColor);
-        this._applyNavbarComprehensiveStyles(color, textColor);
-        console.log(`✅ Navbar styles applied: ${color} with calculated contrast text: ${textColor}`);
-    }
-
-    _setCSSVariables(root, type, color, textColor) {
-        root.style.setProperty(`--${type}-bg`, color);
-        root.style.setProperty(`--${type}-text`, textColor);
-    }
-
-    _applyNavbarElementStyles(color, textColor) {
-        const navbars = document.querySelectorAll('.hospital-navbar, nav.hospital-navbar');
-        navbars.forEach(nav => {
-            this._styleNavbarContainer(nav, color, textColor);
-            this._styleNavbarDescendants(nav, color, textColor);
-            this._styleNavbarDropdowns(nav, color, textColor);
-            this._styleNavbarBadges(nav, color, textColor);
-            this._styleNavbarButtons(nav, textColor);
-            this._styleNavbarLinks(nav, textColor);
-        });
-    }
-
-    _styleNavbarContainer(nav, color, textColor) {
-        nav.style.backgroundColor = color;
-        nav.style.color = textColor;
-        console.log(`📝 Navbar container styled: BG=${color}, Text=${textColor}`);
-    }
-
-    _styleNavbarDescendants(nav, navbarBackgroundColor, textColor) {
-        const allNavbarElements = nav.querySelectorAll('*');
-        allNavbarElements.forEach(element => {
-            if (this._shouldApplyNavbarStyle(element)) {
-                // Verificar se é um elemento de dropdown antes de aplicar
-                if (this._isDropdownElement(element)) {
-                    // Para dropdowns, calcular contraste adequado com a cor de fundo da navbar
-                    const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor(navbarBackgroundColor);
-                    element.style.color = defaultDropdownTextColor;
-                    element.style.setProperty('color', defaultDropdownTextColor, 'important');
-                } else {
-                    // Para elementos normais da navbar, usar contraste calculado
-                    this._applyElementTextStyle(element, textColor);
-                }
-                this._styleSVGElements(element, textColor);
-                this._styleQuickStatElements(element, textColor);
-            }
-        });
-    }
-
-    _shouldApplyNavbarStyle(element) {
-        const hasOwnBackground = element.style.backgroundColor ||
-                               element.classList.contains('bg-') ||
-                               this._classNameIncludes(element, 'dark:bg-');
-
-        const isThemeButton = element.closest('[x-data*="themeManager"]') ||
-                            element.hasAttribute('x-data') ||
-                            element.classList.contains('theme-manager');
-
-        return !hasOwnBackground && !isThemeButton;
-    }
-
-    _applyElementTextStyle(element, textColor) {
-        element.style.color = textColor;
-        element.style.setProperty('color', textColor, 'important');
-    }
-
-    _styleSVGElements(element, textColor) {
-        if (element.tagName === 'SVG') {
-            element.style.fill = textColor;
-            element.style.stroke = textColor;
-        }
-    }
-
-    _styleQuickStatElements(element, textColor) {
-        if (element.classList.contains('quick-stat-badge') ||
-            element.classList.contains('stat-value') ||
-            element.classList.contains('stat-label') ||
-            element.closest('.quick-stat-badge')) {
-            this._applyElementTextStyle(element, textColor);
-        }
-    }
-
-    _styleNavbarDropdowns(nav, color, textColor) {
-        // Selecionar dropdowns com múltiplos seletores para garantir cobertura completa
-        const dropdownSelectors = [
-            '[x-show]',
-            '.dropdown',
-            '.dropdown-menu', 
-            '[class*="dropdown"]',
-            '[role="menu"]',
-            '[aria-expanded]',
-            '.user-menu',
-            '.nav-dropdown',
-            '.menu-dropdown'
-        ];
-        
-        const dropdowns = nav.querySelectorAll(dropdownSelectors.join(', '));
-        console.log(`📋 Found ${dropdowns.length} dropdown elements in navbar`);
-        
-        dropdowns.forEach((dropdown, index) => {
-            if (!dropdown.closest('[x-data*="themeManager"]')) {
-                console.log(`📋 Processing dropdown ${index + 1}: ${dropdown.className || dropdown.tagName}`);
-                this._styleDropdownContainer(dropdown, color, textColor);
-                this._styleDropdownItems(dropdown, color);
-            }
-        });
-        
-        // Aplicação adicional para garantir que todos os dropdowns sejam capturados
-        this._forceDropdownStyling(nav, color);
-    }
-
-    _styleDropdownContainer(dropdown, color, textColor) {
-        // Forçar aplicação da cor de fundo da navbar nos dropdowns
-        // mesmo se já existir uma cor definida
-        dropdown.style.backgroundColor = color;
-        dropdown.style.setProperty('background-color', color, 'important');
-        
-        // Para dropdowns da navbar, calcular contraste adequado com a cor de fundo
-        const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor(color);
-        dropdown.style.color = defaultDropdownTextColor;
-        dropdown.style.setProperty('color', defaultDropdownTextColor, 'important');
-        
-        console.log(`📋 Dropdown container forced: BG=${color}, Text=${defaultDropdownTextColor}`);
-    }
-
-    _styleDropdownItems(dropdown, navbarBackgroundColor) {
-        // Para itens dos dropdowns da navbar, calcular contraste adequado
-        const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor(navbarBackgroundColor);
-        
-        // Aplicar ao dropdown container também
-        dropdown.style.backgroundColor = navbarBackgroundColor;
-        dropdown.style.setProperty('background-color', navbarBackgroundColor, 'important');
-        dropdown.style.color = defaultDropdownTextColor;
-        dropdown.style.setProperty('color', defaultDropdownTextColor, 'important');
-        
-        // Primeiro, remover classes CSS que interferem com o background
-        this._removeConflictingClasses(dropdown);
-        
-        // Aplicar a TODOS os elementos filhos sem exceção (header, footer, body, etc.)
-        const dropdownItems = dropdown.querySelectorAll('*');
-        dropdownItems.forEach(item => {
-            // Remover classes conflitantes de cada elemento
-            this._removeConflictingClasses(item);
-            
-            // Aplicar cor de fundo a todos os elementos do dropdown
-            item.style.backgroundColor = navbarBackgroundColor;
-            item.style.setProperty('background-color', navbarBackgroundColor, 'important');
-            
-            // Remover qualquer background-image que possa interferir
-            item.style.backgroundImage = 'none';
-            item.style.setProperty('background-image', 'none', 'important');
-            
-            // Aplicar cor de texto a todos os elementos do dropdown
-            item.style.color = defaultDropdownTextColor;
-            item.style.setProperty('color', defaultDropdownTextColor, 'important');
-            
-            // SVGs também precisam ser estilizados
-            if (item.tagName === 'SVG') {
-                item.style.fill = defaultDropdownTextColor;
-                item.style.stroke = defaultDropdownTextColor;
-            }
-        });
-        
-        console.log(`📋 All dropdown elements forced styling with class removal: Text=${defaultDropdownTextColor}, BG=${navbarBackgroundColor}`);
-    }
-
-    // Método para remover classes CSS que interferem com o background
-    _removeConflictingClasses(element) {
-        // Lista de classes que interferem com background/cores
-        const conflictingClasses = [
-            // Backgrounds sólidos
-            'bg-white', 'bg-gray-50', 'bg-gray-100', 'bg-gray-200', 'bg-gray-700', 'bg-gray-800',
-            'bg-blue-50', 'bg-purple-50', 'bg-green-50', 
-            // Dark mode backgrounds
-            'dark:bg-gray-600', 'dark:bg-gray-700', 'dark:bg-gray-800',
-            // Gradients que interferem
-            'bg-gradient-to-r', 'from-blue-50', 'to-purple-50', 'dark:from-gray-700', 'dark:to-gray-600',
-            'bg-gradient-to-l', 'bg-gradient-to-t', 'bg-gradient-to-b',
-            // Outras classes de background
-            'bg-opacity-5', 'bg-opacity-10', 'bg-opacity-20'
-        ];
-        
-        // Remover classes conflitantes
-        conflictingClasses.forEach(className => {
-            if (element.classList && element.classList.contains(className)) {
-                element.classList.remove(className);
-                console.log(`🧹 Removed conflicting class: ${className} from ${element.tagName}`);
-            }
-        });
-        
-        // Também remover qualquer classe que contenha 'bg-' para ser mais agressivo
-        if (element.classList) {
-            const classesToRemove = [];
-            element.classList.forEach(className => {
-                if (className.startsWith('bg-') || 
-                    className.startsWith('from-') || 
-                    className.startsWith('to-') ||
-                    className.includes('gradient')) {
-                    classesToRemove.push(className);
-                }
-            });
-            
-            classesToRemove.forEach(className => {
-                element.classList.remove(className);
-                console.log(`🧹 Removed background class: ${className}`);
-            });
-        }
-    }
-
-    // Método adicional para forçar estilização de dropdowns que possam ter sido perdidos
-    _forceDropdownStyling(nav, color) {
-        // Procurar por elementos que podem ser dropdowns baseado em atributos comuns
-        const potentialDropdowns = nav.querySelectorAll('*[style*="display: none"], *[style*="display:none"], *[hidden], *[x-show], *[aria-hidden]');
-        const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor(color);
-        
-        potentialDropdowns.forEach(element => {
-            // Verificar se parece um dropdown baseado em classes ou conteúdo
-            const classString = element.className.toLowerCase();
-            if (classString.includes('menu') || 
-                classString.includes('dropdown') || 
-                classString.includes('popover') ||
-                element.hasAttribute('x-show') ||
-                element.getAttribute('role') === 'menu') {
-                
-                element.style.backgroundColor = color;
-                element.style.setProperty('background-color', color, 'important');
-                element.style.color = defaultDropdownTextColor;
-                element.style.setProperty('color', defaultDropdownTextColor, 'important');
-                
-                console.log(`📋 Force styled potential dropdown: ${element.className || element.tagName}`);
-            }
-        });
-    }
-
-    _styleNavbarBadges(nav, color, textColor) {
-        const quickStatBadges = nav.querySelectorAll('.quick-stat-badge, [class*="stat-"], .badge, .notification-badge');
-        quickStatBadges.forEach(badge => {
-            this._styleBadgeContainer(badge, color, textColor);
-            this._styleBadgeChildren(badge, textColor);
-        });
-    }
-
-    _styleBadgeContainer(badge, color, textColor) {
-        if (!badge.classList.contains('bg-') && !badge.style.backgroundColor) {
-            badge.style.backgroundColor = color;
-            badge.style.borderColor = textColor;
-        }
-        this._applyElementTextStyle(badge, textColor);
-    }
-
-    _styleBadgeChildren(badge, textColor) {
-        const badgeChildren = badge.querySelectorAll('*');
-        badgeChildren.forEach(child => {
-            if (!child.style.backgroundColor && !child.classList.contains('bg-')) {
-                this._applyElementTextStyle(child, textColor);
-            }
-        });
-    }
-
-    _styleNavbarButtons(nav, textColor) {
-        const navbarButtons = nav.querySelectorAll('button:not([class*="theme"]):not([x-data])');
-        navbarButtons.forEach(button => {
-            if (!button.style.backgroundColor && !button.classList.contains('bg-')) {
-                this._styleButtonContainer(button, textColor);
-                this._styleButtonChildren(button, textColor);
-            }
-        });
-    }
-
-    _styleButtonContainer(button, textColor) {
-        button.style.color = textColor;
-        button.style.borderColor = textColor;
-        button.style.setProperty('color', textColor, 'important');
-    }
-
-    _styleButtonChildren(button, textColor) {
-        const buttonChildren = button.querySelectorAll('*');
-        buttonChildren.forEach(child => {
-            if (child.tagName === 'SVG') {
-                this._styleSVGElements(child, textColor);
-            } else {
-                this._applyElementTextStyle(child, textColor);
-            }
-        });
-    }
-
-    _styleNavbarLinks(nav, textColor) {
-        const navbarLinks = nav.querySelectorAll('a');
-        navbarLinks.forEach(link => {
-            if (!link.style.backgroundColor && !link.classList.contains('bg-')) {
-                this._applyElementTextStyle(link, textColor);
-                this._styleLinkChildren(link, textColor);
-            }
-        });
-    }
-
-    _styleLinkChildren(link, textColor) {
-        const linkChildren = link.querySelectorAll('*');
-        linkChildren.forEach(child => {
-            if (!child.style.backgroundColor) {
-                this._applyElementTextStyle(child, textColor);
-            }
-        });
-    }
-
-    _applyNavbarComprehensiveStyles(color, textColor) {
-        console.log(`🎨 Applying comprehensive navbar colors - BG: ${color}, Text: ${textColor}`);
-
-        this._applyStylesToNavbarElements(color, textColor);
-        this._applyStylesToSpecificNavbarSelectors(color, textColor);
-
-        console.log(`✅ Comprehensive navbar colors applied: ${textColor} for background: ${color}`);
-    }
-
-    _applyStylesToNavbarElements(color, textColor) {
-        const navbarElements = document.querySelectorAll(
-            '.hospital-navbar, .hospital-navbar *, nav.hospital-navbar, nav.hospital-navbar *'
-        );
-
-        navbarElements.forEach(element => {
-            if (this._shouldApplyComprehensiveNavbarStyle(element)) {
-                this._applyComprehensiveElementStyle(element, color, textColor);
-            }
-        });
-    }
-
-    _shouldApplyComprehensiveNavbarStyle(element) {
-        const isInNavbar = element.closest('.hospital-navbar, nav.hospital-navbar');
-        const isThemeManager = element.closest('[x-data*="themeManager"]') ||
-                              element.hasAttribute('x-data') ||
-                              element.classList.contains('theme-manager');
-        const hasOwnBg = element.style.backgroundColor ||
-                       element.classList.contains('bg-') ||
-                       this._classNameIncludes(element, 'dark:bg-');
-
-        return isInNavbar && !isThemeManager && !hasOwnBg;
-    }
-
-    _applyComprehensiveElementStyle(element, color, textColor) {
-        // Verificar se é um elemento de dropdown antes de aplicar estilos
-        if (this._isDropdownElement(element)) {
-            // Para dropdowns, calcular contraste adequado com a cor de fundo da navbar
-            const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor(color);
-            element.style.color = defaultDropdownTextColor;
-            element.style.setProperty('color', defaultDropdownTextColor, 'important');
-        } else {
-            // Para elementos normais da navbar, usar contraste calculado
-            this._applyElementTextStyle(element, textColor);
-        }
-        
-        this._styleSVGElements(element, textColor);
-        this._handleSpecialNavbarElements(element, color, textColor);
-        this._handleDropdownElements(element, color, textColor);
-        this._handleButtonElements(element, textColor);
-        this._handleLinkElements(element, textColor);
-    }
-
-    _handleSpecialNavbarElements(element, color, textColor) {
-        if (element.classList.contains('quick-stat-badge') ||
-            element.classList.contains('stat-value') ||
-            element.classList.contains('stat-label') ||
-            element.closest('.quick-stat-badge')) {
-
-            if (element.classList.contains('quick-stat-badge')) {
-                element.style.backgroundColor = color;
-                element.style.borderColor = textColor;
-            }
-            this._applyElementTextStyle(element, textColor);
-        }
-    }
-
-    _handleDropdownElements(element, color, textColor) {
-        if (element.classList.contains('dropdown') ||
-            element.classList.contains('dropdown-menu') ||
-            element.hasAttribute('x-show') ||
-            element.closest('.dropdown, .dropdown-menu, [x-show]')) {
-
-            // Para elementos de dropdown da navbar, calcular contraste adequado
-            const defaultDropdownTextColor = this._getDefaultNavbarDropdownTextColor(color);
-            element.style.color = defaultDropdownTextColor;
-            element.style.setProperty('color', defaultDropdownTextColor, 'important');
-
-            // Aplicar background da navbar a todos os elementos de dropdown
-            element.style.backgroundColor = color;
-            element.style.setProperty('background-color', color, 'important');
-            
-            console.log(`📋 Dropdown element handled: ${element.className || element.tagName}, BG=${color}, Text=${defaultDropdownTextColor}`);
-        }
-    }
-
-    _handleButtonElements(element, textColor) {
-        if (element.tagName === 'BUTTON') {
-            const isThemeManager = element.closest('[x-data*="themeManager"]') ||
-                                  element.hasAttribute('x-data') ||
-                                  element.classList.contains('theme-manager');
-
-            if (!isThemeManager) {
-                element.style.color = textColor;
-                element.style.borderColor = textColor;
-                element.style.setProperty('color', textColor, 'important');
-            }
-        }
-    }
-
-    _handleLinkElements(element, textColor) {
-        if (element.tagName === 'A') {
-            this._applyElementTextStyle(element, textColor);
-        }
-    }
-
-    _applyStylesToSpecificNavbarSelectors(color, textColor) {
-        const specificSelectors = this._getSpecificNavbarSelectors();
-
-        specificSelectors.forEach(selector => {
-            const elements = document.querySelectorAll(selector);
-            elements.forEach(element => {
-                this._applyStyleToSpecificElement(element, color, textColor);
-            });
-        });
-    }
-
-    _getSpecificNavbarSelectors() {
-        const baseSelectors = [
-            '.quick-stat-badge', '.stat-value', '.stat-label',
-            '.badge', '.notification-badge', '[x-show]',
-            '.dropdown', '.dropdown-menu'
-        ];
-
-        const navbarPrefixes = ['.hospital-navbar ', 'nav.hospital-navbar '];
-
-        return navbarPrefixes.flatMap(prefix =>
-            baseSelectors.map(selector => prefix + selector)
-        );
-    }
-
-    _applyStyleToSpecificElement(element, color, textColor) {
-        const isThemeManager = element.closest('[x-data*="themeManager"]');
-        if (!isThemeManager) {
-            this._applyElementTextStyle(element, textColor);
-            this._applyBackgroundToSpecialElements(element, color);
-            this._applyStylesToElementChildren(element, textColor);
-        }
-    }
-
-    _applyBackgroundToSpecialElements(element, color) {
-        if (element.classList.contains('dropdown-menu') ||
-            element.classList.contains('quick-stat-badge') ||
-            element.hasAttribute('x-show')) {
-            element.style.backgroundColor = color;
-        }
-    }
-
-    _applyStylesToElementChildren(element, textColor) {
-        const children = element.querySelectorAll('*');
-        children.forEach(child => {
-            if (!child.style.backgroundColor &&
-                !child.classList.contains('bg-') &&
-                !child.closest('[x-data*="themeManager"]')) {
-                this._applyElementTextStyle(child, textColor);
-            }
-        });
-    }
-
-    _applySidebarStyles(color, textColor, root) {
-        this._setCSSVariables(root, 'sidebar', color, textColor);
-        this._applySidebarElementStyles(color, textColor);
-        this._applySidebarScrollbarStyles(color, textColor, root);
-        console.log(`✅ Sidebar styles applied: ${color} with text: ${textColor}`);
-    }
-
-    _applySidebarElementStyles(color, textColor) {
-        const sidebarSelectors = this._getSidebarSelectors();
-        console.log(`🔍 DEBUG: Using sidebar selectors: ${sidebarSelectors}`);
-
-        const sidebars = document.querySelectorAll(sidebarSelectors);
-        console.log(`🔍 Found ${sidebars.length} sidebar elements`);
-
-        sidebars.forEach((sidebar, index) => {
-            console.log(`🔍 Sidebar ${index + 1}: ${sidebar.className || sidebar.tagName}`);
-        });
-
-        sidebars.forEach(sidebar => {
-            console.log(`🎨 Styling sidebar: ${sidebar.className || sidebar.tagName}`);
-            this._styleSidebarContainer(sidebar, color, textColor);
-            this._styleSidebarChildren(sidebar, textColor);
-        });
-
-        this._forceApplyToSidebarElements(color, textColor);
-    }
-
-    _forceApplyToSidebarElements(color, textColor) {
-        console.log(`🔧 FORCE: Applying sidebar colors to any element containing 'sidebar' class`);
-
-        const allElements = document.querySelectorAll('*');
-        let foundSidebarElements = 0;
-
-        allElements.forEach(element => {
-            const className = this._getElementClassName(element);
-            const id = element.id || '';
-
-            if (this._classNameIncludes(element, 'sidebar') || id.includes('sidebar')) {
-                console.log(`🔧 FORCE: Found sidebar element: ${element.tagName}.${className}#${id}`);
-                foundSidebarElements++;
-
-                if (!element.closest('[x-data*="themeManager"]')) {
-                    element.style.backgroundColor = color;
-                    element.style.color = textColor;
-
-                    const children = element.querySelectorAll('*');
-                    children.forEach(child => {
-                        if (!child.closest('[x-data*="themeManager"]') &&
-                            !child.style.backgroundColor &&
-                            !child.classList.contains('bg-')) {
-                            child.style.color = textColor;
-
-                            if (child.tagName === 'SVG') {
-                                child.style.fill = textColor;
-                                child.style.stroke = textColor;
-                            }
-                        }
-                    });
-                }
-            }
-        });
-
-        console.log(`🔧 FORCE: Applied to ${foundSidebarElements} sidebar elements`);
-    }
-
-    _getSidebarSelectors() {
-        return [
-            '.hospital-sidebar',
-            '.sidebar',
-            '[class*="sidebar"]',
-            'aside',
-            'nav[role="navigation"]',
-            '.nav-sidebar',
-            '.side-nav',
-            '.side-navigation',
-            '.main-sidebar',
-            '#sidebar'
-        ].join(', ');
-    }
-
-    _styleSidebarContainer(sidebar, color, textColor) {
-        sidebar.style.backgroundColor = color;
-        sidebar.style.color = textColor;
-    }
-
-    _styleSidebarChildren(sidebar, textColor) {
-        const children = sidebar.querySelectorAll('*');
-        children.forEach(child => {
-            if (!child.closest('[x-data*="themeManager"]') &&
-                !child.style.backgroundColor &&
-                !child.classList.contains('bg-')) {
-                child.style.color = textColor;
-
-                if (child.tagName === 'SVG') {
-                    child.style.fill = textColor;
-                    child.style.stroke = textColor;
-                }
-            }
-        });
-    }
-
-    _applySidebarScrollbarStyles(color, textColor, root) {
-        const sidebarScrollbarColor = this._adjustColorOpacity(color, 0.3);
-        const sidebarScrollbarHoverColor = this._adjustColorOpacity(color, 0.5);
-
-        root.style.setProperty('--sidebar-scrollbar-color', sidebarScrollbarColor);
-        root.style.setProperty('--sidebar-scrollbar-hover-color', sidebarScrollbarHoverColor);
-
-        const style = document.createElement('style');
-        style.textContent = `
-            .hospital-sidebar::-webkit-scrollbar-thumb {
-                background-color: ${sidebarScrollbarColor} !important;
-            }
-            .hospital-sidebar::-webkit-scrollbar-thumb:hover {
-                background-color: ${sidebarScrollbarHoverColor} !important;
-            }
-        `;
-        
-        const existingStyle = document.head.querySelector('style[data-sidebar-scrollbar]');
-        if (existingStyle) {
-            existingStyle.remove();
-        }
-        
-        style.setAttribute('data-sidebar-scrollbar', 'true');
-        document.head.appendChild(style);
-    }
-
     _adjustColorOpacity(color, opacity) {
         if (!color.startsWith('#')) return color;
 
@@ -704,211 +534,221 @@ export class ColorApplier {
         return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     }
 
-    _applyBackgroundStyles(color, textColor, root) {
-        this._setCSSVariables(root, 'content', color, textColor);
-        this._setCSSVariables(root, 'bg', color, textColor);
+    _classNameIncludes(element, searchText) {
+        if (!element || !element.classList || !searchText) return false;
         
-        const contentArea = this._findMainContentArea();
-        if (contentArea) {
-            this._styleContentArea(contentArea, color, textColor);
-        } else {
-            document.body.style.backgroundColor = color;
-        }
-
-        console.log(`✅ Background styles applied: ${color} with text: ${textColor}`);
-    }
-
-    _findMainContentArea() {
-        const contentSelectors = [
-            '.hospital-content',
-            'main.hospital-main',
-            'main',
-            '.content-area',
-            '.main-content'
-        ];
-
-        for (const selector of contentSelectors) {
-            const contentArea = document.querySelector(selector);
-            if (contentArea) return contentArea;
-        }
-        return null;
-    }
-
-    _styleContentArea(contentArea, color, textColor) {
-        contentArea.style.backgroundColor = color;
-
-        // Para o conteúdo principal, sempre manter textos claros/escuros padrão
-        // Não aplicar a cor de contraste automática para preservar legibilidade
-        const textElements = contentArea.querySelectorAll('h1, h2, h3, h4, h5, h6, p, span, div:not([class*="bg-"]), a:not([class*="bg-"]), label');
-        textElements.forEach(textEl => {
-            if (!textEl.closest('.hospital-navbar') &&
-                !textEl.closest('.hospital-sidebar') &&
-                !textEl.style.backgroundColor &&
-                !textEl.classList.contains('bg-')) {
-                
-                // Aplicar cor de texto padrão baseada no tema atual (claro/escuro)
-                // ao invés da cor de contraste calculada
-                const defaultTextColor = this._getDefaultContentTextColor();
-                textEl.style.color = defaultTextColor;
-                textEl.style.setProperty('color', defaultTextColor, 'important');
+        for (let className of element.classList) {
+            if (className.includes(searchText)) {
+                return true;
             }
-        });
-        
-        console.log(`📝 Content area styled with background: ${color}, keeping default text colors`);
-    }
-
-    // Método para obter cor de texto padrão do conteúdo baseada no tema atual
-    _getDefaultContentTextColor() {
-        const isDarkMode = document.documentElement.classList.contains('dark');
-        // Para conteúdo principal, sempre usar cores neutras legíveis
-        return isDarkMode ? '#f8fafc' : '#1f2937'; // Texto claro no dark mode, escuro no light mode
-    }
-
-    // Método para obter cor de texto padrão dos dropdowns da navbar
-    _getDefaultNavbarDropdownTextColor(navbarBackgroundColor = null) {
-        // Se temos a cor de fundo da navbar, calcular contraste adequado
-        if (navbarBackgroundColor && ColorUtils.isValidHexColor(navbarBackgroundColor)) {
-            // Para dropdowns, garantir contraste adequado com a cor de fundo da navbar
-            return ColorUtils.getSmartContrastColor(navbarBackgroundColor, {
-                lightColor: '#ffffff',
-                darkColor: '#1f2937',
-                mediumLightColor: '#f9fafb',
-                mediumDarkColor: '#374151'
-            });
         }
         
-        // Fallback baseado no tema atual
-        const isDarkMode = document.documentElement.classList.contains('dark');
-        return isDarkMode ? '#f8fafc' : '#1f2937'; // Contraste forte em ambos os modos
-    }
-
-    // Método para identificar se um elemento é parte de um dropdown
-    _isDropdownElement(element) {
-        return element.classList.contains('dropdown') ||
-               element.classList.contains('dropdown-menu') ||
-               element.hasAttribute('x-show') ||
-               element.closest('.dropdown, .dropdown-menu, [x-show]') ||
-               element.closest('[role="menu"]') ||
-               element.classList.contains('dropdown-item');
-    }
-
-    _applyAccentStyles(color, textColor, root) {
-        this._setCSSVariables(root, 'accent', color, textColor);
-        this._applyAccentToElements(color, textColor);
-        console.log(`✅ Accent styles applied: ${color} with text: ${textColor}`);
-    }
-
-    _applyAccentToElements(color, textColor) {
-        const accentElements = document.querySelectorAll(
-            '.btn-primary, .gqa-btn.primary, .text-blue-500, .bg-blue-500, ' +
-            '.border-blue-500, [class*="blue-"], .btn-accent, .accent-color, .primary-button'
-        );
-
-        accentElements.forEach(element => {
-            if (element.classList.contains('bg-blue-500') ||
-                element.classList.contains('btn-primary') ||
-                element.classList.contains('btn-accent') ||
-                element.classList.contains('primary-button')) {
-                element.style.backgroundColor = color;
-                element.style.borderColor = color;
-                element.style.color = textColor;
-            } else if (element.classList.contains('text-blue-500') ||
-                       element.classList.contains('accent-color')) {
-                element.style.color = color;
-            } else if (element.classList.contains('border-blue-500')) {
-                element.style.borderColor = color;
-            }
-        });
-    }
-
-    applyDefaultTheme() {
-        console.log('🔄 Applying default theme...');
-        
-        // Remove custom CSS properties
-        document.documentElement.style.removeProperty('--navbar-bg');
-        document.documentElement.style.removeProperty('--navbar-text');
-        document.documentElement.style.removeProperty('--sidebar-bg');
-        document.documentElement.style.removeProperty('--sidebar-text');
-        document.documentElement.style.removeProperty('--content-bg');
-        document.documentElement.style.removeProperty('--content-text');
-        document.documentElement.style.removeProperty('--accent-color');
-        document.documentElement.style.removeProperty('--accent-text');
-        document.documentElement.style.removeProperty('--bg-color');
-        document.documentElement.style.removeProperty('--text-color');
-
-        // Remove inline styles from elements
-        const elementsToReset = document.querySelectorAll('[style*="background-color"], [style*="color"]');
-        elementsToReset.forEach(element => {
-            // Don't reset theme manager elements
-            if (!element.closest('[x-data*="themeManager"]')) {
-                element.style.removeProperty('background-color');
-                element.style.removeProperty('color');
-                element.style.removeProperty('border-color');
-                element.style.removeProperty('fill');
-                element.style.removeProperty('stroke');
-            }
-        });
-
-        // Remove custom scrollbar styles
-        const customScrollbarStyle = document.head.querySelector('style[data-sidebar-scrollbar]');
-        if (customScrollbarStyle) {
-            customScrollbarStyle.remove();
-        }
-        
-        console.log('✅ Default theme applied successfully');
-    }
-
-    setupDynamicNavbarColorApplication() {
-        const targetNode = document.querySelector('.hospital-navbar, nav.hospital-navbar');
-        if (!targetNode) {
-            console.warn('⚠️ Navbar not found for dynamic color application');
-            return;
-        }
-
-        const observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-                if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
-                    const hasCustomTheme = window.hasCustomTheme;
-                    if (hasCustomTheme && window.Hospital?.themeManager?.colors?.navbar) {
-                        const navbarColor = window.Hospital.themeManager.colors.navbar;
-                        const textColor = ColorUtils.getSmartContrastColor(navbarColor, {
-                            lightColor: '#ffffff',
-                            darkColor: '#1f2937',
-                            mediumLightColor: '#f8fafc',
-                            mediumDarkColor: '#374151'
-                        });
-
-                        console.log(`🔄 Navbar DOM changed, reapplying colors: ${navbarColor}`);
-                        this._applyNavbarStyles(navbarColor, textColor, document.documentElement);
-                    }
-                }
-            });
-        });
-
-        observer.observe(targetNode, {
-            childList: true,
-            subtree: true
-        });
-
-        console.log('🔄 Dynamic navbar color application observer initialized');
+        return false;
     }
 
     _getElementClassName(element) {
-        // Handle both regular elements and SVG elements
+        if (!element) return '';
+        
+        // Handle elements without className property
+        if (!element.className) return '';
+        
+        // Handle string className (most common case)
         if (typeof element.className === 'string') {
             return element.className;
-        } else if (element.className && element.className.baseVal) {
-            // SVG elements have className as SVGAnimatedString
-            return element.className.baseVal;
-        } else if (element.getAttribute) {
-            // Fallback to getAttribute
-            return element.getAttribute('class') || '';
         }
-        return '';
+        
+        // Handle SVGAnimatedString and other objects
+        if (element.className.baseVal !== undefined) {
+            return element.className.baseVal || '';
+        }
+        
+        // Fallback to toString() for other object types
+        try {
+            return element.className.toString() || '';
+        } catch (e) {
+            console.warn('Failed to get className for element:', element, e);
+            return '';
+        }
     }
 
-    _classNameIncludes(element, search) {
-        const className = this._getElementClassName(element);
-        return typeof className === 'string' && className.includes(search);
+    _removeConflictingClasses(element) {
+        if (!element || !element.classList) return;
+        
+        const conflictingClasses = [
+            // Background classes
+            'bg-white', 'bg-gray-50', 'bg-gray-100', 'bg-gray-200', 'bg-gray-300',
+            'bg-gray-400', 'bg-gray-500', 'bg-gray-600', 'bg-gray-700', 'bg-gray-800',
+            'bg-gray-900', 'bg-transparent',
+            // Text classes
+            'text-white', 'text-gray-50', 'text-gray-100', 'text-gray-200', 'text-gray-300',
+            'text-gray-400', 'text-gray-500', 'text-gray-600', 'text-gray-700', 'text-gray-800',
+            'text-gray-900', 'text-black',
+            // Dark mode classes
+            'dark:bg-white', 'dark:bg-gray-50', 'dark:bg-gray-100', 'dark:bg-gray-200',
+            'dark:bg-gray-300', 'dark:bg-gray-400', 'dark:bg-gray-500', 'dark:bg-gray-600',
+            'dark:bg-gray-700', 'dark:bg-gray-800', 'dark:bg-gray-900', 'dark:bg-transparent',
+            'dark:text-white', 'dark:text-gray-50', 'dark:text-gray-100', 'dark:text-gray-200',
+            'dark:text-gray-300', 'dark:text-gray-400', 'dark:text-gray-500', 'dark:text-gray-600',
+            'dark:text-gray-700', 'dark:text-gray-800', 'dark:text-gray-900', 'dark:text-black'
+        ];
+        
+        try {
+            conflictingClasses.forEach(className => {
+                if (element.classList.contains(className)) {
+                    element.classList.remove(className);
+                }
+            });
+        } catch (e) {
+            console.warn('Error removing conflicting classes:', element, e);
+        }
+    }
+
+    _createOrUpdateStyle(id, css) {
+        const existingStyle = document.head.querySelector(`style[data-${id}]`);
+        if (existingStyle) {
+            existingStyle.remove();
+        }
+        
+        const style = document.createElement('style');
+        style.textContent = css;
+        style.setAttribute(`data-${id}`, 'true');
+        document.head.appendChild(style);
+    }
+
+    // Event Management
+    _cleanupElementListeners(element) {
+        this.eventListeners.forEach(listener => {
+            if (listener.element === element) {
+                element.removeEventListener(listener.type, listener.handler);
+                this.eventListeners.delete(listener);
+            }
+        });
+    }
+
+    _cleanupAllListeners() {
+        this.eventListeners.forEach(listener => {
+            listener.element.removeEventListener(listener.type, listener.handler);
+        });
+        this.eventListeners.clear();
+    }
+
+    _cleanupMutationObservers() {
+        this.mutationObservers.forEach(observer => {
+            observer.disconnect();
+        });
+        this.mutationObservers.clear();
+    }
+
+    // Reset Functionality
+    reset() {
+        console.log('🔄 Starting comprehensive theme reset...');
+        
+        const root = document.documentElement;
+        
+        // Clean up event listeners and observers
+        this._cleanupAllListeners();
+        this._cleanupMutationObservers();
+        this._clearElementCache();
+        
+        // Remove CSS variables
+        ['navbar', 'sidebar', 'content', 'bg', 'accent'].forEach(type => {
+            root.style.removeProperty(`--${type}-bg`);
+            root.style.removeProperty(`--${type}-text`);
+        });
+        
+        root.style.removeProperty('--gqa-primary');
+        root.style.removeProperty('--gqa-secondary');
+        
+        // Reset all elements
+        this._resetAllElements();
+        
+        // Remove dynamic styles
+        const dynamicStyles = document.querySelectorAll('style[data-theme], style[data-sidebar-scrollbar]');
+        dynamicStyles.forEach(style => style.remove());
+        
+        console.log('✅ Comprehensive theme reset completed');
+    }
+
+    _resetAllElements() {
+        const allElements = document.querySelectorAll('*');
+        let resetCount = 0;
+        
+        allElements.forEach(element => {
+            if (!this._isThemeManagerElement(element)) {
+                const hadStyles = element.hasAttribute('style');
+                
+                const stylesToRemove = [
+                    'background-color', 'color', 'border-color', 'fill', 'stroke', 
+                    'background-image', 'background', 'border', 'opacity'
+                ];
+                
+                stylesToRemove.forEach(prop => {
+                    element.style.removeProperty(prop);
+                });
+                
+                if (hadStyles && !element.getAttribute('style')) {
+                    element.removeAttribute('style');
+                    resetCount++;
+                }
+            }
+        });
+        
+        console.log(`🔄 Reset ${resetCount} elements`);
+    }
+
+    // Dynamic Color Application Setup
+    setupDynamicNavbarColorApplication() {
+        console.log('🎨 Setting up dynamic navbar color application');
+        
+        const navbar = document.querySelector('.hospital-navbar, nav.hospital-navbar');
+        if (!navbar) {
+            console.warn('⚠️ Navbar not found');
+            return;
+        }
+
+        if (window.hasCustomTheme && window.userTheme) {
+            console.log('🎨 Applying initial navbar colors');
+            this._applyNavbarStyles(window.userTheme.navbar);
+        }
+
+        const observer = new MutationObserver((mutations) => {
+            let shouldReapply = false;
+            
+            mutations.forEach((mutation) => {
+                if (mutation.type === 'childList' && 
+                    (mutation.addedNodes.length > 0 || mutation.removedNodes.length > 0)) {
+                    shouldReapply = true;
+                }
+                
+                if (mutation.type === 'attributes' && 
+                    (mutation.attributeName === 'class' || mutation.attributeName === 'style')) {
+                    shouldReapply = true;
+                }
+            });
+
+            if (shouldReapply && window.hasCustomTheme && window.userTheme) {
+                console.log('🎨 DOM changes detected, reapplying navbar colors');
+                setTimeout(() => {
+                    this._applyNavbarStyles(window.userTheme.navbar);
+                }, 100);
+            }
+        });
+
+        observer.observe(navbar, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ['class', 'style']
+        });
+
+        this.mutationObservers.add(observer);
+        console.log('✅ Dynamic navbar color application setup complete');
+    }
+
+    // Cleanup method to be called when the instance is no longer needed
+    destroy() {
+        this._cleanupAllListeners();
+        this._cleanupMutationObservers();
+        this._clearElementCache();
     }
 }

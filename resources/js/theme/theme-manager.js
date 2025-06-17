@@ -150,7 +150,7 @@ export class ThemeManager {
                 this.updateIsCustomActive();
                 
                 // Apply default theme visually
-                this.colorApplier.applyDefaultTheme();
+                this.colorApplier.reset();
                 this.themeLogic.toggleLightDarkButton();
 
                 // Trigger business rules for theme reset to default
@@ -179,33 +179,75 @@ export class ThemeManager {
 
         try {
             // Client-side reset only (no server call)
+            console.log('🔄 Calling themeStorage.resetTheme()...');
             const success = await this.themeStorage.resetTheme();
+            console.log('🔄 themeStorage.resetTheme() result:', success);
             
             if (success) {
                 // Reset colors to defaults
+                console.log('🔄 Resetting colors to defaults...');
                 this.colors = { ...ThemeConfig.DEFAULT_COLORS };
-                this.updateIsCustomActive();
+                console.log('🔄 Colors reset to:', this.colors);
                 
                 // Apply default theme visually
-                this.colorApplier.applyDefaultTheme();
-                this.themeLogic.toggleLightDarkButton();
+                console.log('🔄 Applying visual reset...');
+                try {
+                    this.colorApplier.reset();
+                    console.log('✅ ColorApplier reset completed');
+                } catch (colorError) {
+                    console.error('❌ Error in ColorApplier reset:', colorError);
+                    // Continue with reset despite this error
+                }
+                
+                // Update state after visual reset (importante: depois do reset visual)
+                console.log('🔄 Updating custom active state...');
+                try {
+                    this.updateIsCustomActive();
+                    console.log('✅ updateIsCustomActive completed');
+                } catch (stateError) {
+                    console.error('❌ Error in updateIsCustomActive:', stateError);
+                    // Continue with reset despite this error
+                }
+                
+                console.log('🔄 Toggling light/dark button...');
+                try {
+                    this.themeLogic.toggleLightDarkButton();
+                    console.log('✅ toggleLightDarkButton completed');
+                } catch (toggleError) {
+                    console.error('❌ Error in toggleLightDarkButton:', toggleError);
+                    // Continue with reset despite this error
+                }
 
                 // Trigger business rules for theme reset to default
-                if (typeof onThemeResetToDefault === 'function') {
-                    onThemeResetToDefault();
+                try {
+                    if (typeof onThemeResetToDefault === 'function') {
+                        console.log('🔄 Calling onThemeResetToDefault...');
+                        onThemeResetToDefault();
+                        console.log('✅ onThemeResetToDefault completed');
+                    } else {
+                        console.log('🔄 onThemeResetToDefault function not found');
+                    }
+                } catch (businessError) {
+                    console.error('❌ Error in onThemeResetToDefault:', businessError);
+                    // Continue with reset despite this error
                 }
 
                 this.showToast('Tema restaurado com sucesso!', 'success');
                 console.log('✅ Theme reset completed successfully');
+                return true;
             } else {
-                throw new Error('Reset failed');
+                console.error('❌ themeStorage.resetTheme() returned false');
+                this.showToast('Erro ao restaurar tema. Tente novamente.', 'error');
+                return false;
             }
         } catch (error) {
-            console.error('❌ Error resetting theme:', error);
+            console.error('❌ Unexpected error resetting theme in resetThemeWithoutState:', error);
+            console.error('❌ Error stack:', error.stack);
             this.showToast('Erro ao restaurar tema. Tente novamente.', 'error');
-            throw error; // Re-throw so Alpine can handle it
+            return false; // Don't re-throw, just return false
         } finally {
             this.loading = false;
+            console.log('🔄 Reset loading state cleared');
         }
     }
 

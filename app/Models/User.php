@@ -89,6 +89,7 @@ class User extends Authenticatable
             'navbar_color' => null,
             'sidebar_color' => null,
             'background_color' => null,
+            'accent_color' => null,
             'is_custom' => false,
         ];
     }
@@ -120,6 +121,7 @@ class User extends Authenticatable
             'navbar_color' => null,
             'sidebar_color' => null,
             'background_color' => null,
+            'accent_color' => null,
             'is_custom' => false,
         ];
         $this->save();

@@ -360,14 +360,14 @@
         </div>
 
         <!-- Notifications Dropdown -->
-        <div class="relative" x-data="{ open: false, hasNew: notifications && notifications.length > 0 }">
+        <div class="relative" x-data="{ open: false, notifications: [], hasNew: false }" x-init="hasNew = notifications && notifications.length > 0">
             <button @click="open = !open"
                     class="relative p-2 rounded-lg text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700 transition-colors">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                 </svg>
-                <span x-show="hasNew && notifications && notifications.length > 0"
-                      x-text="notifications ? notifications.length : 0"
+                <span x-show="hasNew"
+                      x-text="notifications.length"
                       class="absolute -top-1 -right-1 h-5 w-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-medium animate-pulse"
                       style="display: none;">
                 </span>
@@ -397,7 +397,7 @@
                 </div>
 
                 <div class="max-h-80 overflow-y-auto">
-                    <div x-show="!notifications || notifications.length === 0" class="p-8 text-center text-gray-500 dark:text-gray-400">
+                    <div x-show="notifications.length === 0" class="p-8 text-center text-gray-500 dark:text-gray-400">
                         <svg class="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"></path>
                         </svg>
@@ -438,11 +438,19 @@
                  x-transition:leave="transition ease-in duration-150"
                  x-transition:leave-start="opacity-100 scale-100"
                  x-transition:leave-end="opacity-0 scale-95"
-                 class="absolute right-0 mt-2 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 dark:ring-gray-600 overflow-hidden"
+                 class="absolute right-0 mt-2 w-64 rounded-lg shadow-xl ring-1 ring-black ring-opacity-5 dark:ring-gray-600 overflow-hidden z-50"
+                 :class="{
+                     'bg-white dark:bg-gray-800': !window.hasCustomTheme,
+                     'gqa-navbar-bg': window.hasCustomTheme
+                 }"
                  style="display: none; z-index: 9999;">
 
                 <!-- User Info Header - FIXED DARK MODE -->
-                <div class="p-4 border-b border-gray-200 dark:border-gray-600 bg-gradient-to-r from-green-50 to-blue-50 dark:from-gray-700 dark:to-gray-600">
+                <div class="p-4 border-b"
+                     :class="{
+                         'border-gray-200 dark:border-gray-600 bg-gradient-to-r from-green-50 to-blue-50 dark:from-gray-700 dark:to-gray-600': !window.hasCustomTheme,
+                         'gqa-navbar-border gqa-navbar-header-bg': window.hasCustomTheme
+                     }">
                     <div class="flex items-center space-x-3">
                         <div class="w-12 h-12 rounded-full overflow-hidden border-2 border-white dark:border-gray-500 shadow-md">
                             <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&background=22c55e&color=fff&size=48"
@@ -565,7 +573,11 @@
                 </div>
 
                 <!-- Footer with system info - FIXED DARK MODE -->
-                <div class="p-3 border-t border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700">
+                <div class="p-3 border-t"
+                     :class="{
+                         'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700': !window.hasCustomTheme,
+                         'gqa-navbar-border gqa-navbar-footer-bg': window.hasCustomTheme
+                     }">
                     <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
                         <span>Sessão: {{ substr(session()->getId(), 0, 8) }}...</span>
                         <span>{{ now()->format('H:i') }}</span>
@@ -583,19 +595,25 @@
 
         if (search.length >= 2) {
             console.log('Buscando:', search);
-            window.Hospital.utils.showToast(`Buscando por: "${search}"`, 'info', 2000);
+            if (window.Hospital?.utils?.showToast) {
+                window.Hospital.utils.showToast(`Buscando por: "${search}"`, 'info', 2000);
+            }
         }
     }
 
     // Funções para notificações
     window.markAsRead = function(notificationId) {
         console.log('Marcando notificação como lida:', notificationId);
-        window.Hospital.utils.showToast('Notificação marcada como lida', 'success', 2000);
+        if (window.Hospital?.utils?.showToast) {
+            window.Hospital.utils.showToast('Notificação marcada como lida', 'success', 2000);
+        }
     };
 
     window.markAllAsRead = function() {
         console.log('Marcando todas as notificações como lidas');
-        window.Hospital.utils.showToast('Todas as notificações foram marcadas como lidas', 'success');
+        if (window.Hospital?.utils?.showToast) {
+            window.Hospital.utils.showToast('Todas as notificações foram marcadas como lidas', 'success');
+        }
     };
 
     // Atalhos de teclado
@@ -603,13 +621,17 @@
         if ((e.ctrlKey || e.metaKey) && e.key === 'n') {
             e.preventDefault();
             console.log('Atalho: Novo diagnóstico');
-            window.Hospital.utils.showToast('Abrindo novo diagnóstico...', 'info');
+            if (window.Hospital?.utils?.showToast) {
+                window.Hospital.utils.showToast('Abrindo novo diagnóstico...', 'info');
+            }
         }
 
         if ((e.ctrlKey || e.metaKey) && e.key === 'r') {
             e.preventDefault();
             console.log('Atalho: Relatórios');
-            window.Hospital.utils.showToast('Abrindo relatórios...', 'info');
+            if (window.Hospital?.utils?.showToast) {
+                window.Hospital.utils.showToast('Abrindo relatórios...', 'info');
+            }
         }
 
         if ((e.ctrlKey || e.metaKey) && e.key === 't') {
@@ -625,5 +647,51 @@
                 }
             });
         }
+    });
+
+    // Alpine.js component for theme manager
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('themeManager', () => ({
+            open: false,
+            loading: false,
+            
+            toggle() {
+                this.open = !this.open;
+            },
+            
+            async resetTheme() {
+                console.log('🔄 Alpine resetTheme called');
+                
+                if (!window.Hospital?.themeManager) {
+                    console.error('❌ Hospital.themeManager not available');
+                    if (window.Hospital?.utils?.showToast) {
+                        window.Hospital.utils.showToast('Erro: Sistema de temas não disponível', 'error');
+                    }
+                    return;
+                }
+                
+                this.loading = true;
+                try {
+                    console.log('🔄 Calling resetThemeWithoutState...');
+                    const result = await window.Hospital.themeManager.resetThemeWithoutState();
+                    console.log('🔄 Reset result:', result);
+                    
+                    if (result === true) {
+                        console.log('✅ Reset completed successfully');
+                        // Success toast is already shown by themeManager.resetThemeWithoutState()
+                    } else if (result === false) {
+                        console.error('❌ Reset returned false');
+                        // Error toast is already shown by themeManager.resetThemeWithoutState()
+                    }
+                } catch (error) {
+                    console.error('❌ Error in Alpine resetTheme:', error);
+                    if (window.Hospital?.utils?.showToast) {
+                        window.Hospital.utils.showToast('Erro ao resetar tema', 'error');
+                    }
+                } finally {
+                    this.loading = false;
+                }
+            }
+        }));
     });
 </script>

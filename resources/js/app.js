@@ -19,6 +19,37 @@ class HospitalSystem {
                 console.log('Charts destroyed');
             }
         };
+        // Add utils with showToast implementation
+        this.utils = {
+            showToast: (message, type = 'info', duration = 3000) => {
+                this.showToast(message, type, duration);
+            }
+        };
+    }
+
+    showToast(message, type = 'info', duration = 3000) {
+        // Create toast element
+        const toast = document.createElement('div');
+        toast.className = `fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 text-white transition-opacity duration-300 ${
+            type === 'success' ? 'bg-green-500' : 
+            type === 'error' ? 'bg-red-500' : 
+            type === 'warning' ? 'bg-yellow-500' :
+            'bg-blue-500'
+        }`;
+        toast.textContent = message;
+        
+        // Add to DOM
+        document.body.appendChild(toast);
+        
+        // Auto remove after duration
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        }, duration);
     }
 
     init() {

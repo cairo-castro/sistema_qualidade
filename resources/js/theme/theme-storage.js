@@ -88,7 +88,8 @@ export class ThemeStorage {
             navbar_color: colors.navbar,
             sidebar_color: colors.sidebar,
             background_color: colors.background,
-            accent_color: colors.accent || colors.navbar
+            accent_color: colors.accent || colors.navbar,
+            is_custom: true
         };
         window.isCustomActive = true;
 
@@ -97,8 +98,20 @@ export class ThemeStorage {
 
     _clearGlobalThemeState() {
         window.hasCustomTheme = false;
-        window.userTheme = null;
         window.isCustomActive = false;
+        
+        // Keep userTheme structure but clear color values to match backend reset state
+        if (window.userTheme) {
+            window.userTheme = {
+                navbar_color: null,
+                sidebar_color: null,
+                background_color: null,
+                accent_color: null,
+                is_custom: false
+            };
+        } else {
+            window.userTheme = null;
+        }
 
         console.log('🔄 Global theme state cleared');
     }

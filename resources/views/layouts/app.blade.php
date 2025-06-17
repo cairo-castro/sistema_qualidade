@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
+    <!-- Security and Browser Extension Control -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="format-detection" content="telephone=no">
+    <meta name="format-detection" content="address=no">
+    <meta name="format-detection" content="email=no">
+
     <title>{{ $title ?? 'Dashboard' }} - {{ config('app.name', 'Sistema GQA') }}</title>
 
     <!-- Preload important fonts -->
@@ -325,7 +331,19 @@
 
     <script>
         window.userTheme = @json($userTheme);
-        window.hasCustomTheme = @json($hasCustomTheme);
+        window.hasCustomTheme = @json($hasCustomTheme ?? false);
+        window.isCustomActive = window.hasCustomTheme;
+        
+        // Ensure isCustomActive is initialized
+        if (typeof window.isCustomActive === 'undefined') {
+            window.isCustomActive = window.hasCustomTheme;
+        }
+        
+        console.log('🔧 Theme state initialized:', {
+            hasCustomTheme: window.hasCustomTheme,
+            isCustomActive: window.isCustomActive,
+            userTheme: window.userTheme
+        });
     </script>
 
     <!-- Additional styles for specific pages -->
