@@ -1,0 +1,103 @@
+/* 
+ * Estilos para o Gerenciador de Períodos
+ */
+
+/* Estilo do modal de períodos */
+#periodModal .modal-header {
+  border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+}
+
+#periodModal .nav-tabs {
+  border-bottom: 1px solid #dee2e6;
+}
+
+#periodModal .nav-tabs .nav-link {
+  border: none;
+  color: #6c757d;
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  position: relative;
+  transition: color 0.2s;
+}
+
+#periodModal .nav-tabs .nav-link.active {
+  color: #0d6efd;
+  background-color: transparent;
+  border: none;
+}
+
+#periodModal .nav-tabs .nav-link.active::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background-color: #0d6efd;
+}
+
+#periodModal .nav-tabs .nav-link:hover:not(.active) {
+  color: #0a58ca;
+  border: none;
+}
+
+#periodModal .tab-content {
+  padding: 1.5rem;
+  background-color: #fff;
+}
+
+/* Formatação dos campos de data */
+#periodModal input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  height: 38px;
+  padding: 0.375rem 0.75rem;
+}
+
+/* Badge para exibição do período selecionado */
+.period-info {
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  vertical-align: middle;
+}
+
+/* Responsividade para dispositivos menores */
+@media (max-width: 767.98px) {
+  #periodModal .modal-dialog {
+    margin: 0.5rem;
+    max-width: 100%;
+  }
+  
+  #periodModal .tab-content {
+    padding: 1rem;
+  }
+  
+  #periodModal .nav-tabs .nav-link {
+    padding: 0.5rem 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Estilo para a unidade selecionada no select2 */
+.select2-container--default .select2-selection--single .select2-selection__rendered {
+  line-height: 24px;
+}
+
+/* Ajusta espaçamento nos selects */
+.select2-container {
+  margin-bottom: 0.5rem;
+}
+
+/* Estilo para o badge de informação no título */
+.card-title .period-info {
+  transition: all 0.3s ease;
+}
+
+.card-title .period-info:hover {
+  cursor: pointer;
+  box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.25);
+}

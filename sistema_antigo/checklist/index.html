@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hospital Checklist System</title>
+  
+  <!-- Bootstrap 5 CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+  
+  <!-- AdminLTE CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/css/adminlte.min.css" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+
+  <!-- Select2 CSS -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet">
+  
+  <!-- Custom CSS -->
+  <link href="styles.css" rel="stylesheet">
+  <link href="period-manager.css" rel="stylesheet">
+</head>
+<body class="hold-transition sidebar-mini layout-fixed">
+  <div class="wrapper">
+    <!-- Navbar -->
+    <nav class="main-header navbar navbar-expand navbar-white navbar-light">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
+        </li>
+        <li class="nav-item d-none d-sm-inline-block">
+          <a href="#" class="nav-link">Home</a>
+        </li>
+      </ul>
+    </nav>
+
+    <!-- Main Sidebar Container -->
+    <aside class="main-sidebar sidebar-dark-primary elevation-4">
+      <a href="#" class="brand-link">
+        <i class="fas fa-hospital ms-3 me-2"></i>
+        <span class="brand-text font-weight-light">Hospital System</span>
+      </a>
+
+      <div class="sidebar">
+        <nav class="mt-2">
+          <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu">
+            <li class="nav-item">
+              <a href="#" class="nav-link active">
+                <i class="nav-icon fas fa-tasks"></i>
+                <p>Checklist</p>
+              </a>
+            </li>
+            <li class="nav-item">
+              <a href="#" class="nav-link">
+                <i class="nav-icon fas fa-chart-bar"></i>
+                <p>Relatórios</p>
+              </a>
+            </li>
+          </ul>
+        </nav>
+      </div>
+    </aside>
+    
+    <!-- Modal de Período -->
+    <div class="modal fade" id="periodModal" tabindex="-1" aria-labelledby="periodModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title" id="periodModalLabel">Gerenciar Períodos</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <ul class="nav nav-tabs" id="periodTabs" role="tablist">
+              <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="select-tab" data-bs-toggle="tab" data-bs-target="#select-period" type="button" role="tab">Selecionar Período</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="add-tab" data-bs-toggle="tab" data-bs-target="#add-period" type="button" role="tab">Adicionar Período</button>
+              </li>
+              <li class="nav-item" role="presentation">
+                <button class="nav-link" id="delete-tab" data-bs-toggle="tab" data-bs-target="#delete-period" type="button" role="tab">Excluir Período</button>
+              </li>
+            </ul>
+            
+            <div class="tab-content p-3" id="periodTabsContent">
+              <!-- Aba Selecionar Período -->
+              <div class="tab-pane fade show active" id="select-period" role="tabpanel">
+                <div class="mb-3">
+                  <label for="select-period-dropdown" class="form-label">Selecione um período:</label>
+                  <select id="select-period-dropdown" class="form-select select2-period">
+                    <option value="">Selecione um período</option>
+                  </select>
+                </div>
+                <button id="confirm-period-btn" class="btn btn-primary">Confirmar</button>
+              </div>
+              
+              <!-- Aba Adicionar Período -->
+              <div class="tab-pane fade" id="add-period" role="tabpanel">
+                <div class="mb-3">
+                  <label for="unit-dropdown" class="form-label">Unidade:</label>
+                  <select id="unit-dropdown" class="form-select select2-unit">
+                    <option value="">Selecione uma unidade</option>
+                    <option value="1">Hospital Central</option>
+                    <option value="2">Hospital Norte</option>
+                    <option value="3">Hospital Sul</option>
+                  </select>
+                </div>
+                <div class="mb-3">
+                  <label for="start-date" class="form-label">Data Início:</label>
+                  <input type="date" class="form-control" id="start-date">
+                </div>
+                <div class="mb-3">
+                  <label for="end-date" class="form-label">Data Fim:</label>
+                  <input type="date" class="form-control" id="end-date">
+                </div>
+                <button id="create-period-btn" class="btn btn-success">Criar Período</button>
+              </div>
+              
+              <!-- Aba Excluir Período -->
+              <div class="tab-pane fade" id="delete-period" role="tabpanel">
+                <div class="mb-3">
+                  <label for="delete-period-dropdown" class="form-label">Selecione um período para excluir:</label>
+                  <select id="delete-period-dropdown" class="form-select select2-delete">
+                    <option value="">Selecione um período</option>
+                  </select>
+                </div>
+                <button id="delete-period-btn" class="btn btn-danger">Excluir Período</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Content Wrapper -->
+    <div class="content-wrapper">
+      <section class="content">
+        <div class="container-fluid">
+          <div class="row">
+            <!-- Sidebar de Setores -->
+            <div class="col-md-3 d-print-none">
+              <div class="card" id="sectors-card">
+                <div class="card-header">
+                  <h3 class="card-title">
+                    <i class="fas fa-sitemap me-2"></i>
+                    <span class="title-text">Setores Hospitalares</span>
+                  </h3>
+                  <div class="card-tools">
+                    <button type="button" class="btn btn-tool custom-collapse" title="Recolher">
+                      <i class="fas fa-minus"></i>
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body p-0 sectors-container">
+                  <div class="custom-sectors-menu">
+                    <!-- Setor Emergência -->
+                    <div class="custom-sector">
+                      <div class="custom-sector-header" data-sector="emergency">
+                        <i class="fas fa-ambulance"></i>
+                        <span>Emergência</span>
+                        <i class="fas fa-chevron-right custom-sector-toggle"></i>
+                      </div>
+                      <ul class="custom-subsectors" data-sector="emergency">
+                        <li class="custom-subsector">
+                          <a href="#" class="custom-subsector-link" data-subsector="triage">
+                            <i class="far fa-circle"></i>
+                            <span>Triagem</span>
+                          </a>
+                        </li>
+                        <li class="custom-subsector">
+                          <a href="#" class="custom-subsector-link" data-subsector="observation">
+                            <i class="far fa-circle"></i>
+                            <span>Observação</span>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    <!-- Setor UTI -->
+                    <div class="custom-sector">
+                      <div class="custom-sector-header" data-sector="icu">
+                        <i class="fas fa-procedures"></i>
+                        <span>UTI</span>
+                        <i class="fas fa-chevron-right custom-sector-toggle"></i>
+                      </div>
+                      <ul class="custom-subsectors" data-sector="icu">
+                        <li class="custom-subsector">
+                          <a href="#" class="custom-subsector-link" data-subsector="adult-icu">
+                            <i class="far fa-circle"></i>
+                            <span>UTI Adulto</span>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    <!-- Setor Centro Cirúrgico -->
+                    <div class="custom-sector">
+                      <div class="custom-sector-header" data-sector="surgery">
+                        <i class="fas fa-syringe"></i>
+                        <span>Centro Cirúrgico</span>
+                        <i class="fas fa-chevron-right custom-sector-toggle"></i>
+                      </div>
+                      <ul class="custom-subsectors" data-sector="surgery">
+                        <li class="custom-subsector">
+                          <a href="#" class="custom-subsector-link" data-subsector="surgery-room">
+                            <i class="far fa-circle"></i>
+                            <span>Sala de Cirurgia</span>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                    
+                    <!-- Setor Enfermarias -->
+                    <div class="custom-sector">
+                      <div class="custom-sector-header" data-sector="wards">
+                        <i class="fas fa-bed"></i>
+                        <span>Enfermarias</span>
+                        <i class="fas fa-chevron-right custom-sector-toggle"></i>
+                      </div>
+                      <ul class="custom-subsectors" data-sector="wards">
+                        <li class="custom-subsector">
+                          <a href="#" class="custom-subsector-link" data-subsector="medical">
+                            <i class="far fa-circle"></i>
+                            <span>Clínica Médica</span>
+                          </a>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Conteúdo Principal -->
+            <div class="col-md-9">
+              <div class="card">
+                <div class="card-header custom-header">
+                  <h3 class="card-title">
+                    <i class="fas fa-clipboard-check me-2"></i>
+                    Lista de Verificação
+                  </h3>
+                  <div class="card-tools">
+                    <button type="button" class="btn btn-light btn-sm" id="btn-add">
+                      <i class="fas fa-plus"></i> Adicionar Item
+                    </button>
+                    <button type="button" class="btn btn-light btn-sm ms-2" id="btn-export">
+                      <i class="fas fa-file-export"></i> Exportar
+                    </button>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <!-- Barra de Progresso Adicionada Aqui -->
+                  <div class="progress-container mb-4">
+                    <div class="d-flex justify-content-between mb-2">
+                      <span class="progress-label">Progresso da Verificação</span>
+                      <span class="progress-stats">
+                        <span id="completed-count">0</span> de <span id="total-count">0</span> itens verificados
+                      </span>
+                    </div>
+                    <div class="progress" style="height: 30px;">
+                      <div id="progress-conforme" class="progress-bar bg-success" role="progressbar" style="width: 0%">Conforme</div>
+                      <div id="progress-parcialmente" class="progress-bar bg-warning" role="progressbar" style="width: 0%">Parcialmente</div>
+                      <div id="progress-nao-conforme" class="progress-bar bg-danger" role="progressbar" style="width: 0%">Não Conforme</div>
+                    </div>
+                    <div class="progress-legend mt-2 d-flex justify-content-between">
+                      <small class="text-success"><i class="fas fa-square"></i> <span id="count-conforme">0</span> Conforme</small>
+                      <small class="text-warning"><i class="fas fa-square"></i> <span id="count-parcialmente">0</span> Parcialmente</small>
+                      <small class="text-danger"><i class="fas fa-square"></i> <span id="count-nao-conforme">0</span> Não Conforme</small>
+                      <small class="text-secondary"><i class="fas fa-square"></i> <span id="count-restante">0</span> Restante</small>
+                    </div>
+                  </div>
+                  <div class="table-responsive">
+                    <table id="checklist-table" class="table table-bordered table-hover">
+                      <thead>
+                        <tr>
+                          <th style="width: 60px;">ID</th>
+                          <th>Item</th>
+                          <th style="width: 350px;">Status</th>
+                          <th style="width: 120px; text-align: center;">Não se Aplica</th>
+                          <th>Observação</th>
+                          <th style="width: 100px; text-align: center;">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <footer class="main-footer">
+      <div class="float-right d-none d-sm-inline">
+        v1.0
+      </div>
+      <strong>Copyright &copy; 2025</strong>
+    </footer>
+  </div>
+
+  <!-- Template para linha de problemas -->
+  <template id="problema-template">
+    <tr class="problema-row bg-light">
+      <td colspan="6" class="p-3">
+        <div class="problema-container">
+          <div class="problema-section">
+            <div class="problema-title mb-2">
+              <i class="fas fa-exclamation-triangle text-warning me-2"></i>Tipos de Problema:
+            </div>
+            <select class="problema-select form-select form-select-lg" style="width: 100%" multiple>
+              <!-- Options will be added by JavaScript -->
+            </select>
+            <div class="form-text text-muted mt-1">Selecione ou adicione novos problemas</div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </template>
+
+  <!-- jQuery -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  
+  <!-- Bootstrap 5 JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
+  
+  <!-- AdminLTE JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/admin-lte/3.2.0/js/adminlte.min.js"></script>
+
+  <!-- Select2 JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+  
+  <!-- Custom JavaScript -->
+  <script src="ProblemSelectComponent.js"></script>
+  <script src="PeriodManager.js"></script>
+  <script src="script.js"></script>
+  <script src="init.js"></script>
+</body>
+</html>
