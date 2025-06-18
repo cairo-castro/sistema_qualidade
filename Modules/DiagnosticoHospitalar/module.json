@@ -1,0 +1,11 @@
+{
+    "name": "DiagnosticoHospitalar",
+    "alias": "diagnosticohospitalar",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\DiagnosticoHospitalar\\Providers\\DiagnosticoHospitalarServiceProvider"
+    ],
+    "files": []
+}
