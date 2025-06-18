@@ -5,6 +5,8 @@ import { ThemeManager } from './theme/theme-manager.js';
 import { AnimatedSwitches } from './theme/animated-switches.js';
 import { DarkModeController } from './theme/dark-mode-controller.js';
 import { registerAlpineComponents } from './theme/alpine-components.js';
+import { DashboardCharts } from './charts/dashboard-charts.js';
+import './charts/datatable-init.js';
 
 class HospitalSystem {
     constructor() {
@@ -368,6 +370,36 @@ window.saveTheme = function() {
 window.resetTheme = function() {
     if (window.Hospital?.themeManager) {
         return window.Hospital.themeManager.resetTheme();
+    }
+};
+
+// Global function for dashboard reload
+window.reloadDashboard = async function() {
+    console.log('🔄 Reloading dashboard...');
+    
+    // Show loading state
+    window.loading = true;
+    if (window.Alpine?.store?.hospital) {
+        window.Alpine.store('hospital').setLoading(true);
+    }
+
+    try {
+        // Use dashboard charts module if available
+        if (window.dashboardCharts) {
+            await window.dashboardCharts.reloadDashboard();
+        } else {
+            // Fallback: just simulate loading
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            console.log('✅ Dashboard reloaded (fallback)');
+        }
+    } catch (error) {
+        console.error('❌ Failed to reload dashboard:', error);
+    } finally {
+        // Hide loading state
+        window.loading = false;
+        if (window.Alpine?.store?.hospital) {
+            window.Alpine.store('hospital').setLoading(false);
+        }
     }
 };
 
@@ -754,6 +786,28 @@ function fixNavbarThemeInputs() {
 
 document.addEventListener('DOMContentLoaded', function() {
     console.log('🎬 DOM loaded, initializing systems...');
+    
+    // Initialize dashboard charts
+    window.dashboardCharts = new DashboardCharts();
+    
+    // Function to attempt chart initialization
+    window.initializeDashboardChart = async function() {
+        if (window.dashboardCharts) {
+            return await window.dashboardCharts.initializeDiagnosticsChart();
+        } else {
+            console.error('❌ Dashboard charts not available');
+            return null;
+        }
+    };
+    
+    // Try to initialize charts with delays
+    setTimeout(() => {
+        window.initializeDashboardChart();
+    }, 1000);
+    
+    setTimeout(() => {
+        window.initializeDashboardChart();
+    }, 2500);
     
     // Initialize global state before Alpine starts
     const initialSidebarState = JSON.parse(localStorage.getItem('hospital-sidebar-collapsed') || 'false');

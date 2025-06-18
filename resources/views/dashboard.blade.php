@@ -490,6 +490,8 @@
             itensNaoConformes: {{ $itensNaoConformes ?? 8 }}
         };
         window.notifications = @json($notifications ?? []);
+        
+        // Dashboard initialization complete
     </script>
     @endpush
 </x-app-layout>

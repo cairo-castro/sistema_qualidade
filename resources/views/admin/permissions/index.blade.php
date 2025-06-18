@@ -113,34 +113,121 @@
             </div>
         </form>
     </div>    <!-- Permissions Table Card -->
-    <div class="gqa-card">
-        <div class="flex items-center justify-between mb-4">
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-6">
+        <div class="flex items-center justify-between mb-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Lista de Permissões ({{ $permissions->total() }} registros)
+                Lista de Permissões
             </h3>
         </div>
         
         @if($permissions->count() > 0)
-            <div class="gqa-table-wrapper">
-                <table class="gqa-table">
-                    <thead>
+            <!-- DataTable Header Controls -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <!-- Search and Entries -->
+                <div class="flex flex-col sm:flex-row gap-4">
+                    <!-- Search Input -->
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </div>
+                        <input type="search" 
+                               data-hs-datatable-search=""
+                               class="block w-full pl-10 pr-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm placeholder-gray-500 dark:placeholder-gray-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500"
+                               placeholder="Buscar permissões...">
+                    </div>
+                    
+                    <!-- Entries per page -->
+                    <div class="flex items-center gap-2">
+                        <label class="text-sm text-gray-700 dark:text-gray-300">Mostrar:</label>
+                        <select data-hs-datatable-page-entities=""
+                                class="block w-auto px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-green-500 focus:border-green-500">
+                            <option value="10">10</option>
+                            <option value="25" selected>25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span class="text-sm text-gray-700 dark:text-gray-300">registros</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- DataTable -->
+            <div data-hs-datatable='{
+                "pageLength": 25,
+                "pagingOptions": {
+                    "pageBtnClasses": "min-h-[38px] min-w-[38px] flex justify-center items-center text-gray-800 hover:bg-gray-100 py-2 px-3 text-sm rounded-lg focus:outline-none focus:bg-gray-100 disabled:opacity-50 disabled:pointer-events-none dark:text-white dark:hover:bg-white/10 dark:focus:bg-white/10"
+                },
+                "isResponsive": false,
+                "isShowPaging": true,
+                "language": {
+                    "search": "",
+                    "searchPlaceholder": "Buscar permissões...",
+                    "info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+                    "infoEmpty": "Mostrando 0 a 0 de 0 registros",
+                    "infoFiltered": "(filtrado de _MAX_ registros)",
+                    "lengthMenu": "Mostrar _MENU_ registros",
+                    "loadingRecords": "Carregando...",
+                    "processing": "Processando...",
+                    "zeroRecords": "Nenhum registro encontrado",
+                    "paginate": {
+                        "first": "Primeiro",
+                        "last": "Último",
+                        "next": "Próximo",
+                        "previous": "Anterior"
+                    }
+                }
+            }'>
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
                         <tr>
-                            <th>Nome</th>
-                            <th>Grupo</th>
-                            <th>Papéis Associados</th>
-                            <th>Criado em</th>
-                            <th width="150">Ações</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m0 0a2 2 0 012 2m-2-2h-2m2 0h2M9 7h6m0 10v-5m-6 5h6m6-4a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Nome
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
+                                    </svg>
+                                    Grupo
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider --exclude-from-ordering">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                    </svg>
+                                    Papéis Associados
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                <div class="flex items-center gap-2">
+                                    <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    Criado em
+                                </div>
+                            </th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider --exclude-from-ordering">
+                                Ações
+                            </th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                         @foreach($permissions as $permission)
                             @php
                                 $parts = explode(' ', $permission->name);
                                 $action = $parts[0] ?? '';
                                 $resource = $parts[1] ?? 'other';
                             @endphp
-                            <tr>
-                                <td>
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="mr-3">
                                             @switch($action)
@@ -183,12 +270,12 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-2 py-1 text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-full">
                                         {{ ucfirst($resource) }}
                                     </span>
                                 </td>
-                                <td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     @if($permission->roles->count() > 0)
                                         <div class="flex flex-wrap gap-1">
                                             @foreach($permission->roles->take(3) as $role)
@@ -209,22 +296,24 @@
                                         <span class="text-gray-500 dark:text-gray-400 text-sm">Nenhum papel</span>
                                     @endif
                                 </td>
-                                <td>
+                                <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="text-sm text-gray-600 dark:text-gray-400" title="{{ $permission->created_at->format('d/m/Y H:i:s') }}">
                                         {{ $permission->created_at->diffForHumans() }}
                                     </span>
                                 </td>
-                                <td>
-                                    <div class="flex items-center gap-2">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <div class="flex items-center space-x-2">
                                         <a href="{{ route('admin.permissions.show', $permission) }}" 
-                                           class="hospital-btn-sm hospital-btn-outline-primary" title="Visualizar">
+                                           class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" 
+                                           title="Visualizar">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                             </svg>
                                         </a>
                                         <a href="{{ route('admin.permissions.edit', $permission) }}" 
-                                           class="hospital-btn-sm hospital-btn-outline-secondary" title="Editar">
+                                           class="inline-flex items-center px-2.5 py-1.5 border border-gray-300 dark:border-gray-600 shadow-sm text-xs font-medium rounded text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500" 
+                                           title="Editar">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                             </svg>
@@ -234,7 +323,7 @@
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" 
-                                                    class="hospital-btn-sm hospital-btn-outline-danger {{ $permission->roles->count() > 0 ? 'opacity-50 cursor-not-allowed' : '' }}" 
+                                                    class="inline-flex items-center px-2.5 py-1.5 border border-red-300 dark:border-red-600 shadow-sm text-xs font-medium rounded text-red-700 dark:text-red-300 bg-white dark:bg-gray-700 hover:bg-red-50 dark:hover:bg-red-900/20 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 {{ $permission->roles->count() > 0 ? 'opacity-50 cursor-not-allowed' : '' }}" 
                                                     title="Deletar"
                                                     {{ $permission->roles->count() > 0 ? 'disabled' : '' }}>
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -248,11 +337,6 @@
                         @endforeach
                     </tbody>
                 </table>
-            </div>
-
-            <!-- Pagination -->
-            <div class="flex justify-center mt-6">
-                {{ $permissions->appends(request()->query())->links() }}
             </div>
         @else
             <div class="text-center py-12">
